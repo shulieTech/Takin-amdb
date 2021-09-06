@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2021 Shulie Technology, Co.Ltd
+  ~ Email: shulie@shulie.io
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shulie.amdb.mapper.AppServerMapper">
+  <resultMap id="BaseResultMap" type="io.shulie.amdb.entity.TAmdbAppServer">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="app_name" jdbcType="VARCHAR" property="appName" />
+    <result column="server_name" jdbcType="VARCHAR" property="serverName" />
+    <result column="server_type" jdbcType="VARCHAR" property="serverType" />
+    <result column="ext" jdbcType="VARCHAR" property="ext" />
+    <result column="flag" jdbcType="INTEGER" property="flag" />
+    <result column="creator" jdbcType="VARCHAR" property="creator" />
+    <result column="creator_name" jdbcType="VARCHAR" property="creatorName" />
+    <result column="modifier" jdbcType="VARCHAR" property="modifier" />
+    <result column="modifier_name" jdbcType="VARCHAR" property="modifierName" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
+    <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, app_name, `server_name`, server_type, ext, flag, creator, creator_name, modifier, 
+    modifier_name, gmt_create, gmt_modify
+  </sql>
+  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="io.shulie.amdb.entity.TAmdbAppServer" useGeneratedKeys="true">
+    insert into t_amdb_app_server (app_name, `server_name`, server_type, 
+      ext, flag, creator, 
+      creator_name, modifier, modifier_name, 
+      gmt_create, gmt_modify)
+    values (#{appName,jdbcType=VARCHAR}, #{serverName,jdbcType=VARCHAR}, #{serverType,jdbcType=VARCHAR}, 
+      #{ext,jdbcType=VARCHAR}, #{flag,jdbcType=INTEGER}, #{creator,jdbcType=VARCHAR}, 
+      #{creatorName,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{modifierName,jdbcType=VARCHAR}, 
+      #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModify,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="io.shulie.amdb.entity.TAmdbAppServer" useGeneratedKeys="true">
+    insert into t_amdb_app_server
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="appName != null">
+        app_name,
+      </if>
+      <if test="serverName != null">
+        `server_name`,
+      </if>
+      <if test="serverType != null">
+        server_type,
+      </if>
+      <if test="ext != null">
+        ext,
+      </if>
+      <if test="flag != null">
+        flag,
+      </if>
+      <if test="creator != null">
+        creator,
+      </if>
+      <if test="creatorName != null">
+        creator_name,
+      </if>
+      <if test="modifier != null">
+        modifier,
+      </if>
+      <if test="modifierName != null">
+        modifier_name,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="appName != null">
+        #{appName,jdbcType=VARCHAR},
+      </if>
+      <if test="serverName != null">
+        #{serverName,jdbcType=VARCHAR},
+      </if>
+      <if test="serverType != null">
+        #{serverType,jdbcType=VARCHAR},
+      </if>
+      <if test="ext != null">
+        #{ext,jdbcType=VARCHAR},
+      </if>
+      <if test="flag != null">
+        #{flag,jdbcType=INTEGER},
+      </if>
+      <if test="creator != null">
+        #{creator,jdbcType=VARCHAR},
+      </if>
+      <if test="creatorName != null">
+        #{creatorName,jdbcType=VARCHAR},
+      </if>
+      <if test="modifier != null">
+        #{modifier,jdbcType=VARCHAR},
+      </if>
+      <if test="modifierName != null">
+        #{modifierName,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="io.shulie.amdb.entity.TAmdbAppServer">
+    update t_amdb_app_server
+    <set>
+      <if test="appName != null">
+        app_name = #{appName,jdbcType=VARCHAR},
+      </if>
+      <if test="serverName != null">
+        `server_name` = #{serverName,jdbcType=VARCHAR},
+      </if>
+      <if test="serverType != null">
+        server_type = #{serverType,jdbcType=VARCHAR},
+      </if>
+      <if test="ext != null">
+        ext = #{ext,jdbcType=VARCHAR},
+      </if>
+      <if test="flag != null">
+        flag = #{flag,jdbcType=INTEGER},
+      </if>
+      <if test="creator != null">
+        creator = #{creator,jdbcType=VARCHAR},
+      </if>
+      <if test="creatorName != null">
+        creator_name = #{creatorName,jdbcType=VARCHAR},
+      </if>
+      <if test="modifier != null">
+        modifier = #{modifier,jdbcType=VARCHAR},
+      </if>
+      <if test="modifierName != null">
+        modifier_name = #{modifierName,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify = #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="io.shulie.amdb.entity.TAmdbAppServer">
+    update t_amdb_app_server
+    set app_name = #{appName,jdbcType=VARCHAR},
+      `server_name` = #{serverName,jdbcType=VARCHAR},
+      server_type = #{serverType,jdbcType=VARCHAR},
+      ext = #{ext,jdbcType=VARCHAR},
+      flag = #{flag,jdbcType=INTEGER},
+      creator = #{creator,jdbcType=VARCHAR},
+      creator_name = #{creatorName,jdbcType=VARCHAR},
+      modifier = #{modifier,jdbcType=VARCHAR},
+      modifier_name = #{modifierName,jdbcType=VARCHAR},
+      gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      gmt_modify = #{gmtModify,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

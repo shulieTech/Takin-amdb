@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2021 Shulie Technology, Co.Ltd
+  ~ Email: shulie@shulie.io
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shulie.amdb.mapper.TAmdbMapperSqlInfoMapper">
+    <resultMap id="BaseResultMap" type="io.shulie.amdb.entity.TAmdbMapperSqlInfo">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="sql_id" jdbcType="VARCHAR" property="sqlId"/>
+        <result column="sql" jdbcType="VARCHAR" property="sql"/>
+        <result column="mapper_path" jdbcType="VARCHAR" property="mapperPath"/>
+        <result column="belongs_app" jdbcType="VARCHAR" property="belongsApp"/>
+        <result column="env" jdbcType="VARCHAR" property="env"/>
+        <result column="publish_package_name" jdbcType="VARCHAR" property="publishPackageName"/>
+        <result column="report_time" jdbcType="TIMESTAMP" property="reportTime"/>
+        <result column="scan_time" jdbcType="TIMESTAMP" property="scanTime"/>
+        <result column="ext" jdbcType="VARCHAR" property="ext"/>
+        <result column="flag" jdbcType="INTEGER" property="flag"/>
+        <result column="creator" jdbcType="VARCHAR" property="creator"/>
+        <result column="branch" jdbcType="VARCHAR" property="branch"/>
+        <result column="line" jdbcType="INTEGER" property="line"/>
+        <result column="creator_name" jdbcType="VARCHAR" property="creatorName"/>
+        <result column="modifier" jdbcType="VARCHAR" property="modifier"/>
+        <result column="modifier_name" jdbcType="VARCHAR" property="modifierName"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    id, sql_id, `sql`, mapper_path, belongs_app, env, publish_package_name, report_time, 
+    scan_time, ext, flag, branch, line, creator, creator_name, modifier, modifier_name, gmt_create,
+    gmt_modify
+    </sql>
+    <select id="selectList" parameterType="io.shulie.amdb.entity.TAmdbMapperSqlInfo" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_amdb_mapper_sql_info
+        <where>
+            <if test="sqlId != null">
+                and sql_id = #{sqlId,jdbcType=VARCHAR}
+            </if>
+            <if test="sql != null">
+                and `sql` = #{sql,jdbcType=VARCHAR}
+            </if>
+            <if test="mapperPath != null">
+                and mapper_path = #{mapperPath,jdbcType=VARCHAR}
+            </if>
+            <if test="belongsApp != null">
+                and belongs_app = #{belongsApp,jdbcType=VARCHAR}
+            </if>
+            <if test="env != null">
+                and env = #{env,jdbcType=VARCHAR}
+            </if>
+            <if test="publishPackageName != null">
+                and publish_package_name = #{publishPackageName,jdbcType=VARCHAR}
+            </if>
+            <if test="reportTime != null">
+                and report_time = #{reportTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="scanTime != null">
+                and scan_time = #{scanTime,jdbcType=TIMESTAMP}
+            </if>
+            <if test="ext != null">
+                and ext = #{ext,jdbcType=VARCHAR}
+            </if>
+            <if test="flag != null">
+                and flag = #{flag,jdbcType=INTEGER}
+            </if>
+            <if test="line != null">
+                and line = #{line,jdbcType=INTEGER}
+            </if>
+            <if test="branch != null">
+                and branch = #{branch,jdbcType=VARCHAR}
+            </if>
+            <if test="creator != null">
+                and creator = #{creator,jdbcType=VARCHAR}
+            </if>
+            <if test="creatorName != null">
+                and creator_name = #{creatorName,jdbcType=VARCHAR}
+            </if>
+            <if test="modifier != null">
+                and modifier = #{modifier,jdbcType=VARCHAR}
+            </if>
+            <if test="modifierName != null">
+                and modifier_name = #{modifierName,jdbcType=VARCHAR}
+            </if>
+            <if test="gmtCreate != null">
+                and gmt_create = #{gmtCreate,jdbcType=TIMESTAMP}
+            </if>
+            <if test="gmtModify != null">
+                and gmt_modify = #{gmtModify,jdbcType=TIMESTAMP}
+            </if>
+        </where>
+    </select>
+    <select id="selectByFilter" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_amdb_mapper_sql_info
+        <where>
+            ${filter}
+        </where>
+    </select>
+    <insert id="insert" keyColumn="id" keyProperty="id" parameterType="io.shulie.amdb.entity.TAmdbMapperSqlInfo"
+            useGeneratedKeys="true">
+    insert into t_amdb_mapper_sql_info (sql_id, `sql`, mapper_path, 
+      belongs_app, env, publish_package_name, 
+      report_time, scan_time, ext, 
+      flag, branch, line, creator, creator_name,
+      modifier, modifier_name, gmt_create, 
+      gmt_modify)
+    values (#{sqlId,jdbcType=VARCHAR}, #{sql,jdbcType=VARCHAR}, #{mapperPath,jdbcType=VARCHAR}, 
+      #{belongsApp,jdbcType=VARCHAR}, #{env,jdbcType=VARCHAR}, #{publishPackageName,jdbcType=VARCHAR}, 
+      #{reportTime,jdbcType=TIMESTAMP}, #{scanTime,jdbcType=TIMESTAMP}, #{ext,jdbcType=VARCHAR}, 
+      #{flag,jdbcType=INTEGER}, #{branch,jdbcType=VARCHAR}, #{line,jdbcType=INTEGER}, #{creator,jdbcType=VARCHAR}, #{creatorName,jdbcType=VARCHAR},
+      #{modifier,jdbcType=VARCHAR}, #{modifierName,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, 
+      #{gmtModify,jdbcType=TIMESTAMP})
+  </insert>
+    <insert id="insertSelective" keyColumn="id" keyProperty="id"
+            parameterType="io.shulie.amdb.entity.TAmdbMapperSqlInfo" useGeneratedKeys="true">
+        insert into t_amdb_mapper_sql_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="sqlId != null">
+                sql_id,
+            </if>
+            <if test="sql != null">
+                `sql`,
+            </if>
+            <if test="mapperPath != null">
+                mapper_path,
+            </if>
+            <if test="belongsApp != null">
+                belongs_app,
+            </if>
+            <if test="env != null">
+                env,
+            </if>
+            <if test="publishPackageName != null">
+                publish_package_name,
+            </if>
+            <if test="reportTime != null">
+                report_time,
+            </if>
+            <if test="scanTime != null">
+                scan_time,
+            </if>
+            <if test="ext != null">
+                ext,
+            </if>
+            <if test="flag != null">
+                flag,
+            </if>
+            <if test="branch != null">
+                branch,
+            </if>
+            <if test="line != null">
+                line,
+            </if>
+            <if test="creator != null">
+                creator,
+            </if>
+            <if test="creatorName != null">
+                creator_name,
+            </if>
+            <if test="modifier != null">
+                modifier,
+            </if>
+            <if test="modifierName != null">
+                modifier_name,
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create,
+            </if>
+            <if test="gmtModify != null">
+                gmt_modify,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="sqlId != null">
+                #{sqlId,jdbcType=VARCHAR},
+            </if>
+            <if test="sql != null">
+                #{sql,jdbcType=VARCHAR},
+            </if>
+            <if test="mapperPath != null">
+                #{mapperPath,jdbcType=VARCHAR},
+            </if>
+            <if test="belongsApp != null">
+                #{belongsApp,jdbcType=VARCHAR},
+            </if>
+            <if test="env != null">
+                #{env,jdbcType=VARCHAR},
+            </if>
+            <if test="publishPackageName != null">
+                #{publishPackageName,jdbcType=VARCHAR},
+            </if>
+            <if test="reportTime != null">
+                #{reportTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="scanTime != null">
+                #{scanTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="ext != null">
+                #{ext,jdbcType=VARCHAR},
+            </if>
+            <if test="flag != null">
+                #{flag,jdbcType=INTEGER},
+            </if>
+            <if test="branch != null">
+                #{branch,jdbcType=VARCHAR},
+            </if>
+            <if test="line != null">
+                #{line,jdbcType=INTEGER},
+            </if>
+            <if test="creator != null">
+                #{creator,jdbcType=VARCHAR},
+            </if>
+            <if test="creatorName != null">
+                #{creatorName,jdbcType=VARCHAR},
+            </if>
+            <if test="modifier != null">
+                #{modifier,jdbcType=VARCHAR},
+            </if>
+            <if test="modifierName != null">
+                #{modifierName,jdbcType=VARCHAR},
+            </if>
+            <if test="gmtCreate != null">
+                #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModify != null">
+                #{gmtModify,jdbcType=TIMESTAMP},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="io.shulie.amdb.entity.TAmdbMapperSqlInfo">
+        update t_amdb_mapper_sql_info
+        <set>
+            <if test="sqlId != null">
+                sql_id = #{sqlId,jdbcType=VARCHAR},
+            </if>
+            <if test="sql != null">
+                `sql` = #{sql,jdbcType=VARCHAR},
+            </if>
+            <if test="mapperPath != null">
+                mapper_path = #{mapperPath,jdbcType=VARCHAR},
+            </if>
+            <if test="belongsApp != null">
+                belongs_app = #{belongsApp,jdbcType=VARCHAR},
+            </if>
+            <if test="env != null">
+                env = #{env,jdbcType=VARCHAR},
+            </if>
+            <if test="publishPackageName != null">
+                publish_package_name = #{publishPackageName,jdbcType=VARCHAR},
+            </if>
+            <if test="reportTime != null">
+                report_time = #{reportTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="scanTime != null">
+                scan_time = #{scanTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="ext != null">
+                ext = #{ext,jdbcType=VARCHAR},
+            </if>
+            <if test="flag != null">
+                flag = #{flag,jdbcType=INTEGER},
+            </if>
+            <if test="branch != null">
+                branch = #{branch,jdbcType=VARCHAR},
+            </if>
+            <if test="line != null">
+                line = #{line,jdbcType=INTEGER},
+            </if>
+            <if test="creator != null">
+                creator = #{creator,jdbcType=VARCHAR},
+            </if>
+            <if test="creatorName != null">
+                creator_name = #{creatorName,jdbcType=VARCHAR},
+            </if>
+            <if test="modifier != null">
+                modifier = #{modifier,jdbcType=VARCHAR},
+            </if>
+            <if test="modifierName != null">
+                modifier_name = #{modifierName,jdbcType=VARCHAR},
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModify != null">
+                gmt_modify = #{gmtModify,jdbcType=TIMESTAMP},
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="io.shulie.amdb.entity.TAmdbMapperSqlInfo">
+    update t_amdb_mapper_sql_info
+    set sql_id = #{sqlId,jdbcType=VARCHAR},
+      `sql` = #{sql,jdbcType=VARCHAR},
+      mapper_path = #{mapperPath,jdbcType=VARCHAR},
+      belongs_app = #{belongsApp,jdbcType=VARCHAR},
+      env = #{env,jdbcType=VARCHAR},
+      publish_package_name = #{publishPackageName,jdbcType=VARCHAR},
+      report_time = #{reportTime,jdbcType=TIMESTAMP},
+      scan_time = #{scanTime,jdbcType=TIMESTAMP},
+      ext = #{ext,jdbcType=VARCHAR},
+      flag = #{flag,jdbcType=INTEGER},
+      branch = #{branch,jdbcType=VARCHAR},
+      line = #{line,jdbcType=INTEGER},
+      creator = #{creator,jdbcType=VARCHAR},
+      creator_name = #{creatorName,jdbcType=VARCHAR},
+      modifier = #{modifier,jdbcType=VARCHAR},
+      modifier_name = #{modifierName,jdbcType=VARCHAR},
+      gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      gmt_modify = #{gmtModify,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2021 Shulie Technology, Co.Ltd
+  ~ Email: shulie@shulie.io
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shulie.amdb.mapper.AppInstanceStatusMapper">
+    <resultMap id="BaseResultMap" type="io.shulie.amdb.entity.TAmdbAppInstanceStatusDO">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="app_name" jdbcType="VARCHAR" property="appName"/>
+        <result column="agent_id" jdbcType="VARCHAR" property="agentId"/>
+        <result column="ip" jdbcType="VARCHAR" property="ip"/>
+        <result column="pid" jdbcType="VARCHAR" property="pid"/>
+        <result column="hostname" jdbcType="VARCHAR" property="hostname"/>
+        <result column="agent_language" jdbcType="VARCHAR" property="agentLanguage"/>
+        <result column="agent_version" jdbcType="VARCHAR" property="agentVersion"/>
+        <result column="probe_version" jdbcType="VARCHAR" property="probeVersion"/>
+        <result column="probe_status" jdbcType="CHAR" property="probeStatus"/>
+        <result column="error_code" jdbcType="VARCHAR" property="errorCode"/>
+        <result column="error_msg" jdbcType="VARCHAR" property="errorMsg"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id
+        , app_name, agent_id, ip, pid, hostname, agent_language, agent_version, probe_version,probe_status,error_code,error_msg, gmt_create, gmt_modify
+    </sql>
+
+    <update id="truncateTable">
+        truncate table t_amdb_app_instance_status
+    </update>
+
+    <select id="selectDistinctVersionByParam" parameterType="io.shulie.amdb.entity.TAmdbAppInstanceStatusDO"
+            resultType="string">
+        select
+        distinct probe_version
+        from t_amdb_app_instance_status
+        <where>
+            <if test="appName != null">
+                and app_name=#{appName,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectOneByParam" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_amdb_app_instance_status
+        <where>
+            <if test="id != null">
+                and id=#{id,jdbcType=BIGINT}
+            </if>
+            <if test="appName != null">
+                and app_name=#{appName,jdbcType=VARCHAR}
+            </if>
+            <if test="agentId != null">
+                and agent_id=#{agentId,jdbcType=VARCHAR}
+            </if>
+            <if test="ip != null">
+                and ip=#{ip,jdbcType=VARCHAR}
+            </if>
+            <if test="pid != null">
+                and pid=#{pid,jdbcType=VARCHAR}
+            </if>
+            <if test="hostname != null">
+                and hostname=#{hostname,jdbcType=VARCHAR}
+            </if>
+            <if test="agentLanguage != null">
+                and agent_language=#{agentLanguage,jdbcType=VARCHAR}
+            </if>
+            <if test="agentVersion != null">
+                and agent_version=#{agentVersion,jdbcType=VARCHAR}
+            </if>
+            <if test="probeVersion != null">
+                and probe_version=#{probeVersion,jdbcType=VARCHAR}
+            </if>
+            <if test="probeStatus != null">
+                and probe_status=#{probeStatus,jdbcType=CHAR}
+            </if>
+            <if test="errorCode != null">
+                and error_code=#{errorCode,jdbcType=VARCHAR}
+            </if>
+            <if test="errorMsg != null">
+                and error_msg=#{errorMsg,jdbcType=VARCHAR}
+            </if>
+            <if test="gmtCreate != null">
+                and gmt_create=#{gmtCreate,jdbcType=TIMESTAMP}
+            </if>
+            <if test="gmtModify != null">
+                and gmt_modify=#{gmtModify,jdbcType=TIMESTAMP}
+            </if>
+            limit 1
+        </where>
+    </select>
+    <select id="selectByFilter" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_amdb_app_instance_status
+        <where>
+            ${filter}
+        </where>
+    </select>
+    <insert id="insert" parameterType="io.shulie.amdb.entity.TAmdbAppInstanceStatusDO">
+        insert into t_amdb_app_instance_status (id, app_name, agent_id, ip, pid, hostname, agent_language,
+                                                agent_version, probe_version, probe_status, error_code, error_msg,
+                                                gmt_create, gmt_modify)
+        values (#{id,jdbcType=BIGINT}, #{appName,jdbcType=VARCHAR},
+                #{agentId,jdbcType=VARCHAR}, #{ip,jdbcType=VARCHAR}, #{pid,jdbcType=VARCHAR},
+                #{hostname,jdbcType=VARCHAR}, #{agentLanguage,jdbcType=VARCHAR}, #{agentVersion,jdbcType=VARCHAR},
+                #{probeVersion,jdbcType=VARCHAR}, #{probeStatus,jdbcType=CHAR}, #{errorCode,jdbcType=VARCHAR},
+                #{errorMsg,jdbcType=VARCHAR}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModify,jdbcType=TIMESTAMP})
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="io.shulie.amdb.entity.TAmdbAppInstanceStatusDO">
+        update t_amdb_app_instance_status
+        <set>
+            <if test="appName != null">
+                app_name = #{appName,jdbcType=VARCHAR},
+            </if>
+            <if test="agentId != null">
+                agent_id = #{agentId,jdbcType=VARCHAR},
+            </if>
+            <if test="ip != null">
+                ip = #{ip,jdbcType=VARCHAR},
+            </if>
+            <if test="pid != null">
+                pid = #{pid,jdbcType=VARCHAR},
+            </if>
+            <if test="hostname != null">
+                hostname = #{hostname,jdbcType=VARCHAR},
+            </if>
+            <if test="agentLanguage != null">
+                agent_language = #{agentLanguage,jdbcType=VARCHAR},
+            </if>
+            <if test="agentVersion != null">
+                agent_version = #{agentVersion,jdbcType=VARCHAR},
+            </if>
+            <if test="probeVersion != null">
+                probe_version = #{probeVersion,jdbcType=VARCHAR},
+            </if>
+            <if test="probeStatus != null">
+                probe_status = #{probeStatus,jdbcType=CHAR},
+            </if>
+            <if test="errorCode != null">
+                error_code=#{errorCode,jdbcType=VARCHAR},
+            </if>
+            <if test="errorMsg != null">
+                error_msg=#{errorMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModify != null">
+                gmt_modify = #{gmtModify,jdbcType=TIMESTAMP}
+            </if>
+        </set>
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="io.shulie.amdb.entity.TAmdbAppInstanceStatusDO">
+        update t_amdb_app_instance_status
+        set app_name       = #{appName,jdbcType=VARCHAR},
+            agent_id       = #{agentId,jdbcType=VARCHAR},
+            ip             = #{ip,jdbcType=VARCHAR},
+            pid            = #{pid,jdbcType=VARCHAR},
+            hostname       = #{hostname,jdbcType=VARCHAR},
+            agent_language = #{agentLanguage,jdbcType=VARCHAR},
+            agent_version  = #{agentVersion,jdbcType=VARCHAR},
+            probe_version  = #{probeVersion,jdbcType=VARCHAR},
+            probe_status   = #{probeStatus,jdbcType=CHAR},
+            error_code     = #{errorCode,jdbcType=VARCHAR},
+            error_msg      = #{errorMsg,jdbcType=VARCHAR},
+            gmt_create     = #{gmtCreate,jdbcType=TIMESTAMP},
+            gmt_modify     = #{gmtModify,jdbcType=TIMESTAMP}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+
+    <insert id="insertSelective" parameterType="io.shulie.amdb.entity.TAmdbAppInstanceStatusDO"
+            keyColumn="id" keyProperty="id" useGeneratedKeys="true">
+        insert into t_amdb_app_instance_status
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="appName != null">
+                app_name,
+            </if>
+            <if test="agentId != null">
+                agent_id,
+            </if>
+            <if test="ip != null">
+                ip,
+            </if>
+            <if test="pid != null">
+                pid,
+            </if>
+            <if test="hostname != null">
+                hostname,
+            </if>
+            <if test="agentLanguage != null">
+                agent_language,
+            </if>
+            <if test="agentVersion != null">
+                agent_version,
+            </if>
+            <if test="probeVersion != null">
+                probe_version,
+            </if>
+            <if test="probeStatus != null">
+                probe_status,
+            </if>
+            <if test="errorCode != null">
+                error_code,
+            </if>
+            <if test="errorMsg != null">
+                error_msg,
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create,
+            </if>
+            <if test="gmtModify != null">
+                gmt_modify,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="appName != null">
+                #{appName,jdbcType=VARCHAR},
+            </if>
+            <if test="agentId != null">
+                #{agentId,jdbcType=VARCHAR},
+            </if>
+            <if test="ip != null">
+                #{ip,jdbcType=VARCHAR},
+            </if>
+            <if test="pid != null">
+                #{pid,jdbcType=VARCHAR},
+            </if>
+            <if test="hostname != null">
+                #{hostname,jdbcType=VARCHAR},
+            </if>
+            <if test="agentLanguage != null">
+                #{agentLanguage,jdbcType=VARCHAR},
+            </if>
+            <if test="agentVersion != null">
+                #{agentVersion,jdbcType=VARCHAR},
+            </if>
+            <if test="probeVersion != null">
+                #{probeVersion,jdbcType=VARCHAR},
+            </if>
+            <if test="probeStatus != null">
+                #{probeStatus,jdbcType=CHAR},
+            </if>
+            <if test="errorCode != null">
+                #{errorCode,jdbcType=VARCHAR},
+            </if>
+            <if test="errorMsg != null">
+                #{errorMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="gmtCreate != null">
+                #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModify != null">
+                #{gmtModify,jdbcType=TIMESTAMP},
+            </if>
+        </trim>
+        <include refid="update_duplicate_key_frame"/>
+    </insert>
+
+    <sql id="update_duplicate_key_frame">
+        on duplicate key update
+        <if test="appName != null">
+            app_name = #{appName,jdbcType=VARCHAR},
+        </if>
+        <if test="agentId != null">
+            agent_id = #{agentId,jdbcType=VARCHAR},
+        </if>
+        <if test="ip != null">
+            ip = #{ip,jdbcType=VARCHAR},
+        </if>
+        <if test="pid != null">
+            pid = #{pid,jdbcType=VARCHAR},
+        </if>
+        <if test="hostname != null">
+            hostname = #{hostname,jdbcType=VARCHAR},
+        </if>
+        <if test="agentLanguage != null">
+            agent_language = #{agentLanguage,jdbcType=VARCHAR},
+        </if>
+        <if test="agentVersion != null">
+            agent_version = #{agentVersion,jdbcType=VARCHAR},
+        </if>
+        <if test="probeVersion != null">
+            probe_version = #{probeVersion,jdbcType=VARCHAR},
+        </if>
+        <if test="probeStatus != null">
+            probe_status = #{probeStatus,jdbcType=CHAR},
+        </if>
+        <if test="errorCode != null">
+            error_code=#{errorCode,jdbcType=VARCHAR},
+        </if>
+        <if test="errorMsg != null">
+            error_msg=#{errorMsg,jdbcType=VARCHAR},
+        </if>
+        <if test="gmtCreate != null">
+            gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+        </if>
+        gmt_modify = now()
+    </sql>
+</mapper>

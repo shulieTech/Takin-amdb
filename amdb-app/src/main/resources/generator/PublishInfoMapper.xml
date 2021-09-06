@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2021 Shulie Technology, Co.Ltd
+  ~ Email: shulie@shulie.io
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shulie.amdb.mapper.PublishInfoMapper">
+  <resultMap id="BaseResultMap" type="io.shulie.amdb.entity.TAmdbPublishInfo">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="publisher" jdbcType="VARCHAR" property="publisher" />
+    <result column="publish_time" jdbcType="TIMESTAMP" property="publishTime" />
+    <result column="publish_server" jdbcType="VARCHAR" property="publishServer" />
+    <result column="publish_app" jdbcType="VARCHAR" property="publishApp" />
+    <result column="publish_env" jdbcType="VARCHAR" property="publishEnv" />
+    <result column="publish_version" jdbcType="VARCHAR" property="publishVersion" />
+    <result column="ext" jdbcType="VARCHAR" property="ext" />
+    <result column="flag" jdbcType="INTEGER" property="flag" />
+    <result column="creator" jdbcType="VARCHAR" property="creator" />
+    <result column="creator_name" jdbcType="VARCHAR" property="creatorName" />
+    <result column="modifier" jdbcType="VARCHAR" property="modifier" />
+    <result column="modifier_name" jdbcType="VARCHAR" property="modifierName" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
+    <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, publisher, publish_time, publish_server, publish_app, publish_env, publish_version, 
+    ext, flag, creator, creator_name, modifier, modifier_name, gmt_create, gmt_modify
+  </sql>
+  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="io.shulie.amdb.entity.TAmdbPublishInfo" useGeneratedKeys="true">
+    insert into t_amdb_publish_info (publisher, publish_time, publish_server, 
+      publish_app, publish_env, publish_version, 
+      ext, flag, creator, 
+      creator_name, modifier, modifier_name, 
+      gmt_create, gmt_modify)
+    values (#{publisher,jdbcType=VARCHAR}, #{publishTime,jdbcType=TIMESTAMP}, #{publishServer,jdbcType=VARCHAR}, 
+      #{publishApp,jdbcType=VARCHAR}, #{publishEnv,jdbcType=VARCHAR}, #{publishVersion,jdbcType=VARCHAR}, 
+      #{ext,jdbcType=VARCHAR}, #{flag,jdbcType=INTEGER}, #{creator,jdbcType=VARCHAR}, 
+      #{creatorName,jdbcType=VARCHAR}, #{modifier,jdbcType=VARCHAR}, #{modifierName,jdbcType=VARCHAR}, 
+      #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModify,jdbcType=TIMESTAMP})
+  </insert>
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="io.shulie.amdb.entity.TAmdbPublishInfo" useGeneratedKeys="true">
+    insert into t_amdb_publish_info
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="publisher != null">
+        publisher,
+      </if>
+      <if test="publishTime != null">
+        publish_time,
+      </if>
+      <if test="publishServer != null">
+        publish_server,
+      </if>
+      <if test="publishApp != null">
+        publish_app,
+      </if>
+      <if test="publishEnv != null">
+        publish_env,
+      </if>
+      <if test="publishVersion != null">
+        publish_version,
+      </if>
+      <if test="ext != null">
+        ext,
+      </if>
+      <if test="flag != null">
+        flag,
+      </if>
+      <if test="creator != null">
+        creator,
+      </if>
+      <if test="creatorName != null">
+        creator_name,
+      </if>
+      <if test="modifier != null">
+        modifier,
+      </if>
+      <if test="modifierName != null">
+        modifier_name,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="publisher != null">
+        #{publisher,jdbcType=VARCHAR},
+      </if>
+      <if test="publishTime != null">
+        #{publishTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="publishServer != null">
+        #{publishServer,jdbcType=VARCHAR},
+      </if>
+      <if test="publishApp != null">
+        #{publishApp,jdbcType=VARCHAR},
+      </if>
+      <if test="publishEnv != null">
+        #{publishEnv,jdbcType=VARCHAR},
+      </if>
+      <if test="publishVersion != null">
+        #{publishVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="ext != null">
+        #{ext,jdbcType=VARCHAR},
+      </if>
+      <if test="flag != null">
+        #{flag,jdbcType=INTEGER},
+      </if>
+      <if test="creator != null">
+        #{creator,jdbcType=VARCHAR},
+      </if>
+      <if test="creatorName != null">
+        #{creatorName,jdbcType=VARCHAR},
+      </if>
+      <if test="modifier != null">
+        #{modifier,jdbcType=VARCHAR},
+      </if>
+      <if test="modifierName != null">
+        #{modifierName,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="io.shulie.amdb.entity.TAmdbPublishInfo">
+    update t_amdb_publish_info
+    <set>
+      <if test="publisher != null">
+        publisher = #{publisher,jdbcType=VARCHAR},
+      </if>
+      <if test="publishTime != null">
+        publish_time = #{publishTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="publishServer != null">
+        publish_server = #{publishServer,jdbcType=VARCHAR},
+      </if>
+      <if test="publishApp != null">
+        publish_app = #{publishApp,jdbcType=VARCHAR},
+      </if>
+      <if test="publishEnv != null">
+        publish_env = #{publishEnv,jdbcType=VARCHAR},
+      </if>
+      <if test="publishVersion != null">
+        publish_version = #{publishVersion,jdbcType=VARCHAR},
+      </if>
+      <if test="ext != null">
+        ext = #{ext,jdbcType=VARCHAR},
+      </if>
+      <if test="flag != null">
+        flag = #{flag,jdbcType=INTEGER},
+      </if>
+      <if test="creator != null">
+        creator = #{creator,jdbcType=VARCHAR},
+      </if>
+      <if test="creatorName != null">
+        creator_name = #{creatorName,jdbcType=VARCHAR},
+      </if>
+      <if test="modifier != null">
+        modifier = #{modifier,jdbcType=VARCHAR},
+      </if>
+      <if test="modifierName != null">
+        modifier_name = #{modifierName,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify = #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="io.shulie.amdb.entity.TAmdbPublishInfo">
+    update t_amdb_publish_info
+    set publisher = #{publisher,jdbcType=VARCHAR},
+      publish_time = #{publishTime,jdbcType=TIMESTAMP},
+      publish_server = #{publishServer,jdbcType=VARCHAR},
+      publish_app = #{publishApp,jdbcType=VARCHAR},
+      publish_env = #{publishEnv,jdbcType=VARCHAR},
+      publish_version = #{publishVersion,jdbcType=VARCHAR},
+      ext = #{ext,jdbcType=VARCHAR},
+      flag = #{flag,jdbcType=INTEGER},
+      creator = #{creator,jdbcType=VARCHAR},
+      creator_name = #{creatorName,jdbcType=VARCHAR},
+      modifier = #{modifier,jdbcType=VARCHAR},
+      modifier_name = #{modifierName,jdbcType=VARCHAR},
+      gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      gmt_modify = #{gmtModify,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>
