@@ -13,50 +13,54 @@
  * limitations under the License.
  */
 
-package io.shulie.amdb.request.query;
+package io.shulie.amdb.common.dto.agent;
 
-import io.shulie.amdb.common.request.PagingRequest;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Serializable;
+import java.util.Date;
 
+/**
+ * @author anjone
+ * @date 2021/8/18
+ */
 @Data
-public class TAmdbAppInstanceBatchAppQueryRequest extends PagingRequest {
+public class AgentConfigDTO implements Serializable {
+
+    private Long id;
+
     /**
      * 应用名称
      */
-    private String appNames;
+    private String appName;
 
     /**
-     * 应用ID
+     * agent id
      */
-    private List<Integer> appIds;
+    private String agentId;
 
     /**
-     * agentID
+     * 配置key
      */
-    private List<String> agentIds;
+    private String configKey;
 
     /**
-     * 应用IP
+     * 配置value
      */
-    private List<String> ipAddress;
+    private String configValue;
 
     /**
-     * 客户Id
+     * 配置校验结果 ture 校验成功 false校验失败
      */
-    private String tenantKey;
+    private Boolean status;
 
     /**
-     * 查询内容
+     * 创建时间
      */
-    private List<String> fields;
+    private Date gmtCreate;
 
-    public List<String> getFields() {
-        if (fields == null) {
-            fields = new ArrayList<>();
-        }
-        return fields;
-    }
+    /**
+     * 更新时间
+     */
+    private Date gmtUpdate;
 }

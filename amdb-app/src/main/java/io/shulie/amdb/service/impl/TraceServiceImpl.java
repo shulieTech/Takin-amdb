@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -50,6 +51,7 @@ public class TraceServiceImpl implements TraceService {
             + "attributes,localAttributes,async,version,hostIp,agentId,parsedServiceName ";
 
     @Autowired
+    @Qualifier("traceDaoImpl")
     ITraceDao traceDao;
 
     @Value("${config.trace.limit}")
@@ -132,7 +134,7 @@ public class TraceServiceImpl implements TraceService {
             return Response.fail(AmdbExceptionEnums.TRACE_EMPTY_SELECT_FILED);
         }
         // 拼装过滤条件
-        Pair<List<String>, List<String>> filters = getFilters_2(param);
+        Pair<List<String>, List<String>> filters = getFilters2(param);
         List<String> andFilterList = filters.getFirst();
         List<String> orFilterList = filters.getSecond();
         if (isEmpty(andFilterList)) {
@@ -177,9 +179,9 @@ public class TraceServiceImpl implements TraceService {
         entryTraceInfoDtos = mergeEngineTraceAndTrace(traceId2EngineTraceMap, traceId2TraceMap);*/
         Response result = Response.success(modelList.stream().map(model -> convert(model)).collect(Collectors.toList()));
         if ("0".equals(param.getResultType()) || "2".equals(param.getResultType())) {
-            setDistinctResponseCount(andFilterList, null, result);
+            setDistinctResponseCount(andFilterList, orFilterList, result);
         } else {
-            setResponseCount(andFilterList, null, result);
+            setResponseCount(andFilterList, orFilterList, result);
         }
         return result;
     }
@@ -406,20 +408,23 @@ public class TraceServiceImpl implements TraceService {
         return new Pair<>(andFilterList, orFilterList);
     }
 
-    private Pair<List<String>, List<String>> getFilters_2(EntryTraceQueryParam param) {
+    private Pair<List<String>, List<String>> getFilters2(EntryTraceQueryParam param) {
         List<String> andFilterList = new ArrayList<>();
         List<String> orFilterList = new ArrayList<>();
-        if (StringUtils.isNotBlank(param.getEntranceList())) {
-            List<String> entryList = Arrays.asList(param.getEntranceList().split(","));
-            entryList.forEach(entrance -> {
-                String[] entranceInfo = entrance.split("#");
-                if (StringUtils.isNotBlank(entranceInfo[0])) {
-                    //压测引擎上报的流量明细是pressure-engine,并且parsedService和Method都为空
-                    orFilterList.add("(appName='pressure-engine' and serviceName like '%" + entranceInfo[1]
-                            + "' and methodName like '%" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
-                }
-            });
-        }
+
+//        if (StringUtils.isNotBlank(param.getEntranceList())) {
+//            List<String> entryList = Arrays.asList(param.getEntranceList().split(","));
+//            //如果为单独查询一个入口时,可能是两种情况,调试脚本查询指定业务活动数据/压测报告查看一个业务活动压测的流量明细
+//            //不管是哪一种,如果不含有入口规则变量,才可以匹配
+//            if (entryList.size() == 1 && !entryList.get(0).contains("}")) {
+//                String[] entranceInfo = entryList.get(0).split("#");
+//                if (StringUtils.isNotBlank(entranceInfo[0])) {
+//                    //压测引擎上报的流量明细是pressure-engine,并且parsedService和Method都为空
+//                    andFilterList.add("serviceName= '" + entranceInfo[1]
+//                            + "' and methodName='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "'");
+//                }
+//            }
+//        }
 
         andFilterList.add("taskId='" + param.getTaskId() + "'");
         if (StringUtils.isNotBlank(param.getResultType())) {

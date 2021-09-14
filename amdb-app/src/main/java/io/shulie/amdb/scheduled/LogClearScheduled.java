@@ -27,12 +27,12 @@ import java.util.Date;
 
 /**
  * @author anjone
- * @data 2021/8/12
+ * @date 2021/8/12
  */
 @Slf4j
 @Component
 public class LogClearScheduled {
-    @Resource
+    @Resource(name = "traceDaoImpl")
     private ITraceDao traceDao;
 
     @Value("${datasource.traceAll}")

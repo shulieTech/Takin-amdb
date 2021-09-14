@@ -37,6 +37,7 @@ public class AdaptorStarterRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         if (!isOpen) {
+            log.info("未开启应用实例监听");
             return;
         }
         try {

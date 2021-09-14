@@ -20,7 +20,7 @@ import io.shulie.amdb.adaptors.AdaptorModel;
 import lombok.Data;
 
 /**
- * 实例状态模型
+ * agent实例状态模型
  *
  * @author vincent
  */
@@ -49,5 +49,11 @@ public class InstanceStatusModel implements AdaptorModel {
     private String simulatorVersion;
     //探针状态
     private String agentStatus;
+    //agent 应用jvm启动参数，是一个list的json字符串
+    private String jvmArgs;
+    //应用服务器的jdk版本
+    private String jdk;
+    //应用java home下的tools.jar包路径，如果不存在，是个空字符串
+    private String toolsJarPath;
 }
 

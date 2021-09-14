@@ -15,12 +15,13 @@
 
 package io.shulie.amdb.configration;
 
-import io.shulie.amdb.adaptors.starter.ClientAdaptorStarter;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.clickhouse.BalancedClickhouseDataSource;
 import ru.yandex.clickhouse.settings.ClickHouseProperties;
@@ -33,11 +34,19 @@ import java.util.Objects;
  * @date 2021/9/1
  */
 @Configuration
-public class ClickhouseConfiguration {
+public class JDBCConfiguration {
 
     @Lazy
-    @Bean(name = "clickhouseDatasource")
-    public JdbcTemplate adaptorStarter(
+    @Primary
+    @Bean(name = "mysqlJdbcTemplate")
+    //dataSource 是spring自动加载的
+    public JdbcTemplate mysqlJdbcTemplate(@Autowired DataSource dataSource) throws Exception {
+        return new JdbcTemplate(dataSource);
+    }
+
+    @Lazy
+    @Bean(name = "clickhouseJdbcTemplate")
+    public JdbcTemplate clickhouseJdbcTemplate(
             @Value("${config.clickhouse.url}") String clickhouseUrl,
             @Value("${config.clickhouse.username}") String clickhouseUserName,
             @Value("${config.clickhouse.password}") String clickhousePassword

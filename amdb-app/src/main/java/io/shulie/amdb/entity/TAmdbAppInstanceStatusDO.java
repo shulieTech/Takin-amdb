@@ -20,7 +20,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -30,7 +29,6 @@ import java.util.Date;
 
 @Getter
 @Setter
-@ToString
 @EqualsAndHashCode
 @ApiModel("")
 @Table(name = "`t_amdb_app_instance_status`")
@@ -107,6 +105,13 @@ public class TAmdbAppInstanceStatusDO implements Serializable {
     private String probeStatus;
 
     /**
+     * agent状态(0-已安装,1-未安装,2-安装中,3-卸载中,4-安装失败,5-卸载失败,99-未知状态)
+     */
+    @Column(name = "`agent_status`")
+    @ApiModelProperty("探针状态")
+    private String agentStatus;
+
+    /**
      * 错误码
      */
     @Column(name = "`error_code`")
@@ -120,6 +125,19 @@ public class TAmdbAppInstanceStatusDO implements Serializable {
     @ApiModelProperty("错误信息")
     private String errorMsg;
 
+    /**
+     * agent 应用jvm启动参数，是一个list的json字符串
+     */
+    @Column(name = "`jvm_args`")
+    @ApiModelProperty("agent 应用jvm启动参数，是一个list的json字符串")
+    private String jvmArgs;
+
+    /**
+     * 应用服务器的jdk版本
+     */
+    @Column(name = "`jdk`")
+    @ApiModelProperty("应用服务器的jdk版本")
+    private String jdk;
 
     /**
      * 创建时间
@@ -134,6 +152,20 @@ public class TAmdbAppInstanceStatusDO implements Serializable {
     @Column(name = "`gmt_modify`")
     @ApiModelProperty("更新时间")
     private Date gmtModify;
+
+    /**
+     * 探针错误码
+     */
+    @Column(name = "`agent_error_code`")
+    @ApiModelProperty("agent错误码")
+    private String agentErrorCode;
+
+    /**
+     * 探针错误信息
+     */
+    @Column(name = "`agent_error_msg`")
+    @ApiModelProperty("agent错误信息")
+    private String agentErrorMsg;
 
     private static final long serialVersionUID = 1L;
 
@@ -156,6 +188,8 @@ public class TAmdbAppInstanceStatusDO implements Serializable {
         sb.append(", probeStatus=").append(probeStatus);
         sb.append(", errorCode=").append(errorCode);
         sb.append(", errorMsg=").append(errorMsg);
+        sb.append(", agentErrorCode=").append(agentErrorCode);
+        sb.append(", agentErrorMsg=").append(agentErrorMsg);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

@@ -16,6 +16,8 @@
 package io.shulie.amdb.controller;
 
 import io.shulie.amdb.common.Response;
+import io.shulie.amdb.common.dto.agent.AgentInfoDTO;
+import io.shulie.amdb.common.request.agent.AmdbAgentInfoQueryRequest;
 import io.shulie.amdb.entity.TAmdbAppInstanceDO;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.request.query.TAmdbAppInstanceBatchAppQueryRequest;
@@ -26,7 +28,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -64,7 +69,7 @@ public class AppInstanceController {
     }
 
     @RequestMapping(value = "/select", method = RequestMethod.GET)
-    public Response select(TAmdbAppInstanceDO tAmdbApp) {
+    public Response<TAmdbAppInstanceDO> select(TAmdbAppInstanceDO tAmdbApp) {
         try {
             return Response.success(appInstanceService.selectOneByParam(tAmdbApp));
         } catch (Exception e) {
@@ -86,10 +91,23 @@ public class AppInstanceController {
         }
     }
 
+    @RequestMapping(value = "/selectByBatchAppParams", method = RequestMethod.POST)
+    public Response selectByBatchAppParamsByPostMethod(@RequestBody TAmdbAppInstanceBatchAppQueryRequest param) {
+        try {
+            if (CollectionUtils.isEmpty(param.getAppIds()) && StringUtils.isBlank(param.getAppNames()) && CollectionUtils.isEmpty(param.getAgentIds()) && CollectionUtils.isEmpty(param.getIpAddress())) {
+                return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
+            }
+            return Response.success(appInstanceService.selectByBatchAppParams(param));
+        } catch (Exception e) {
+            log.error("查询应用实例失败", e);
+            return Response.fail(AmdbExceptionEnums.APP_INSTANCE_SELECT);
+        }
+    }
+
     @RequestMapping(value = "/selectByBatchAppParams", method = RequestMethod.GET)
     public Response selectByBatchAppParams(TAmdbAppInstanceBatchAppQueryRequest param) {
         try {
-            if (CollectionUtils.isEmpty(param.getAppIds()) && CollectionUtils.isEmpty(param.getAppNames()) && CollectionUtils.isEmpty(param.getAgentIds()) && CollectionUtils.isEmpty(param.getIpAddress())) {
+            if (CollectionUtils.isEmpty(param.getAppIds()) && StringUtils.isBlank(param.getAppNames()) && CollectionUtils.isEmpty(param.getAgentIds()) && CollectionUtils.isEmpty(param.getIpAddress())) {
                 return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
             }
             return Response.success(appInstanceService.selectByBatchAppParams(param));
@@ -134,6 +152,22 @@ public class AppInstanceController {
         } catch (Exception e) {
             log.error("更新应用实例失败", e);
             return Response.fail(AmdbExceptionEnums.APP_INSTANCE_UPDATE);
+        }
+    }
+
+    /**
+     * 查询agent日志
+     *
+     * @return
+     */
+    @RequestMapping(value = "/queryAgentInfo", method = RequestMethod.POST)
+    public Response<List<AgentInfoDTO>> queryAgentInfo(AmdbAgentInfoQueryRequest request) {
+        log.info("查询agent日志 ：{}", request);
+        try {
+            return Response.success(appInstanceService.queryAgentInfo(request));
+        } catch (Exception e) {
+            log.error("查appInstanceStatus询agent日志失败", e);
+            return Response.fail(AmdbExceptionEnums.APP_INSTANCE_STATUS_SELECT);
         }
     }
 }

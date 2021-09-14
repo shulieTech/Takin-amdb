@@ -16,6 +16,7 @@
 package io.shulie.amdb.configration;
 
 import io.shulie.amdb.adaptors.starter.ClientAdaptorStarter;
+import io.shulie.amdb.mapper.TAmdbAgentConfigDOMapper;
 import io.shulie.amdb.service.AppInstanceService;
 import io.shulie.amdb.service.AppInstanceStatusService;
 import io.shulie.amdb.service.AppService;
@@ -38,6 +39,8 @@ public class AdaptorConfiguration {
     private AppInstanceService appInstanceService;
     @Autowired
     private AppInstanceStatusService appInstanceStatusService;
+    @Autowired
+    private TAmdbAgentConfigDOMapper agentConfigDOMapper;
 
     @Bean
     public ClientAdaptorStarter adaptorStarter() throws Exception {
@@ -45,6 +48,7 @@ public class AdaptorConfiguration {
         config.put("appService", appService);
         config.put("appInstanceService", appInstanceService);
         config.put("appInstanceStatusService", appInstanceStatusService);
+        config.put("agentConfigDOMapper", agentConfigDOMapper);
         System.setProperty("zookeeper.servers", zkPath);
         return new ClientAdaptorStarter(config);
     }

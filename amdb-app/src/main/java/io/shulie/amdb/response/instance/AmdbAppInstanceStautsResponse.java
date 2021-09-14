@@ -29,6 +29,8 @@ public class AmdbAppInstanceStautsResponse implements Serializable {
     String agentId;
     // agent 版本
     String agentVersion;
+    //agent状态
+    private String agentStatus;
     // 更新时间
     String agentUpdateTime;
     // 进程号 id
@@ -39,26 +41,35 @@ public class AmdbAppInstanceStautsResponse implements Serializable {
     String agentLanguage;
     // hostname
     String hostname;
-    // probeVersion
+    // 探针Version
     String probeVersion;
-    // probeStatus
+    // 探针beStatus
     String probeStatus;
+    /**
+     * 错误信息
+     */
+    private String errorMsg;
+    // 探针错误信息
+    private String agentErrorMsg;
 
     public AmdbAppInstanceStautsResponse() {
 
     }
 
     public AmdbAppInstanceStautsResponse(TAmdbAppInstanceStatusDO amdbAppInstanceStatusDO) {
-        this.setAppName(amdbAppInstanceStatusDO.getAppName());
-        this.setAgentId(amdbAppInstanceStatusDO.getAgentId());
-        this.setAgentVersion(amdbAppInstanceStatusDO.getAgentVersion());
-        this.setAgentUpdateTime(DateFormatUtils.format(amdbAppInstanceStatusDO.getGmtModify(), "yyyy-MM-dd HH:mm:ss"));
-        this.setProgressId(amdbAppInstanceStatusDO.getPid());
-        this.setIpAddress(amdbAppInstanceStatusDO.getIp());
-        this.setAgentLanguage(amdbAppInstanceStatusDO.getAgentLanguage());
-        this.setHostname(amdbAppInstanceStatusDO.getHostname());
+        this.appName = amdbAppInstanceStatusDO.getAppName();
+        this.agentId = amdbAppInstanceStatusDO.getAgentId();
+        this.agentVersion = amdbAppInstanceStatusDO.getAgentVersion();
+        this.agentStatus = amdbAppInstanceStatusDO.getAgentStatus();
+        this.agentUpdateTime = DateFormatUtils.format(amdbAppInstanceStatusDO.getGmtModify(), "yyyy-MM-dd HH:mm:ss");
+        this.progressId = amdbAppInstanceStatusDO.getPid();
+        this.ipAddress = amdbAppInstanceStatusDO.getIp();
+        this.agentLanguage = amdbAppInstanceStatusDO.getAgentLanguage();
+        this.hostname = amdbAppInstanceStatusDO.getHostname();
+        this.errorMsg = amdbAppInstanceStatusDO.getErrorMsg();
         //2021-05-28
-        this.setProbeVersion(amdbAppInstanceStatusDO.getProbeVersion());
-        this.setProbeStatus(amdbAppInstanceStatusDO.getProbeStatus());
+        this.probeVersion = amdbAppInstanceStatusDO.getProbeVersion();
+        this.probeStatus = amdbAppInstanceStatusDO.getProbeStatus();
+        this.agentErrorMsg = amdbAppInstanceStatusDO.getAgentErrorMsg();
     }
 }

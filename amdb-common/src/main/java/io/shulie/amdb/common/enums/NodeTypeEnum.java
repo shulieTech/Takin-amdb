@@ -199,6 +199,8 @@ public enum NodeTypeEnum {
                 return NodeTypeEnum.CACHE;
             case "search":
                 return NodeTypeEnum.ES;
+            case "es":
+                return NodeTypeEnum.ES;
             case "virtual":
                 return NodeTypeEnum.VIRTUAL;
             default:

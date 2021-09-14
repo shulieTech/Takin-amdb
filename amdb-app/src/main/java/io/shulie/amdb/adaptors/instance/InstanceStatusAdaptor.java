@@ -27,9 +27,7 @@ import io.shulie.amdb.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author vincent
@@ -89,6 +87,7 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
 
         //如果从zk中获取到的数据模型不为空,则进入更新或者插入逻辑
         if (instanceStatusModel != null) {
+            //实例DO更新
             updateOrInsertInstanceStatus(appName, instanceStatusModel, oldInstanceKey);
             String newInstanceKey = appName + "#" + instanceStatusModel.getAddress() + "#" + instanceStatusModel.getPid();
             INSTANCE_STATUS_CACHE.put(dataContext.getPath(), newInstanceKey);
@@ -99,15 +98,13 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
                 instanceOffline(oldInstanceKey);
                 //清除缓存
                 INSTANCE_STATUS_CACHE.remove(oldInstanceKey);
+
             }
         }
         return null;
     }
 
     private void updateOrInsertInstanceStatus(String appName, InstanceStatusModel newInstanceStatusModel, String oldInstanceKey) {
-        Date curr = new Date();
-        // 判断instance是否存在
-        TAmdbAppInstanceStatusDO instanceStatus = null;
 
         TAmdbAppInstanceStatusDO selectParam = new TAmdbAppInstanceStatusDO();
         // 如果有更新则需要拿到原来的唯一值检索
@@ -122,12 +119,14 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
             selectParam.setIp(instanceInfo[1]);
             selectParam.setPid(instanceInfo[2]);
         }
+
+        Date curr = new Date();
         TAmdbAppInstanceStatusDO oldInstanceStatusDO = appInstanceStatusService.selectOneByParam(selectParam);
         if (oldInstanceStatusDO == null) {
-            instanceStatus = getInsertInstanceStatusModel(newInstanceStatusModel, appName, curr);
-            appInstanceStatusService.insert(instanceStatus);
+            TAmdbAppInstanceStatusDO instanceStatus = instanceStatus = getInsertInstanceStatusModel(newInstanceStatusModel, appName, curr);
+            appInstanceStatusService.insertOrUpdate(instanceStatus);
         } else {
-            instanceStatus = getUpdateInstanceStatusModel(oldInstanceStatusDO, newInstanceStatusModel, curr);
+            TAmdbAppInstanceStatusDO instanceStatus = instanceStatus = getUpdateInstanceStatusModel(oldInstanceStatusDO, newInstanceStatusModel, curr);
             appInstanceStatusService.update(instanceStatus);
         }
     }
@@ -151,10 +150,13 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
 
         dealWithInstanceStatusModel(instanceStatusModel);
 
-        appInstanceStatus.setProbeStatus(instanceStatusModel.getAgentStatus());
         appInstanceStatus.setProbeVersion(instanceStatusModel.getSimulatorVersion());
         appInstanceStatus.setErrorCode(instanceStatusModel.getErrorCode());
         appInstanceStatus.setErrorMsg(instanceStatusModel.getErrorMsg());
+        appInstanceStatus.setProbeStatus(instanceStatusModel.getAgentStatus());
+
+        appInstanceStatus.setJvmArgs(instanceStatusModel.getJvmArgs());
+        appInstanceStatus.setJdk(instanceStatusModel.getJdk());
         appInstanceStatus.setGmtCreate(curr);
         appInstanceStatus.setGmtModify(curr);
         return appInstanceStatus;
@@ -213,10 +215,10 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
 
         dealWithInstanceStatusModel(newInstanceStatusModel);
 
-        oldInstanceStatusDO.setProbeStatus(newInstanceStatusModel.getAgentStatus());
         oldInstanceStatusDO.setProbeVersion(newInstanceStatusModel.getSimulatorVersion());
         oldInstanceStatusDO.setErrorCode(newInstanceStatusModel.getErrorCode());
         oldInstanceStatusDO.setErrorMsg(newInstanceStatusModel.getErrorMsg());
+        oldInstanceStatusDO.setProbeStatus(newInstanceStatusModel.getAgentStatus());
         oldInstanceStatusDO.setGmtModify(curr);
         return oldInstanceStatusDO;
     }

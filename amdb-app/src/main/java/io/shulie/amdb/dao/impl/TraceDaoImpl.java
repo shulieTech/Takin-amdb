@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-@Service
+@Service("traceDaoImpl")
 public class TraceDaoImpl implements ITraceDao, ApplicationContextAware, InitializingBean {
 
     private transient ApplicationContext applicationContext;
@@ -54,7 +54,7 @@ public class TraceDaoImpl implements ITraceDao, ApplicationContextAware, Initial
     }
 
     @Override
-    public void execute(String sql){
+    public void execute(String sql) {
         jdbcTemplate.execute(sql);
     }
 
@@ -130,6 +130,6 @@ public class TraceDaoImpl implements ITraceDao, ApplicationContextAware, Initial
     }
 
     private void getSetClickhouseJdbcTemplate() {
-        this.jdbcTemplate = applicationContext.getBean("clickhouseDatasource",JdbcTemplate.class);
+        this.jdbcTemplate = applicationContext.getBean("clickhouseJdbcTemplate",JdbcTemplate.class);
     }
 }

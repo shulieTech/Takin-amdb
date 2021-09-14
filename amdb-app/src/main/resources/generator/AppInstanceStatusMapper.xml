@@ -163,6 +163,9 @@
             <if test="gmtModify != null">
                 gmt_modify = #{gmtModify,jdbcType=TIMESTAMP}
             </if>
+            <if test="agentStatus != null">
+                agent_status = #{agentStatus,jdbcType=VARCHAR}
+            </if>
         </set>
         where id = #{id,jdbcType=BIGINT}
     </update>
@@ -227,6 +230,21 @@
             <if test="gmtModify != null">
                 gmt_modify,
             </if>
+            <if test="agentStatus != null">
+                agent_status,
+            </if>
+            <if test="jvmArgs != null">
+                jvm_args,
+            </if>
+            <if test="jdk != null">
+                jdk,
+            </if>
+            <if test="agentErrorCode != null">
+                agent_error_code,
+            </if>
+            <if test="agentErrorMsg != null">
+                agent_error_msg,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="appName != null">
@@ -267,6 +285,23 @@
             </if>
             <if test="gmtModify != null">
                 #{gmtModify,jdbcType=TIMESTAMP},
+            </if>
+            <if test="agentStatus != null">
+                #{agentStatus,jdbcType=VARCHAR},
+            </if>
+
+            <if test="jvmArgs != null">
+                #{jvmArgs,jdbcType=VARCHAR},
+            </if>
+
+            <if test="jdk != null">
+                #{jdk,jdbcType=VARCHAR},
+            </if>
+            <if test="agentErrorCode != null">
+                #{agentErrorCode,jdbcType=VARCHAR},
+            </if>
+            <if test="agentErrorMsg != null">
+                #{agentErrorMsg,jdbcType=VARCHAR},
             </if>
         </trim>
         <include refid="update_duplicate_key_frame"/>
@@ -309,6 +344,23 @@
         </if>
         <if test="gmtCreate != null">
             gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+        </if>
+        <if test="agentStatus != null">
+            agent_status = #{agentStatus,jdbcType=VARCHAR},
+        </if>
+
+        <if test="jvmArgs != null">
+            jvm_args = #{jvmArgs,jdbcType=VARCHAR},
+        </if>
+
+        <if test="jdk != null">
+            jdk = #{jdk,jdbcType=VARCHAR},
+        </if>
+        <if test="agentErrorCode != null">
+            agent_error_code = #{agentErrorCode,jdbcType=VARCHAR},
+        </if>
+        <if test="agentErrorMsg != null">
+            agent_error_msg = #{agentErrorMsg,jdbcType=VARCHAR},
         </if>
         gmt_modify = now()
     </sql>

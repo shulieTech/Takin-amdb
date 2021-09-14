@@ -17,6 +17,7 @@ package io.shulie.amdb.service;
 
 import com.github.pagehelper.PageInfo;
 import io.shulie.amdb.common.Response;
+import io.shulie.amdb.common.dto.instance.AgentStatusStatInfo;
 import io.shulie.amdb.entity.TAmdbAppInstanceStatusDO;
 import io.shulie.amdb.request.query.AppInstanceStatusQueryRequest;
 import io.shulie.amdb.response.instance.AmdbAppInstanceStautsResponse;
@@ -26,7 +27,7 @@ import java.util.List;
 
 public interface AppInstanceStatusService {
 
-    Response insert(TAmdbAppInstanceStatusDO record);
+    Response insertOrUpdate(TAmdbAppInstanceStatusDO record);
 
     Response insertBatch(List<TAmdbAppInstanceStatusDO> tAmdbApps);
 
@@ -62,4 +63,10 @@ public interface AppInstanceStatusService {
     void deleteByParams(AppInstanceStatusQueryRequest param);
 
     void truncateTable();
+
+    /**
+     * 状态统计
+     * @return
+     */
+    AgentStatusStatInfo countStatus(AppInstanceStatusQueryRequest param);
 }

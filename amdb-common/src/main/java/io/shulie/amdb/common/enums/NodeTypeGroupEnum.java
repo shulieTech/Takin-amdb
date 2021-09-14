@@ -96,6 +96,8 @@ public enum NodeTypeGroupEnum {
             case "elasticsearch":
             case "search":
                 return NodeTypeGroupEnum.SEARCH;
+            case "es":
+                return NodeTypeGroupEnum.SEARCH;
             case "redis":
             case "memcache":
             case "cache":

@@ -20,7 +20,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -162,9 +161,11 @@ public class TAmdbAppInstanceDO implements Serializable {
 
     /**
      * 扩展字段
+     *
+     * @see io.shulie.amdb.common.dto.instance.AppInstanceExtDTO
      */
     @Column(name = "`ext`")
-    @ApiModelProperty("扩展字段")
+    @ApiModelProperty("扩展字段 io.shulie.amdb.common.dto.instance.AppInstanceExtDTO")
     private String ext;
 
     private static final long serialVersionUID = 1L;

@@ -20,12 +20,16 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import io.shulie.amdb.common.Response;
+import io.shulie.amdb.entity.TAmdbAgentInfoDO;
 import io.shulie.amdb.entity.TAmdbAppInstanceDO;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.mapper.AppInstanceMapper;
+import io.shulie.amdb.mapper.TAmdbAgentInfoDOMapper;
+import io.shulie.amdb.common.request.agent.AmdbAgentInfoQueryRequest;
 import io.shulie.amdb.request.query.TAmdbAppInstanceBatchAppQueryRequest;
 import io.shulie.amdb.request.query.TAmdbAppInstanceErrorInfoByQueryRequest;
 import io.shulie.amdb.request.query.TAmdbAppInstanceQueryRequest;
+import io.shulie.amdb.common.dto.agent.AgentInfoDTO;
 import io.shulie.amdb.response.instance.AmdbAppInstanceResponse;
 import io.shulie.amdb.response.instance.InstanceErrorInfoResponse;
 import io.shulie.amdb.service.AppInstanceService;
@@ -46,6 +50,8 @@ import java.util.stream.Collectors;
 public class AppInstanceServiceImpl implements AppInstanceService {
     @Resource
     AppInstanceMapper appInstanceMapper;
+    @Resource
+    TAmdbAgentInfoDOMapper tAmdbAgentInfoDOMapper;
 
     @Override
     public Response insert(TAmdbAppInstanceDO record) {
@@ -154,8 +160,8 @@ public class AppInstanceServiceImpl implements AppInstanceService {
         if (!CollectionUtils.isEmpty(param.getAppIds())) {
             criteria.andIn("appId", param.getAppIds());
         }
-        if (!CollectionUtils.isEmpty(param.getAppNames())) {
-            criteria.andIn("appName", param.getAppNames());
+        if (StringUtils.isNotBlank(param.getAppNames())) {
+            criteria.andIn("appName", Arrays.asList(param.getAppNames().split(",")));
         }
         if (!CollectionUtils.isEmpty(param.getAgentIds())) {
             criteria.andIn("agentId", param.getAgentIds());
@@ -231,8 +237,62 @@ public class AppInstanceServiceImpl implements AppInstanceService {
         appInstanceMapper.deleteByExample(example);
     }
 
+    @Override
+    public PageInfo<AgentInfoDTO> queryAgentInfo(AmdbAgentInfoQueryRequest request) {
+        Example example = new Example(TAmdbAgentInfoDO.class);
+        Example.Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(request.getUserAppKey())) {
+            criteria.andEqualTo("userAppKey", request.getUserAppKey());
+        }
+        if (StringUtils.isNotBlank(request.getAppName())) {
+            criteria.andEqualTo("appName", request.getAppName());
+        }
+        if (StringUtils.isNotBlank(request.getAgentStatus())) {
+            criteria.andEqualTo("agentStatus", request.getAgentStatus());
+        }
+
+        if (StringUtils.isNotBlank(request.getAgentId())) {
+            criteria.andLike("agentId", '%' + request.getAgentId() + '%');
+        }
+
+        if (request.getStartDate() != null) {
+            criteria.andGreaterThanOrEqualTo("agentTimestamp", request.getStartDate());
+        }
+
+        if (request.getEndDate() != null) {
+            criteria.andLessThanOrEqualTo("agentTimestamp", request.getEndDate());
+        }
+
+        if (StringUtils.isNotBlank(request.getAgentInfo())) {
+            criteria.andLike("agentInfo", '%' + request.getAgentInfo() + '%');
+        }
+        example.orderBy("agentTimestamp").desc();
+        PageHelper.startPage(request.getCurrentPage(), request.getPageSize());
+        List<TAmdbAgentInfoDO> agentInfoDOS = tAmdbAgentInfoDOMapper.selectByExample(example);
+
+        List<AgentInfoDTO> amdbAppResponseParams = agentInfoDOS.stream()
+                .map(this::agentId).collect(Collectors.toList());
+
+        return PagingUtils.result(agentInfoDOS, amdbAppResponseParams);
+    }
+
+    private AgentInfoDTO agentId(TAmdbAgentInfoDO agentInfoDO) {
+        if (agentInfoDO == null){
+            return null;
+        }
+        AgentInfoDTO agentInfoDTO = new AgentInfoDTO();
+        agentInfoDTO.setAgentId(agentInfoDO.getAgentId());
+        agentInfoDTO.setAppName(agentInfoDO.getAppName());
+        agentInfoDTO.setIp(agentInfoDO.getIp());
+        agentInfoDTO.setPort(agentInfoDO.getPort());
+        agentInfoDTO.setUserAppKey(agentInfoDO.getUserAppKey());
+        agentInfoDTO.setAgentTimestamp(agentInfoDO.getAgentTimestamp());
+        agentInfoDTO.setAgentInfo(agentInfoDO.getAgentInfo());
+        return agentInfoDTO;
+    }
+
     private void insertOrUpdate(TAmdbAppInstanceDO record) {
-        if(record.getId() != null) {
+        if (record.getId() != null) {
             appInstanceMapper.updateByPrimaryKeySelective(record);
         } else {
             appInstanceMapper.insertSelective(record);

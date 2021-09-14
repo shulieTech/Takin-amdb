@@ -74,6 +74,8 @@ config:
     delaySec: 120
   trace:
     limit: 500
+  agentlog:
+    reserveDays: 7
 
 app:
   version: @project.version@

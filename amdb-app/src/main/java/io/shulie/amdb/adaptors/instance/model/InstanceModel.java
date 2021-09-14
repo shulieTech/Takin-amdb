@@ -20,7 +20,7 @@ import io.shulie.amdb.adaptors.AdaptorModel;
 import lombok.Data;
 
 /**
- * 实例模型
+ * agent实例模型
  *
  * @author vincent
  */
@@ -61,5 +61,19 @@ public class InstanceModel implements AdaptorModel {
     private String jdkVersion;
     //扩展字段
     private String ext;
+    //该字段表示探针的配置文件配置信息，是一个hashmap的json字符串
+    private String simulatorFileConfigs;
+    //模块加载结果 ture 加载成功
+    private Boolean moduleLoadResult;
+    //模块加载详情  json map
+    private String moduleLoadDetail;
+    // 探针状态
+    private String agentStatus;
+    // 探针版本
+    private String simulatorVersion;
+    //该字段表示agent配置文件信息，是一个hashmap的json字符串
+    private String agentFileConfigs;
+    //状态判断
+    private String simulatorFileConfigsCheck;
 }
 

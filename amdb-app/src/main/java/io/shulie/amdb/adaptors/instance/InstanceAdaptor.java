@@ -16,6 +16,7 @@
 package io.shulie.amdb.adaptors.instance;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import io.shulie.amdb.adaptors.AdaptorTemplate;
 import io.shulie.amdb.adaptors.base.AbstractDefaultAdaptor;
 import io.shulie.amdb.adaptors.connector.Connector;
@@ -23,17 +24,24 @@ import io.shulie.amdb.adaptors.connector.DataContext;
 import io.shulie.amdb.adaptors.instance.model.InstanceModel;
 import io.shulie.amdb.adaptors.utils.FlagUtil;
 import io.shulie.amdb.common.Response;
+import io.shulie.amdb.common.dto.instance.AppInstanceExtDTO;
+import io.shulie.amdb.common.dto.instance.ModuleLoadDetailDTO;
 import io.shulie.amdb.entity.AppDO;
+import io.shulie.amdb.entity.TAmdbAgentConfigDO;
 import io.shulie.amdb.entity.TAmdbAppInstanceDO;
+import io.shulie.amdb.entity.TAmdbAppInstanceStatusDO;
+import io.shulie.amdb.mapper.TAmdbAgentConfigDOMapper;
+import io.shulie.amdb.request.query.AppInstanceStatusQueryRequest;
 import io.shulie.amdb.service.AppInstanceService;
+import io.shulie.amdb.service.AppInstanceStatusService;
 import io.shulie.amdb.service.AppService;
+import io.shulie.amdb.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import tk.mybatis.mapper.entity.Example;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author vincent
@@ -55,6 +63,8 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
     private AppInstanceService appInstanceService;
 
     private AdaptorTemplate adaptorTemplate;
+    private AppInstanceStatusService appInstanceStatusService;
+    private TAmdbAgentConfigDOMapper agentConfigDOMapper;
 
     public InstanceAdaptor() {
 
@@ -95,6 +105,8 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         String oldInstanceKey = INSTANCEID_CACHE.get(dataContext.getPath());
         if (instanceModel != null) {
             updateAppAndInstance(appName, instanceModel, oldInstanceKey);
+            //配置DO更新
+            updateAgentConfig(appName, instanceModel);
             String newInstanceKey = appName + "#" + instanceModel.getAddress() + "#" + instanceModel.getPid();
             INSTANCEID_CACHE.put(dataContext.getPath(), newInstanceKey);
         } else {
@@ -102,6 +114,9 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
             if (oldInstanceKey != null) {
                 instanceOffline(oldInstanceKey);
                 //instanceIdCache.remove(dataContext.getPath());
+
+                String agentId = path[1];
+                removeConfig(appName, agentId);
             }
         }
         return null;
@@ -146,6 +161,11 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
             amdbAppInstance = getTamdAppInstanceUpdateModelByInstanceModel(appDO, instanceModel, appInstanceDO, curr);
             appInstanceService.update(amdbAppInstance);
         }
+
+        // 处理agent状态映射关系，与 探针 status 处理一致
+        dealWithProbeStatusModel(instanceModel);
+        TAmdbAppInstanceStatusDO instanceStatus = createInstanceStatus(appName, instanceModel);
+        appInstanceStatusService.insertOrUpdate(instanceStatus);
     }
 
     /**
@@ -211,7 +231,6 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         amdbAppInstance.setAgentVersion(instanceModel.getAgentVersion());
         amdbAppInstance.setMd5(instanceModel.getMd5());
         amdbAppInstance.setAgentLanguage(instanceModel.getAgentLanguage());
-        Map<String, Object> ext = new HashMap<String, Object>();
 //        if (instanceModel.getErrorCode() != null && instanceModel.getErrorCode().trim().length() > 0) {
 //            Map<String, Map<String, Object>> errorMsgInfos = new HashMap<String, Map<String, Object>>();
 //            Map<String, Object> errorMsgInfo = new HashMap<String, Object>();
@@ -222,11 +241,18 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
 //        } else {
 //            ext.put("errorMsgInfos", "{}");
 //        }
-        ext.put("errorMsgInfos", "{}");
-        ext.put("gcType", instanceModel.getGcType());
-        ext.put("host", instanceModel.getHost());
-        ext.put("startTime", instanceModel.getStartTime());
-        ext.put("jdkVersion", instanceModel.getJdkVersion());
+        AppInstanceExtDTO ext = new AppInstanceExtDTO();
+        Map<String, String> simulatorConfig = JSON.parseObject(instanceModel.getSimulatorFileConfigs(), new TypeReference<Map<String, String>>() {
+        });
+        ext.setSimulatorConfigs(simulatorConfig);
+        ext.setModuleLoadResult(instanceModel.getModuleLoadResult());
+        List<ModuleLoadDetailDTO> moduleLoadDetailDTOS = JSON.parseArray(instanceModel.getModuleLoadDetail(), ModuleLoadDetailDTO.class);
+        ext.setModuleLoadDetail(moduleLoadDetailDTOS);
+        ext.setErrorMsgInfos("{}");
+        ext.setGcType(instanceModel.getGcType());
+        ext.setHost(instanceModel.getHost());
+        ext.setStartTime(instanceModel.getStartTime());
+        ext.setJdkVersion(instanceModel.getJdkVersion());
         amdbAppInstance.setHostname(instanceModel.getHost());
         amdbAppInstance.setExt(JSON.toJSONString(ext));
         amdbAppInstance.setFlag(0);
@@ -264,12 +290,18 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         oldAmdbAppInstance.setMd5(instanceModel.getMd5());
         oldAmdbAppInstance.setAgentLanguage(instanceModel.getAgentLanguage());
         oldAmdbAppInstance.setHostname(instanceModel.getHost());
-        Map<String, Object> ext = JSON.parseObject(oldAmdbAppInstance.getExt());
-        ext.put("errorMsgInfos", "{}");
-        ext.put("gcType", instanceModel.getGcType());
-        ext.put("host", instanceModel.getHost());
-        ext.put("startTime", instanceModel.getStartTime());
-        ext.put("jdkVersion", instanceModel.getJdkVersion());
+        AppInstanceExtDTO ext = new AppInstanceExtDTO();
+        Map<String, String> simulatorConfig = JSON.parseObject(instanceModel.getSimulatorFileConfigs(), new TypeReference<Map<String, String>>() {
+        });
+        ext.setSimulatorConfigs(simulatorConfig);
+        ext.setModuleLoadResult(instanceModel.getModuleLoadResult());
+        List<ModuleLoadDetailDTO> moduleLoadDetailDTOS = JSON.parseArray(instanceModel.getModuleLoadDetail(), ModuleLoadDetailDTO.class);
+        ext.setModuleLoadDetail(moduleLoadDetailDTOS);
+        ext.setErrorMsgInfos("{}");
+        ext.setGcType(instanceModel.getGcType());
+        ext.setHost(instanceModel.getHost());
+        ext.setStartTime(instanceModel.getStartTime());
+        ext.setJdkVersion(instanceModel.getJdkVersion());
         oldAmdbAppInstance.setExt(JSON.toJSONString(ext));
         // 改为在线状态
         oldAmdbAppInstance.setFlag(FlagUtil.setFlag(oldAmdbAppInstance.getFlag(), 1, true));
@@ -303,6 +335,12 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         }
         amdbAppInstanceDO.setFlag(FlagUtil.setFlag(amdbAppInstanceDO.getFlag(), 1, false));
         appInstanceService.update(amdbAppInstanceDO);
+
+        AppInstanceStatusQueryRequest request = new AppInstanceStatusQueryRequest();
+        request.setAppName(selectParam.getAppName());
+        request.setIp(selectParam.getIp());
+        request.setPid(selectParam.getPid());
+        appInstanceStatusService.deleteByParams(request);
     }
 
 
@@ -323,5 +361,131 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         }
         this.appService = (AppService) config.get("appService");
         this.appInstanceService = (AppInstanceService) config.get("appInstanceService");
+        //todo check
+        this.appInstanceStatusService = (AppInstanceStatusService) config.get("appInstanceStatusService");
+        this.agentConfigDOMapper = (TAmdbAgentConfigDOMapper) config.get("agentConfigDOMapper");
+
+    }
+
+    private void dealWithProbeStatusModel(InstanceModel instanceModel) {
+        //探针状态转换
+        if (instanceModel != null) {
+            if (instanceModel.getSimulatorVersion() == null) {
+                log.info("探针版本为null");
+                instanceModel.setSimulatorVersion("未知版本");
+            }
+            switch (StringUtil.parseStr(instanceModel.getAgentStatus())) {
+                case "INSTALLED":
+                    instanceModel.setAgentStatus("0");
+                    break;
+                case "UNINSTALL":
+                    instanceModel.setAgentStatus("1");
+                    break;
+                case "INSTALLING":
+                    instanceModel.setAgentStatus("2");
+                    break;
+                case "UNINSTALLING":
+                    instanceModel.setAgentStatus("3");
+                    break;
+                case "INSTALL_FAILED":
+                    instanceModel.setAgentStatus("4");
+                    break;
+                case "UNINSTALL_FAILED":
+                    instanceModel.setAgentStatus("5");
+                    break;
+                default:
+                    log.info("agent未知状态:{}", StringUtil.parseStr(instanceModel.getAgentStatus()));
+                    instanceModel.setAgentStatus("99");
+            }
+        }
+    }
+
+    // 这里应该设置 探针 的状态、错误码、错误信息
+    private TAmdbAppInstanceStatusDO createInstanceStatus(String appName, InstanceModel instanceModel) {
+        TAmdbAppInstanceStatusDO instanceStatus = new TAmdbAppInstanceStatusDO();
+        instanceStatus.setAppName(appName);
+        instanceStatus.setIp(instanceModel.getAddress());
+        instanceStatus.setAgentId(instanceModel.getAgentId());
+        instanceStatus.setPid(instanceModel.getPid());
+        instanceStatus.setAgentErrorCode(instanceModel.getErrorCode());
+        instanceStatus.setAgentErrorMsg(instanceModel.getErrorMsg());
+        instanceStatus.setAgentStatus(instanceModel.getAgentStatus());
+        return instanceStatus;
+    }
+
+    private void updateAgentConfig(String appName, InstanceModel instanceModel) {
+        removeConfig(appName, instanceModel.getAgentId());
+
+        List<TAmdbAgentConfigDO> agentConfigs = buildAgentConfig(appName, instanceModel);
+
+        if (agentConfigs != null && !agentConfigs.isEmpty()) {
+            saveConfig(agentConfigs);
+        }
+    }
+
+    private void saveConfig(List<TAmdbAgentConfigDO> agentConfigs) {
+        agentConfigDOMapper.batchInsert(agentConfigs);
+    }
+
+    private void removeConfig(String appName, String agentId) {
+        Objects.requireNonNull(appName);
+        Objects.requireNonNull(agentId);
+        Example example = new Example(TAmdbAppInstanceStatusDO.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("appName", appName);
+        criteria.andEqualTo("agentId", agentId);
+        agentConfigDOMapper.deleteByExample(example);
+    }
+
+    private List<TAmdbAgentConfigDO> buildAgentConfig(String appName, InstanceModel instanceModel) {
+        String agentAndSimulatorFileConfigsCheck = instanceModel.getSimulatorFileConfigsCheck();
+        if (StringUtils.isBlank(agentAndSimulatorFileConfigsCheck)) {
+            return null;
+        }
+        // 配置生效状态
+        Map<String, String> configCheck = JSON.parseObject(agentAndSimulatorFileConfigsCheck, new TypeReference<Map<String, String>>() {
+        });
+        List<TAmdbAgentConfigDO> ret = new ArrayList<>();
+        String agentId = instanceModel.getAgentId();
+
+        // agent配置项
+        String agentConfig = instanceModel.getAgentFileConfigs();
+        if (StringUtils.isNotBlank(agentConfig)) {
+            Map<String, String> configKeyValues = JSON.parseObject(agentConfig, new TypeReference<Map<String, String>>() {
+            });
+            configKeyValues.forEach((configKey, configValue) -> {
+                TAmdbAgentConfigDO configDO = new TAmdbAgentConfigDO();
+                configDO.setAgentId(agentId);
+                configDO.setAppName(appName);
+                configDO.setConfigKey(configKey);
+                configDO.setConfigValue(configValue);
+                String status = configCheck.get(configKey);
+                if (status == null) {
+                    status = configCheck.get("status");
+                }
+                configDO.setStatus(Boolean.parseBoolean(status));
+                ret.add(configDO);
+            });
+        }
+        // 探针配置项
+        String simulatorConfigs = instanceModel.getSimulatorFileConfigs();
+        if (StringUtils.isNotBlank(simulatorConfigs)) {
+            Map<String, String> simulatorConfigsKeyValues = JSON.parseObject(simulatorConfigs, new TypeReference<Map<String, String>>() {
+            });
+            simulatorConfigsKeyValues.forEach((configKey, configValue) -> {
+                TAmdbAgentConfigDO configDO = new TAmdbAgentConfigDO();
+                configDO.setAgentId(agentId);
+                configDO.setAppName(appName);
+                configDO.setConfigKey(configKey);
+                configDO.setConfigValue(configValue);
+                String status = configCheck.get(configKey);
+                if (status == null) {
+                    status = configCheck.get("status");
+                }
+                configDO.setStatus(Boolean.parseBoolean(status));
+                ret.add(configDO);
+            });
+        }
+        return ret;
     }
 }

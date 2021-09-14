@@ -19,6 +19,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import io.shulie.amdb.common.Response;
+import io.shulie.amdb.common.dto.instance.AgentStatusStatInfo;
 import io.shulie.amdb.entity.TAmdbAppInstanceStatusDO;
 import io.shulie.amdb.mapper.AppInstanceStatusMapper;
 import io.shulie.amdb.request.query.AppInstanceStatusQueryRequest;
@@ -28,12 +29,15 @@ import io.shulie.amdb.service.AppInstanceStatusService;
 import io.shulie.amdb.utils.PagingUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.entity.Example.Criteria;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,7 +51,7 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
     AppInstanceStatusMapper appInstanceStatusMapper;
 
     @Override
-    public Response insert(TAmdbAppInstanceStatusDO record) {
+    public Response insertOrUpdate(TAmdbAppInstanceStatusDO record) {
         try {
             appInstanceStatusMapper.insertSelective(record);
             return Response.success(record.getId());
@@ -137,12 +141,21 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
             criteria.andEqualTo("probeStatus", param.getProbeStatus());
         }
 
+        if (StringUtils.isNotBlank(param.getAgentStatus())) {
+            criteria.andEqualTo("agentStatus", param.getAgentStatus());
+        }
+
+        Long minUpdateDate = param.getMinUpdateDate();
+        if (minUpdateDate != null) {
+            criteria.andGreaterThan("gmtModify", DateFormatUtils.format(new Date(minUpdateDate), "yyyy/MM/dd HH:mm:ss"));
+        }
+
         int page = param.getCurrentPage();
         int pageSize = param.getPageSize();
         PageHelper.startPage(page, pageSize);
 
         List<TAmdbAppInstanceStatusDO> instanceStatusDos = appInstanceStatusMapper.selectByExample(example);
-        List<AmdbAppInstanceStautsResponse> amdbAppResponseParams = instanceStatusDos.stream().map(instanceStatusDO -> new AmdbAppInstanceStautsResponse(instanceStatusDO)).collect(Collectors.toList());
+        List<AmdbAppInstanceStautsResponse> amdbAppResponseParams = instanceStatusDos.stream().map(AmdbAppInstanceStautsResponse::new).collect(Collectors.toList());
         return PagingUtils.result(instanceStatusDos, amdbAppResponseParams);
     }
 
@@ -205,5 +218,42 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
     public void truncateTable() {
         appInstanceStatusMapper.truncateTable();
         log.warn("表t_amdb_app_instance_status已truncate");
+    }
+
+    @Override
+    public AgentStatusStatInfo countStatus(AppInstanceStatusQueryRequest param) {
+        AgentStatusStatInfo ret = new AgentStatusStatInfo();
+
+        Example example = new Example(TAmdbAppInstanceStatusDO.class);
+        Criteria criteria = createInstanceStatusCriteria(example, param);
+
+        int i = appInstanceStatusMapper.selectCountByExample(example);
+        ret.setAgentCount(i);
+        ret.setProbeCount(i);
+
+        criteria.andEqualTo("agentStatus", "4");
+        int agentFailCount = appInstanceStatusMapper.selectCountByExample(example);
+        ret.setAgentFailCount(agentFailCount);
+
+        example.clear();
+        criteria = createInstanceStatusCriteria(example, param);
+        criteria.andEqualTo("probeStatus", "4");
+        int probeFailCount = appInstanceStatusMapper.selectCountByExample(example);
+        ret.setProbeFailCount(probeFailCount);
+
+        return ret;
+    }
+
+    private Criteria createInstanceStatusCriteria(Example example, AppInstanceStatusQueryRequest param) {
+        Criteria criteria = example.createCriteria();
+        String appNames = param.getAppNames();
+        if (StringUtils.isNotBlank(appNames)) {
+            criteria.andIn("appName", Arrays.asList(appNames.split(",")));
+        }
+        String appName = param.getAppName();
+        if (StringUtils.isNotBlank(appName)) {
+            criteria.andEqualTo("appName", appName);
+        }
+        return criteria;
     }
 }

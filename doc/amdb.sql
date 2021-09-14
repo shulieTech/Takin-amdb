@@ -11,6 +11,21 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ */
+
+/*
+ * Copyright 2021 Shulie Technology, Co.Ltd
+ * Email: shulie@shulie.io
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */ ------------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -686,3 +701,38 @@ CREATE TABLE IF NOT EXISTS `t_trace_all` (
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+/* 2021-8-31  */
+alter table t_amdb_app_instance add index idx_app_id_flag(app_id,flag)
+
+/* 2021-9-14  */
+CREATE TABLE `t_amdb_agent_config` (
+                                       `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT,
+                                       `app_name` varchar(512) DEFAULT NULL COMMENT '应用名称',
+                                       `agent_id` varchar(64) DEFAULT NULL COMMENT 'agent id',
+                                       `config_key` varchar(128) DEFAULT NULL COMMENT '配置key',
+                                       `config_value` varchar(128) DEFAULT NULL COMMENT '配置value',
+                                       `status` tinyint(1) NOT NULL COMMENT '配置校验结果 ture 校验成功 false校验失败',
+                                       `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                       PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='agent动态配置表';
+
+CREATE TABLE `t_amdb_agent_info` (
+                                     `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT,
+                                     `agent_id` varchar(64) DEFAULT NULL COMMENT 'agent Id',
+                                     `app_name` varchar(512) DEFAULT NULL COMMENT '应用名称',
+                                     `ip` varchar(64) DEFAULT NULL COMMENT 'agentip',
+                                     `port` int(11) DEFAULT NULL COMMENT 'agent端口',
+                                     `user_app_key` varchar(64) DEFAULT NULL,
+                                     `agent_info` text COMMENT 'agent日志',
+                                     `agent_timestamp` bigint(20) NOT NULL COMMENT 'agent日志时间',
+                                     `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                     PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COMMENT='agent错误日志表';
+
+ALTER TABLE `t_amdb_app_instance_status` ADD COLUMN `agent_status` varchar(32) DEFAULT NULL COMMENT 'agent 状态';
+ALTER TABLE `t_amdb_app_instance_status` ADD COLUMN `jdk` varchar(32) DEFAULT NULL COMMENT 'jdk版本号';
+ALTER TABLE `t_amdb_app_instance_status` ADD COLUMN `jvm_args` text DEFAULT NULL COMMENT 'jvm参数';
+ALTER TABLE `t_amdb_app_instance_status` ADD COLUMN `agent_error_msg` varchar(4096)  DEFAULT NULL COMMENT 'agent异常日志';
+ALTER TABLE `t_amdb_app_instance_status` ADD COLUMN `agent_error_code` varchar(32) DEFAULT NULL COMMENT 'agnet异常code';gi
