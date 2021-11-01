@@ -244,6 +244,7 @@ public class MetricsServiceImpl implements MetricsService {
 
         //去重(因为influxDB的group by支持不够),计算指标,计算业务活动入口
         String sql;
+        Set<String> allActiveList = new HashSet<>();
         for (TraceMetrics temp : resultList) {
             MetricsDetailResponse response = new MetricsDetailResponse();
             response.setAppName(temp.getAppName());
@@ -258,6 +259,7 @@ public class MetricsServiceImpl implements MetricsService {
                 List<String> value = this.cache2.getIfPresent(key);
                 if (value != null) {
                     response.setActiveList(value);
+                    allActiveList.addAll(value);
                 }
                 //计算指标
                 sql = "select sum(totalCount) as requestCount,sum(totalCount)/" + diffInMillis + " as tps,sum(successCount)/sum(totalCount) as successRatio,sum(totalRt)/sum(totalCount) as responseConsuming from trace_metrics\n" +
@@ -289,7 +291,9 @@ public class MetricsServiceImpl implements MetricsService {
         if (responseSize <= current * pageSize) {
             return new Pair<>(new ArrayList<>(0), responseSize);
         }
-        return new Pair<>(sortAndPaging(resultList2, request), responseSize);
+        List<MetricsDetailResponse> currentPageList = sortAndPaging(resultList2, request);
+        currentPageList.get(0).setAllActiveList(allActiveList);
+        return new Pair<>(currentPageList, responseSize);
     }
 
     //根据业务活动找服务列表,linkId    /   appname+server+method

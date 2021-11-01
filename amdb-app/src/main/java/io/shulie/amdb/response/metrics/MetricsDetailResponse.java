@@ -20,6 +20,7 @@ import lombok.Data;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 public class MetricsDetailResponse implements Serializable {
@@ -40,6 +41,16 @@ public class MetricsDetailResponse implements Serializable {
 
     //关联业务活动
     List<String> activeList;
+
+    Set<String> allActiveList;
+
+    public Set<String> getAllActiveList() {
+        return allActiveList;
+    }
+
+    public void setAllActiveList(Set<String> allActiveList) {
+        this.allActiveList = allActiveList;
+    }
 
     public String getAppName() {
         return appName;
