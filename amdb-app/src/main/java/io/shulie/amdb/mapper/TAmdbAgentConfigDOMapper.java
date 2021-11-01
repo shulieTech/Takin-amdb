@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.shulie.amdb.mapper;
 
 import io.shulie.amdb.entity.TAmdbAgentConfigDO;
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
@@ -33,8 +33,11 @@ public interface TAmdbAgentConfigDOMapper extends Mapper<TAmdbAgentConfigDO> {
             "</foreach>",
             "</script>"
     })
-    void batchInsert(@Param(value="agentConfigs") List<TAmdbAgentConfigDO> agentConfigs);
+    void batchInsert(@Param(value = "agentConfigs") List<TAmdbAgentConfigDO> agentConfigs);
 
     @Update("truncate table t_amdb_agent_config")
     void truncateTable();
+
+    @Delete("delete from t_amdb_agent_config where 1=1")
+    void deleteAll();
 }

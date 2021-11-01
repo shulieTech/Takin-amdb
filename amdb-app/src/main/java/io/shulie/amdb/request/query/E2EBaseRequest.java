@@ -45,4 +45,9 @@ public class E2EBaseRequest {
      */
     @ApiModelProperty("RPC类型")
     String rpcType;
+    /**
+     * 边ID
+     */
+    @ApiModelProperty("链路图唯一边ID")
+    String edgeId;
 }

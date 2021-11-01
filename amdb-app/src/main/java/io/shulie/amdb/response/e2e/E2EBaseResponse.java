@@ -40,4 +40,7 @@ public class E2EBaseResponse {
      */
     @ApiModelProperty("RPC类型")
     String rpcType;
+
+    @ApiModelProperty("链路图唯一边ID")
+    String edgeId;
 }

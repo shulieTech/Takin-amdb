@@ -19,6 +19,8 @@ import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
+import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
+import io.shulie.surge.data.deploy.pradar.link.model.TTrackClickhouseModel;
 
 import java.util.List;
 import java.util.Map;
@@ -29,8 +31,11 @@ public interface TraceService {
 
     Response<List<EntryTraceInfoDTO>> getEntryTraceListByTaskId(EntryTraceQueryParam param);
 
-    List<RpcBased> getTraceDetail(String traceId);
+    List<RpcBased> getTraceDetail(TraceStackQueryParam param);
 
-    Response<Map<String,List<RpcBased>>> getTraceInfo(EntryTraceQueryParam param);
+    Response<Map<String, List<RpcBased>>> getTraceInfo(EntryTraceQueryParam param);
 
+    List<Map<String, Object>> queryInterfaceParam(TraceStackQueryParam param);
+
+    Response<List<TTrackClickhouseModel>> getAllTraceList(EntryTraceQueryParam param);
 }

@@ -79,6 +79,7 @@ public enum NodeTypeGroupEnum {
             case "activemq":
             case "ibmmq":
             case "rabbitmq":
+            case "sto-event":
                 return NodeTypeGroupEnum.MQ;
             case "hbase":
             case "aliyun-hbase":

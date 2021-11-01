@@ -19,19 +19,22 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.entity.AppDO;
+import io.shulie.amdb.entity.AppShadowBizTableDO;
+import io.shulie.amdb.entity.AppShadowDatabaseDO;
 import io.shulie.amdb.entity.TAmdbAppInstanceDO;
 import io.shulie.amdb.mapper.AppInstanceMapper;
 import io.shulie.amdb.mapper.AppMapper;
+import io.shulie.amdb.mapper.AppShadowDatabaseMapper;
+import io.shulie.amdb.request.query.AppShadowBizTableRequest;
+import io.shulie.amdb.request.query.AppShadowDatabaseRequest;
 import io.shulie.amdb.request.query.TAmdbAppBatchAppQueryRequest;
 import io.shulie.amdb.response.app.AmdbAppResponse;
 import io.shulie.amdb.response.app.model.InstanceInfo;
-import io.shulie.amdb.service.AppInstanceService;
 import io.shulie.amdb.service.AppService;
 import io.shulie.amdb.utils.PagingUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -49,8 +52,9 @@ public class AppServiceImpl implements AppService {
     private AppMapper appMapper;
     @Resource
     AppInstanceMapper appInstanceMapper;
-    @Autowired
-    private AppInstanceService appInstanceService;
+
+    @Resource
+    private AppShadowDatabaseMapper appShadowDatabaseMapper;
 
     @Override
     public Response insert(AppDO record) {
@@ -160,5 +164,22 @@ public class AppServiceImpl implements AppService {
         String sql = "select app_name as appName from t_amdb_app where app_type in ('APP','virtual')";
         List<LinkedHashMap> result = appMapper.selectBySql(sql);
         return result.stream().map(map -> ObjectUtils.toString(map.get("appName"))).collect(Collectors.toList());
+    }
+
+    @Override
+    public PageInfo<AppShadowDatabaseDO> selectShadowDatabase(AppShadowDatabaseRequest request) {
+        Example example = new Example(AppShadowDatabaseDO.class);
+        Example.Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("appName", request.getAppName());
+        if (StringUtils.isNotBlank(request.getDataSource())) {
+            criteria.andEqualTo("dataSource", request.getDataSource());
+        }
+        PageHelper.startPage(request.getCurrentPage(), request.getPageSize());
+        return PageInfo.of(appShadowDatabaseMapper.selectByExample(example));
+    }
+
+    @Override
+    public List<AppShadowBizTableDO> selectShadowBizTables(AppShadowBizTableRequest request) {
+        return appShadowDatabaseMapper.selectShadowBizTables(request);
     }
 }

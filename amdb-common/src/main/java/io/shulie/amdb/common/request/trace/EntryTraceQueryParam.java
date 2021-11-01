@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -58,5 +59,7 @@ public class EntryTraceQueryParam {
     long maxCost;
     @ApiModelProperty("调用来源(tro/e2e)")
     String querySource;
+    @ApiModelProperty("租户下应用列表")
+    List<String> appNames;
 
 }

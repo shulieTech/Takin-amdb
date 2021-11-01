@@ -39,4 +39,6 @@ public interface AppInstanceStatusMapper extends Mapper<TAmdbAppInstanceStatusDO
 
     void truncateTable();
 
+    void deleteAll();
+
 }

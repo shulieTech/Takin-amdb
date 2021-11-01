@@ -104,6 +104,10 @@ public enum NodeTypeEnum {
      */
     RABBITMQ("RABBITMQ"),
     /**
+     * STO-EVENT
+     */
+    STOEVENT("STOEVENT"),
+    /**
      * OTHER
      */
     OTHER("OTHER"),
@@ -161,6 +165,8 @@ public enum NodeTypeEnum {
                 return NodeTypeEnum.IBMMQ;
             case "rabbitmq":
                 return NodeTypeEnum.RABBITMQ;
+            case "sto-event":
+                return NodeTypeEnum.STOEVENT;
             case "hbase":
             case "aliyun-hbase":
                 return NodeTypeEnum.HBASE;

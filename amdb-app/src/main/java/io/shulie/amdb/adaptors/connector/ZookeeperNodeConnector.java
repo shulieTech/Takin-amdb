@@ -25,6 +25,7 @@ import io.shulie.surge.data.common.zk.ZkClientSpec;
 import io.shulie.surge.data.common.zk.ZkNodeCache;
 import io.shulie.surge.data.runtime.common.zk.NetflixCuratorZkClientFactory;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,19 +104,21 @@ public class ZookeeperNodeConnector implements Connector {
                             String body = Bytes.toString(zkClient.getData(path));
                             Object object = JSON.parseObject(body, paramsClazz);
                             dataContext.setModel(object);
-                        } catch (Exception e) {
+                            processor.process(dataContext);
+                        } catch (KeeperException.NoNodeException e) {
+                            logger.warn("节点下线:{}", path);
+                            //执行删除表中历史节点数据操作,必须在shutdownnow方法之前
+                            processor.process(dataContext);
                             // 节点删除时执行
                             // 通知adaptor节点已删除，通过childPath+model同时为NULL即可确认
                             //logger.error("解析ZK数据失败，path:{}，errorInfo:{}", path, e.getMessage());
                             if (nodeCache.get(path) != null) {
                                 nodeCache.get(path).stop();
                                 nodeCache.remove(path);
+                                executor.shutdownNow();
                             }
-                        }
-                        try {
-                            processor.process(dataContext);
                         } catch (Exception e) {
-                            logger.error("processor处理失败，path:{}，dataContext:{}", path, dataContext, e);
+                            logger.error("processor处理发生异常:{},异常堆栈:{}，path:{}，dataContext:{}", e, e.getStackTrace(), path, dataContext);
                         }
                     }
                 }

@@ -21,20 +21,44 @@ import lombok.Data;
 
 @Data
 @ApiModel("节点指标信息响应")
-public class E2ENodeMetricsResponse extends E2EBaseResponse{
+public class E2ENodeMetricsResponse extends E2EBaseResponse {
     /**
      * 成功率
      */
     @ApiModelProperty("成功率")
     double successRate;
+
     /**
-     * 失败率
+     * 成功次数
      */
-    @ApiModelProperty("失败率")
+    @ApiModelProperty("成功次数")
+    double successCount;
+
+    /**
+     * 总次数
+     */
+    @ApiModelProperty("总次数")
+    double totalCount;
+
+    /**
+     * 平均RT
+     */
+    @ApiModelProperty("平均RT")
     double rt;
     /**
      * QPS
      */
-    @ApiModelProperty("QPS")
+    @ApiModelProperty("平均QPS/TPS")
     double qps;
+    /**
+     * maxRt
+     */
+    @ApiModelProperty("最大RT")
+    double maxRt;
+
+    @ApiModelProperty("SQL语句")
+    String sqlStatement;
+
+    @ApiModelProperty("耗时最长的traceId")
+    String traceId;
 }

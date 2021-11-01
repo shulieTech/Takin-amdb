@@ -32,9 +32,13 @@ public class MetricsQueryRequest {
      */
     List<LinkedHashMap<String, String>> tagMapList;
     /**
-     * filelds
+     * aggrerate filelds
      */
     Map<String, String> fieldMap;
+    /**
+     * non-aggrerate filelds
+     */
+    Map<String, String> nonAggrerateFieldMap;
     /**
      * Group
      */

@@ -27,7 +27,7 @@ public class ExitQueryParam extends PagingRequest {
     String queryTye;
     @ApiModelProperty("应用名称(查询入口时传入服务端应用,查询出口时传入客户端应用名)")
     String appName;
-    @ApiModelProperty("客户端应用名称")
+    @ApiModelProperty("客户端应用名称,针对入口(服务端日志)")
     String upAppName;
     @ApiModelProperty("调用类型")
     String rpcType;
@@ -39,4 +39,14 @@ public class ExitQueryParam extends PagingRequest {
     String middlewareName;
     @ApiModelProperty(value = "需返回的字段列表", required = true)
     String fieldNames;
+    @ApiModelProperty("默认白名单标识,不传或者传入false查询正常出口,true为查询默认白名单")
+    boolean defaultWhiteFlag;
+
+    public boolean isDefaultWhiteFlag() {
+        return defaultWhiteFlag;
+    }
+
+    public void setDefaultWhiteFlag(boolean defaultWhiteFlag) {
+        this.defaultWhiteFlag = defaultWhiteFlag;
+    }
 }

@@ -22,10 +22,12 @@ import io.shulie.amdb.common.dto.link.topology.LinkTopologyDTO;
 import io.shulie.amdb.common.request.link.ExitQueryParam;
 import io.shulie.amdb.common.request.link.ServiceQueryParam;
 import io.shulie.amdb.common.request.link.TopologyQueryParam;
+import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
 import io.shulie.amdb.dto.LinkDTO;
 import io.shulie.amdb.request.LinkRequest;
 import io.shulie.amdb.utils.PageInfo;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -115,4 +117,6 @@ public interface LinkService {
      * @return
      */
     Response<LinkTopologyDTO> getLinkTopology(TopologyQueryParam param);
+
+    Response<String> calculateTopology(TraceStackQueryParam param) throws IOException;
 }

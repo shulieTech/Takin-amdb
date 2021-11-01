@@ -43,6 +43,8 @@ public enum AmdbExceptionEnums {
     APP_INSTANCE_UPDATE("AMDB_0202_U00001","应用实例更新异常"),
     APP_INSTANCE_INFO_SELECT("AMDB_0202_U00002","应用实例信息查询异常"),
     APP_INSTANCE_STATUS_SELECT("AMDB_0203_U00000","应用状态查询异常"),
+    APP_SHADOW_DATABASE_SELECT("AMDB_0204_U00000","应用影子库表查询异常"),
+    APP_SHADOW_BIZ_TABLE_SELECT("AMDB_0204_U00001","应用业务表查询异常"),
 
 
     /**
@@ -64,16 +66,26 @@ public enum AmdbExceptionEnums {
     TRACE_QUERY("AMDB_0$00_U0000","trace数据查询异常"),
     TRACE_DETAIL_QUERY("AMDB_0400_U0001","trace详情查询异常"),
     TRACE_EMPTY_SELECT_FILED("AMDB_0400_U0003", "trace查询失败,参数错误，未指定查询结果字段列表"),
+    TRACE_QUERY_WARN("AMDB_0400_U0004", "警告: %s"),
 
     /**
      * E2E业务异常 AMDB_0500_UXXXX
      */
-    E2E_NODE_QUERY("AMDB_0500_U0000","E2E节点数据查询异常"),
-    E2E_NODE_UPDATE("AMDB_0500_U0001","E2E节点数据更新异常"),
-    E2E_ASSERT_QUERY("AMDB_0500_U0002","E2E断言数据查询异常"),
-    E2E_ASSERT_UPDATE("AMDB_0500_U0003","E2E断言数据跟更新异常"),
-    ;
+    E2E_NODE_QUERY("AMDB_0500_U0000", "E2E节点数据查询异常"),
+    E2E_NODE_UPDATE("AMDB_0500_U0001", "E2E节点数据更新异常"),
+    E2E_ASSERT_QUERY("AMDB_0500_U0002", "E2E断言数据查询异常"),
+    E2E_ASSERT_UPDATE("AMDB_0500_U0003", "E2E断言数据跟更新异常"),
 
+    /**
+     * trace_metrics指标查询异常 AMDB_0600_UXXXX
+     */
+    METRICS_NODE_QUERY("AMDB_0600_U0000", "METRICS指标数据查询异常"),
+
+    /**
+     * 应用自定义探针配置查询异常 AMDB_0700_UXXXX
+     */
+    TRODATA_NODE_QUERY("AMDB_0700_U0000", "应用自定义探针配置查询异常"),
+    ;
 
     private final String code;
     private final String msg;

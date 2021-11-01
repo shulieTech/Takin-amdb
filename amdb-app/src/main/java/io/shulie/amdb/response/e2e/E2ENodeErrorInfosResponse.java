@@ -15,16 +15,16 @@
 
 package io.shulie.amdb.response.e2e;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @ApiModel("节点异常信息响应")
-public class E2ENodeErrorInfosResponse extends E2EBaseResponse{
+public class E2ENodeErrorInfosResponse extends E2EBaseResponse {
     /**
      * E2E-请求数
      */
@@ -69,5 +69,10 @@ public class E2ENodeErrorInfosResponse extends E2EBaseResponse{
          */
         @ApiModelProperty("错误类型")
         String errorType;
+        /**
+         * 最近一次命中断言 traceId
+         */
+        @ApiModelProperty("traceId")
+        String traceId;
     }
 }

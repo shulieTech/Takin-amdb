@@ -42,6 +42,7 @@ public class E2ENodeMetricsRequest extends E2EBaseRequest {
                 ", serviceName='" + serviceName + '\'' +
                 ", methodName='" + methodName + '\'' +
                 ", rpcType='" + rpcType + '\'' +
+                ", edgeId='" + edgeId + '\'' +
                 ", startTime=" + startTime +
                 ", endTime=" + endTime +
                 '}';

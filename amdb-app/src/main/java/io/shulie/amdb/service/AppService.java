@@ -18,6 +18,10 @@ package io.shulie.amdb.service;
 import com.github.pagehelper.PageInfo;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.entity.AppDO;
+import io.shulie.amdb.entity.AppShadowBizTableDO;
+import io.shulie.amdb.entity.AppShadowDatabaseDO;
+import io.shulie.amdb.request.query.AppShadowBizTableRequest;
+import io.shulie.amdb.request.query.AppShadowDatabaseRequest;
 import io.shulie.amdb.request.query.TAmdbAppBatchAppQueryRequest;
 import io.shulie.amdb.response.app.AmdbAppResponse;
 
@@ -45,4 +49,8 @@ public interface AppService {
     PageInfo<AmdbAppResponse> selectByBatchAppParams(TAmdbAppBatchAppQueryRequest param);
 
     List<String> selectAllAppName(TAmdbAppBatchAppQueryRequest param);
+
+    PageInfo<AppShadowDatabaseDO> selectShadowDatabase(AppShadowDatabaseRequest request);
+
+    List<AppShadowBizTableDO> selectShadowBizTables(AppShadowBizTableRequest request);
 }

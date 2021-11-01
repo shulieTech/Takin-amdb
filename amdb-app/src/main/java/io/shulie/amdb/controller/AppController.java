@@ -17,15 +17,21 @@ package io.shulie.amdb.controller;
 
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.entity.AppDO;
+import io.shulie.amdb.entity.AppShadowBizTableDO;
+import io.shulie.amdb.entity.AppShadowDatabaseDO;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
+import io.shulie.amdb.request.query.AppShadowBizTableRequest;
+import io.shulie.amdb.request.query.AppShadowDatabaseRequest;
 import io.shulie.amdb.request.query.TAmdbAppBatchAppQueryRequest;
 import io.shulie.amdb.response.app.AmdbAppResponse;
 import io.shulie.amdb.service.AppService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -166,6 +172,34 @@ public class AppController {
             return Response.success(appService.selectAllAppName(param));
         } catch (Exception e) {
             log.error("查询应用信息失败", e);
+            return Response.fail(AmdbExceptionEnums.APP_SELECT);
+        }
+    }
+
+    @ApiOperation(value = "应用影子库/表查询")
+    @GetMapping(value = "/selectShadowDatabases")
+    public Response<List<AppShadowDatabaseDO>> selectShadowDatabases(AppShadowDatabaseRequest request) {
+        if (StringUtils.isBlank(request.getAppName())) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "appName");
+        }
+        try {
+            return Response.success(appService.selectShadowDatabase(request));
+        } catch (Exception e) {
+            log.error("查询应用影子库/表失败", e);
+            return Response.fail(AmdbExceptionEnums.APP_SELECT);
+        }
+    }
+
+    @ApiOperation(value = "应用业务表查询")
+    @GetMapping(value = "/selectShadowBizTables")
+    public Response<List<AppShadowBizTableDO>> selectShadowBizTables(AppShadowBizTableRequest request) {
+        if (StringUtils.isAnyBlank(request.getAppName(), request.getDataSource(), request.getTableUser())) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "appName/dataSource/tableUser");
+        }
+        try {
+            return Response.success(appService.selectShadowBizTables(request));
+        } catch (Exception e) {
+            log.error("查询应用业务表失败", e);
             return Response.fail(AmdbExceptionEnums.APP_SELECT);
         }
     }

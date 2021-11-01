@@ -79,7 +79,9 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
 
     @Override
     public Object process(DataContext dataContext) {
-        log.info("当前dataContext为:{}", dataContext);
+        if (log.isDebugEnabled()) {
+            log.debug("当前dataContext为:{}", dataContext);
+        }
         String path[] = dataContext.getPath().replaceAll(INSTANCE_STATUS_PATH, "").split("/");
         String appName = path[0];
         InstanceStatusModel instanceStatusModel = (InstanceStatusModel) dataContext.getModel();

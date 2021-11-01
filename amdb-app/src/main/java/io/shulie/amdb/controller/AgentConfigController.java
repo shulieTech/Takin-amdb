@@ -12,16 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.shulie.amdb.controller;
 
+import com.github.pagehelper.PageInfo;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.agent.AgentConfigDTO;
 import io.shulie.amdb.common.dto.agent.AgentStatInfoDTO;
-import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.common.request.agent.AgentConfigQueryRequest;
+import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.service.AgentConfigService;
-import com.github.pagehelper.PageInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,6 +44,7 @@ public class AgentConfigController {
 
     /**
      * agent配置查询
+     *
      * @param param
      * @return
      */
@@ -61,13 +61,14 @@ public class AgentConfigController {
 
     /**
      * agent配置统计
+     *
      * @param param
      * @return
      */
     @RequestMapping(value = "/count", method = RequestMethod.POST)
     public Response<AgentStatInfoDTO> count(AgentConfigQueryRequest param) {
         try {
-            if(param == null || param.getConfigKey() == null){
+            if (param == null || param.getConfigKey() == null) {
                 return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "configKey");
             }
             return Response.success(agentConfigService.count(param));

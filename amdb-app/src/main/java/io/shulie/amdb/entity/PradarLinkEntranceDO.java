@@ -100,11 +100,33 @@ public class PradarLinkEntranceDO implements Serializable {
     private String linkType;
 
     /**
-     * linkType
+     * up_app_name
      */
     @Column(name = "`up_app_name`")
     @ApiModelProperty("upAppName")
     private String upAppName;
+
+    /**
+     * middleware_detail
+     */
+    @Column(name = "`middleware_detail`")
+    @ApiModelProperty("middlewareDetail")
+    private String middlewareDetail;
+
+    /**
+     * down_app_name
+     */
+    @Column(name = "`down_app_name`")
+    @ApiModelProperty("downAppName")
+    private String downAppName;
+
+
+    /**
+     * default_white_info
+     */
+    @Column(name = "`default_white_info`")
+    @ApiModelProperty("defaultWhiteInfo")
+    private String defaultWhiteInfo;
 
     /**
      * 创建时间
@@ -122,26 +144,4 @@ public class PradarLinkEntranceDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(getClass().getSimpleName());
-        sb.append(" [");
-        sb.append("Hash = ").append(hashCode());
-        sb.append(", id=").append(id);
-        sb.append(", entranceId=").append(entranceId);
-        sb.append(", appName=").append(appName);
-        sb.append(", serviceName=").append(serviceName);
-        sb.append(", methodName=").append(methodName);
-        sb.append(", middlewareName=").append(middlewareName);
-        sb.append(", rpcType=").append(rpcType);
-        sb.append(", extend=").append(extend);
-        sb.append(", linkType=").append(linkType);
-        sb.append(", upAppName=").append(upAppName);
-        sb.append(", gmtCreate=").append(gmtCreate);
-        sb.append(", gmtModify=").append(gmtModify);
-        sb.append(", serialVersionUID=").append(serialVersionUID);
-        sb.append("]");
-        return sb.toString();
-    }
 }

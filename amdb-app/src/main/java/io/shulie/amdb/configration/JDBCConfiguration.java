@@ -16,7 +16,7 @@
 package io.shulie.amdb.configration;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,7 +40,7 @@ public class JDBCConfiguration {
     @Primary
     @Bean(name = "mysqlJdbcTemplate")
     //dataSource 是spring自动加载的
-    public JdbcTemplate mysqlJdbcTemplate(@Autowired DataSource dataSource) throws Exception {
+    public JdbcTemplate mysqlJdbcTemplate(@Qualifier("amdbDataSource") DataSource dataSource) throws Exception {
         return new JdbcTemplate(dataSource);
     }
 
