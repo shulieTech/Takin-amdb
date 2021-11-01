@@ -17,6 +17,7 @@ package io.shulie.amdb.zipkin;
 import com.google.common.primitives.Longs;
 import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
+import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
 import io.shulie.amdb.service.TraceService;
 import io.shulie.surge.data.deploy.pradar.parser.MiddlewareType;
 import io.shulie.surge.data.deploy.pradar.parser.PradarLogType;
@@ -119,7 +120,9 @@ public class ZipkinQueryApiV2 {
     @RequestMapping("/api/v2/export/{traceId}")
     public void getExportOne(@PathVariable String traceId, HttpServletResponse response)
             throws IOException {
-        List<RpcBased> rpcBaseds = traceService.getTraceDetail(traceId);
+        TraceStackQueryParam param = new TraceStackQueryParam();
+        param.setTraceId(traceId);
+        List<RpcBased> rpcBaseds = traceService.getTraceDetail(param);
         StringBuilder sb = new StringBuilder();
         rpcBaseds.forEach(rpcBased -> sb.append("\r\n").append(LOG_FORMATTER.format(rpcBased)));
         writeResponse(sb.toString().getBytes(), response);
@@ -128,8 +131,9 @@ public class ZipkinQueryApiV2 {
     @RequestMapping("/api/v2/tracecheck/{traceId}")
     public void traceCheck(@PathVariable String traceId, HttpServletResponse response)
             throws Exception {
-
-        List<RpcBased> rpcBaseds = traceService.getTraceDetail(traceId);
+        TraceStackQueryParam param = new TraceStackQueryParam();
+        param.setTraceId(traceId);
+        List<RpcBased> rpcBaseds = traceService.getTraceDetail(param);
         StringBuilder sb = new StringBuilder();
         List<String> errorMessages = new ArrayList<String>();
         rpcBaseds.forEach(rpcBased -> {
@@ -165,7 +169,9 @@ public class ZipkinQueryApiV2 {
     @RequestMapping("/api/v2/trace/{traceId}")
     public void getTrace(@PathVariable String traceId, HttpServletResponse response) throws IOException {
         traceId = traceId != null ? traceId.trim() : null;
-        List<RpcBased> rpcBaseds = traceService.getTraceDetail(traceId);
+        TraceStackQueryParam param = new TraceStackQueryParam();
+        param.setTraceId(traceId);
+        List<RpcBased> rpcBaseds = traceService.getTraceDetail(param);
         rpcBaseds.sort(new Comparator<RpcBased>() {
             @Override
             public int compare(RpcBased o1, RpcBased o2) {
@@ -291,7 +297,7 @@ public class ZipkinQueryApiV2 {
         return builder.build();
     }
 
-    static byte[] writeTraces(SpanBytesEncoder codec, List<List<zipkin2.Span>> traces) {
+    static byte[] writeTraces(SpanBytesEncoder codec, List<List<Span>> traces) {
         // Get the encoded size of the nested list so that we don't need to grow the buffer
         int length = traces.size();
         int sizeInBytes = 2; // []
@@ -300,7 +306,7 @@ public class ZipkinQueryApiV2 {
         }// comma to join elements
 
         for (int i = 0; i < length; i++) {
-            List<zipkin2.Span> spans = traces.get(i);
+            List<Span> spans = traces.get(i);
             int jLength = spans.size();
             sizeInBytes += 2; // []
             if (jLength > 1) {

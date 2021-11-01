@@ -1,4 +1,4 @@
-/*
+package io.shulie.amdb.scheduled;/*
 package io.shulie.amdb.scheduled;
 
 import io.shulie.amdb.entity.TAMDBPradarLinkConfigDO;

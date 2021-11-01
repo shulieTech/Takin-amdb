@@ -37,6 +37,12 @@ public class AmdbAgentInfoQueryRequest extends PagingRequest implements Serializ
     private String appName;
 
     /**
+     * 应用名称
+     */
+    @ApiModelProperty("应用名称")
+    private String appNames;
+
+    /**
      * agent状态
      */
     @ApiModelProperty("agent状态")

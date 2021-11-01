@@ -20,16 +20,16 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import io.shulie.amdb.common.Response;
+import io.shulie.amdb.common.dto.agent.AgentInfoDTO;
+import io.shulie.amdb.common.request.agent.AmdbAgentInfoQueryRequest;
 import io.shulie.amdb.entity.TAmdbAgentInfoDO;
 import io.shulie.amdb.entity.TAmdbAppInstanceDO;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.mapper.AppInstanceMapper;
 import io.shulie.amdb.mapper.TAmdbAgentInfoDOMapper;
-import io.shulie.amdb.common.request.agent.AmdbAgentInfoQueryRequest;
 import io.shulie.amdb.request.query.TAmdbAppInstanceBatchAppQueryRequest;
 import io.shulie.amdb.request.query.TAmdbAppInstanceErrorInfoByQueryRequest;
 import io.shulie.amdb.request.query.TAmdbAppInstanceQueryRequest;
-import io.shulie.amdb.common.dto.agent.AgentInfoDTO;
 import io.shulie.amdb.response.instance.AmdbAppInstanceResponse;
 import io.shulie.amdb.response.instance.InstanceErrorInfoResponse;
 import io.shulie.amdb.service.AppInstanceService;
@@ -266,7 +266,11 @@ public class AppInstanceServiceImpl implements AppInstanceService {
         if (StringUtils.isNotBlank(request.getAgentInfo())) {
             criteria.andLike("agentInfo", '%' + request.getAgentInfo() + '%');
         }
-        example.orderBy("agentTimestamp").desc();
+        String appNames = request.getAppNames();
+        if (StringUtils.isNotBlank(appNames)) {
+            criteria.andIn("appName", Arrays.asList(appNames.split(",")));
+        }
+        example.orderBy("agentTimestamp").desc().orderBy("id").desc();
         PageHelper.startPage(request.getCurrentPage(), request.getPageSize());
         List<TAmdbAgentInfoDO> agentInfoDOS = tAmdbAgentInfoDOMapper.selectByExample(example);
 
@@ -277,7 +281,7 @@ public class AppInstanceServiceImpl implements AppInstanceService {
     }
 
     private AgentInfoDTO agentId(TAmdbAgentInfoDO agentInfoDO) {
-        if (agentInfoDO == null){
+        if (agentInfoDO == null) {
             return null;
         }
         AgentInfoDTO agentInfoDTO = new AgentInfoDTO();

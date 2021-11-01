@@ -12,13 +12,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.shulie.amdb.service;
 
+import com.github.pagehelper.PageInfo;
 import io.shulie.amdb.common.dto.agent.AgentConfigDTO;
 import io.shulie.amdb.common.dto.agent.AgentStatInfoDTO;
 import io.shulie.amdb.common.request.agent.AgentConfigQueryRequest;
-import com.github.pagehelper.PageInfo;
 
 /**
  * agent配置服务
@@ -30,4 +29,6 @@ public interface AgentConfigService {
     PageInfo<AgentConfigDTO> selectByParams(AgentConfigQueryRequest param);
 
     AgentStatInfoDTO count(AgentConfigQueryRequest param);
+
+    void truncateTable();
 }

@@ -11,21 +11,6 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-
-/*
- * Copyright 2021 Shulie Technology, Co.Ltd
- * Email: shulie@shulie.io
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */ ------------------------------------------------------------
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -735,4 +720,44 @@ ALTER TABLE `t_amdb_app_instance_status` ADD COLUMN `agent_status` varchar(32) D
 ALTER TABLE `t_amdb_app_instance_status` ADD COLUMN `jdk` varchar(32) DEFAULT NULL COMMENT 'jdk版本号';
 ALTER TABLE `t_amdb_app_instance_status` ADD COLUMN `jvm_args` text DEFAULT NULL COMMENT 'jvm参数';
 ALTER TABLE `t_amdb_app_instance_status` ADD COLUMN `agent_error_msg` varchar(4096)  DEFAULT NULL COMMENT 'agent异常日志';
-ALTER TABLE `t_amdb_app_instance_status` ADD COLUMN `agent_error_code` varchar(32) DEFAULT NULL COMMENT 'agnet异常code';gi
+ALTER TABLE `t_amdb_app_instance_status` ADD COLUMN `agent_error_code` varchar(32) DEFAULT NULL COMMENT 'agnet异常code';
+
+ALTER TABLE `t_amdb_pradar_link_entrance` ADD COLUMN `default_white_info` varchar(64) NOT NULL DEFAULT '' COMMENT '默认白名单信息';
+ALTER TABLE `t_amdb_pradar_link_entrance` ADD COLUMN `middleware_detail` varchar(64) NOT NULL DEFAULT '' COMMENT '中间件详细名称';
+ALTER TABLE `t_amdb_pradar_link_entrance` ADD COLUMN `down_app_name` varchar(512) NOT NULL DEFAULT '' COMMENT '上下游应用名称';
+
+CREATE TABLE `t_amdb_app_shadowdatabase` (
+                                             `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键Id',
+                                             `app_name` varchar(100) COLLATE utf8mb4_bin NOT NULL COMMENT '应用名称',
+                                             `data_source` varchar(600) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '业务数据源',
+                                             `db_name` varchar(20) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '数据库类型',
+                                             `table_user` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '用户名称',
+                                             `password` varchar(100) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '密码',
+                                             `middleware_type` varchar(20) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '中间件类型',
+                                             `connection_pool` varchar(20) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '连接池名称',
+                                             `type` varchar(5) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '类型',
+                                             `ext_info` varchar(50) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '附加信息',
+                                             `attachment` text COLLATE utf8mb4_bin COMMENT 'attachment',
+                                             `unique_key` varchar(40) COLLATE utf8mb4_bin NOT NULL COMMENT '唯一健(md5(app_name,data_source,table_user))',
+                                             `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                             `gmt_modify` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                             `shadow_data_source` varchar(1000) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '影子数据源',
+                                             PRIMARY KEY (`id`),
+                                             UNIQUE KEY `unique_index` (`unique_key`) USING BTREE,
+                                             KEY `appname_index` (`app_name`,`data_source`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+
+CREATE TABLE `t_amdb_app_shadowbiztable` (
+                                             `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键Id',
+                                             `app_name` varchar(100) COLLATE utf8mb4_bin NOT NULL COMMENT '应用名称',
+                                             `data_source` varchar(600) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '业务数据源',
+                                             `biz_database` varchar(50) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '业务库',
+                                             `table_user` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '用户名称',
+                                             `table_name` varchar(100) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '业务表名',
+                                             `unique_key` varchar(40) COLLATE utf8mb4_bin NOT NULL COMMENT '唯一健(md5(app_name,data_source,table_user,table_name))',
+                                             `gmt_create` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                             `gmt_modify` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                                             PRIMARY KEY (`id`),
+                                             UNIQUE KEY `unique_index` (`unique_key`) USING BTREE,
+                                             KEY `datasource_index` (`app_name`,`data_source`,`table_user`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;

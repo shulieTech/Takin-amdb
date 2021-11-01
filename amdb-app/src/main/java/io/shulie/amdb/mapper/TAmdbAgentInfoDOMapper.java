@@ -12,11 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.shulie.amdb.mapper;
 
 import io.shulie.amdb.entity.TAmdbAgentInfoDO;
-import org.apache.ibatis.annotations.Select;
 import tk.mybatis.mapper.common.Mapper;
 
 public interface TAmdbAgentInfoDOMapper extends Mapper<TAmdbAgentInfoDO> {

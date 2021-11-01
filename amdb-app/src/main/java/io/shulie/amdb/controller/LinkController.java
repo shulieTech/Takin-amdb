@@ -23,6 +23,7 @@ import io.shulie.amdb.common.dto.link.topology.LinkTopologyDTO;
 import io.shulie.amdb.common.request.link.ExitQueryParam;
 import io.shulie.amdb.common.request.link.ServiceQueryParam;
 import io.shulie.amdb.common.request.link.TopologyQueryParam;
+import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
 import io.shulie.amdb.dto.LinkDTO;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.request.LinkRequest;
@@ -131,6 +132,23 @@ public class LinkController {
             return linkService.getLinkTopology(param);
         } catch (Exception e) {
             log.error("查询拓扑图失败", e);
+            return Response.fail(AmdbExceptionEnums.LINK_QUERY);
+        }
+    }
+
+    /**
+     * 指定调用链生成拓扑图
+     *
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "/calculateLinkTopology", method = RequestMethod.POST)
+    public Response<String> calculateLinkTopology(TraceStackQueryParam param) {
+        log.info("指定调用链生成拓扑图 param:{}", param);
+        try {
+            return linkService.calculateTopology(param);
+        } catch (Exception e) {
+            log.error("指定调用链生成拓扑图失败", e);
             return Response.fail(AmdbExceptionEnums.LINK_QUERY);
         }
     }

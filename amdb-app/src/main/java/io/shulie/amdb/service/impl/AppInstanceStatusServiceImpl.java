@@ -17,7 +17,6 @@ package io.shulie.amdb.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.instance.AgentStatusStatInfo;
 import io.shulie.amdb.entity.TAmdbAppInstanceStatusDO;
@@ -108,8 +107,8 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
         example.setOrderByClause("id DESC");
 //        example.setOrderByClause("gmt_modify DESC");
 
-        Example.Criteria criteria = example.createCriteria();
-        if(StringUtils.isNotBlank(param.getAppNames())) {
+        Criteria criteria = example.createCriteria();
+        if (StringUtils.isNotBlank(param.getAppNames())) {
             String[] split = param.getAppNames().split(",");
             List<String> appNames = Arrays.asList(split);
             criteria.andIn("appName", appNames);
@@ -175,7 +174,7 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
     @Override
     public Integer getOnlineInstanceCount(String appName) {
         Example example = new Example(TAmdbAppInstanceStatusDO.class);
-        Example.Criteria criteria = example.createCriteria();
+        Criteria criteria = example.createCriteria();
         criteria.andEqualTo("appName", appName);
         return appInstanceStatusMapper.selectCountByExample(example);
     }
@@ -183,7 +182,7 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
     @Override
     public Integer getSpecificStatusInstanceCount(String appName, String probeStatus) {
         Example example = new Example(TAmdbAppInstanceStatusDO.class);
-        Example.Criteria criteria = example.createCriteria();
+        Criteria criteria = example.createCriteria();
         criteria.andEqualTo("appName", appName);
 
         if (StringUtils.isNotBlank(probeStatus)) {
@@ -203,7 +202,7 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
     @Override
     public void deleteByParams(AppInstanceStatusQueryRequest param) {
         Example example = new Example(TAmdbAppInstanceStatusDO.class);
-        Example.Criteria criteria = example.createCriteria();
+        Criteria criteria = example.createCriteria();
         criteria.andIn("appName", Arrays.asList(param.getAppName().split(",").clone()));
         if (StringUtils.isNotBlank(param.getIp())) {
             criteria.andEqualTo("ip", param.getIp());
@@ -216,7 +215,12 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
 
     @Override
     public void truncateTable() {
-        appInstanceStatusMapper.truncateTable();
+        try {
+            appInstanceStatusMapper.truncateTable();
+        } catch (Exception e) {
+            log.error("执行t_amdb_app_instance_status表truncate出现异常:{},异常堆栈:{}", e, e.getStackTrace());
+            appInstanceStatusMapper.deleteAll();
+        }
         log.warn("表t_amdb_app_instance_status已truncate");
     }
 

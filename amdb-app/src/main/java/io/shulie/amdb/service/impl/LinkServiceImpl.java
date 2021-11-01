@@ -16,6 +16,7 @@
 package io.shulie.amdb.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONPath;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import com.google.common.collect.Lists;
@@ -31,6 +32,7 @@ import io.shulie.amdb.common.enums.NodeTypeGroupEnum;
 import io.shulie.amdb.common.request.link.ExitQueryParam;
 import io.shulie.amdb.common.request.link.ServiceQueryParam;
 import io.shulie.amdb.common.request.link.TopologyQueryParam;
+import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
 import io.shulie.amdb.convert.LinkConvert;
 import io.shulie.amdb.convert.LinkNodeConvert;
 import io.shulie.amdb.convert.LinkNodeRelationConvert;
@@ -530,6 +532,10 @@ public class LinkServiceImpl implements LinkService {
             criteria.andEqualTo("linkType", param.getQueryTye());
         }
 
+        if (param.isDefaultWhiteFlag()) {
+            criteria.andNotEqualTo("defaultWhiteInfo", "");
+        }
+
         int page = param.getCurrentPage();
         int pageSize = param.getPageSize();
 
@@ -558,6 +564,22 @@ public class LinkServiceImpl implements LinkService {
                 }
                 if (selectFields.contains("upAppName")) {
                     exitInfoDTO.setUpAppName(data.getUpAppName());
+                }
+                if (selectFields.contains("middlewareDetail")) {
+                    exitInfoDTO.setMiddlewareDetail(data.getMiddlewareDetail());
+                }
+                if (selectFields.contains("downAppName")) {
+                    exitInfoDTO.setDownAppName(data.getDownAppName());
+                }
+                if (selectFields.contains("defaultWhiteInfo")) {
+                    String[] defaultWhiteInfo = data.getDefaultWhiteInfo().split("@##");
+                    if (defaultWhiteInfo.length == 2) {
+                        String reason = StringUtil.parseStr(JSONPath.read(defaultWhiteInfo[1], "$.ext.container"));
+                        String isIgnore = StringUtil.parseStr(JSONPath.read(defaultWhiteInfo[1], "$.ext.ignore"));
+                        exitInfoDTO.setDefaultWhiteInfo(isIgnore + "#" + reason);
+                    } else {
+                        exitInfoDTO.setDefaultWhiteInfo(data.getDefaultWhiteInfo());
+                    }
                 }
                 exitInfoDtos.add(exitInfoDTO);
             });
@@ -591,6 +613,15 @@ public class LinkServiceImpl implements LinkService {
             }
             if (fieldNames.contains("upAppName")) {
                 selectFields.add("upAppName");
+            }
+            if (fieldNames.contains("middlewareDetail")) {
+                selectFields.add("middlewareDetail");
+            }
+            if (fieldNames.contains("downAppName")) {
+                selectFields.add("downAppName");
+            }
+            if (fieldNames.contains("defaultWhiteInfo")) {
+                selectFields.add("defaultWhiteInfo");
             }
         }
         return selectFields;
@@ -652,7 +683,8 @@ public class LinkServiceImpl implements LinkService {
             io.shulie.amdb.common.dto.link.topology.LinkEdgeDTO linkEdgeDTO
                     = new io.shulie.amdb.common.dto.link.topology.LinkEdgeDTO();
             linkEdgeDTO.setEagleId(edgeDO.getEdgeId());
-            linkEdgeDTO.setMiddlewareName(EdgeTypeEnum.convertMiddlewareName(edgeDO.getMiddlewareName()));
+            //改为真实的middleWareName
+            linkEdgeDTO.setMiddlewareName(edgeDO.getMiddlewareName());
             linkEdgeDTO.setEagleType(EdgeTypeEnum.getEdgeTypeEnum(linkEdgeDTO.getMiddlewareName()).getType());
             linkEdgeDTO.setEagleTypeGroup(EdgeTypeGroupEnum.getEdgeTypeEnum(linkEdgeDTO.getMiddlewareName()).getType());
             linkEdgeDTO.setSourceId(edgeDO.getFromAppId());
@@ -667,6 +699,50 @@ public class LinkServiceImpl implements LinkService {
             return linkEdgeDTO;
         }).collect(Collectors.toList()));
         return Response.success(linkTopologyDTO);
+    }
+
+    @Override
+    public Response<String> calculateTopology(TraceStackQueryParam param) throws IOException {
+        String serviceName = param.getServiceName();
+        String methodName = param.getMethodName();
+        String appName = param.getAppName();
+        String rpcType = param.getRpcType();
+        String traceId = param.getTraceId();
+        String startTime = param.getStartTime();
+        String endTime = param.getEndTime();
+
+        StringBuffer tags = new StringBuffer();
+        tags.append(objectToString(serviceName, ""))
+                .append("|")
+                .append(objectToString(methodName, ""))
+                .append("|")
+                .append(objectToString(appName, ""))
+                .append("|")
+                .append(objectToString(rpcType, ""))
+                .append("|");
+        String linkId = Md5Utils.md5(tags.toString());
+
+        Map<String, String> request = new HashMap<>();
+        request.put("linkId", linkId);
+        request.put("serviceName", serviceName);
+        request.put("methodName", methodName);
+        request.put("appName", appName);
+        request.put("rpcType", rpcType);
+        request.put("traceId", traceId);
+        request.put("startTime", startTime);
+        request.put("endTime", endTime);
+        //如果没传值则赋默认值
+        request.put("rpcId", StringUtils.isBlank(param.getRpcId()) ? "0" : param.getRpcId());
+        request.put("logType", StringUtils.isBlank(param.getLogType()) ? "1" : param.getLogType());
+
+        //初始化
+        linkProcessor.init();
+
+        //根据traceId计算链路拓扑
+        Pair<Set<LinkNodeModel>, Set<LinkEdgeModel>> topology = linkProcessor.link(request);
+        //保存到表里
+        linkProcessor.saveTopology(linkId, null, topology);
+        return Response.success(linkId + " save edges:" + topology.getRight().size() + ",nodes:" + topology.getLeft().size());
     }
 
     /**
@@ -755,7 +831,7 @@ public class LinkServiceImpl implements LinkService {
         List<TAmdbPradarLinkNodeDO> nodeDOList = new ArrayList<>();
         List<TAmdbPradarLinkEdgeDO> edgeDOList = new ArrayList<>();
         try {
-            org.apache.commons.lang3.tuple.Pair<Set<LinkNodeModel>, Set<LinkEdgeModel>> topology =
+            Pair<Set<LinkNodeModel>, Set<LinkEdgeModel>> topology =
                     linkProcessor.link(linkId, linkConfig, TraceLogQueryScopeEnum.build(60));
             nodeDOList = topology.getLeft().stream().map(linkNodeModel -> {
                 TAmdbPradarLinkNodeDO linkNodeDTO = new TAmdbPradarLinkNodeDO();
@@ -799,4 +875,5 @@ public class LinkServiceImpl implements LinkService {
         }
         return ObjectUtils.toString(value);
     }
+
 }

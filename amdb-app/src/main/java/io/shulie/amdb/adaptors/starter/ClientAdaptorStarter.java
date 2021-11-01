@@ -15,7 +15,7 @@
 
 package io.shulie.amdb.adaptors.starter;
 
-import io.shulie.amdb.mapper.TAmdbAgentConfigDOMapper;
+import io.shulie.amdb.service.AgentConfigService;
 import io.shulie.amdb.service.AppInstanceService;
 import io.shulie.amdb.service.AppInstanceStatusService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ public class ClientAdaptorStarter extends DefaultFactoryAdaptorStarter {
     private AppInstanceStatusService appInstanceStatusService;
 
     @Autowired
-    private TAmdbAgentConfigDOMapper agentConfigDOMapper;
+    private AgentConfigService agentConfigService;
 
     public ClientAdaptorStarter(Map<String, Object> config) {
         super(config);
@@ -58,6 +58,6 @@ public class ClientAdaptorStarter extends DefaultFactoryAdaptorStarter {
         /**
          * turn cate agent config
          */
-        agentConfigDOMapper.truncateTable();
+        agentConfigService.truncateTable();
     }
 }

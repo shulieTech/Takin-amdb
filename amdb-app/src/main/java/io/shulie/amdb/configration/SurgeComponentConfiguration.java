@@ -34,9 +34,9 @@ public class SurgeComponentConfiguration {
 
 
     @Bean
-    public MysqlSupport mysqlSupport(@Value("${config.clickhouse.url}") String url,
-                                     @Value("${config.clickhouse.username}") String userName,
-                                     @Value("${config.clickhouse.password}") String password) {
+    public MysqlSupport mysqlSupport(@Value("${spring.datasource.url}") String url,
+                                     @Value("${spring.datasource.username}") String userName,
+                                     @Value("${spring.datasource.password}") String password) {
         return new MysqlSupport(url, userName, password, 1, 1, 20);
     }
 
@@ -50,8 +50,8 @@ public class SurgeComponentConfiguration {
 
     @Bean
     public LinkProcessor linkProcessor(@Autowired ClickHouseSupport clickHouseSupport,
-                                @Autowired MysqlSupport mysqlSupport,
-                                @Value("${datasource.traceAll}") String dataSourceType) {
+                                       @Autowired MysqlSupport mysqlSupport,
+                                       @Value("${datasource.traceAll}") String dataSourceType) {
 
         LinkProcessor linkProcessor = new LinkProcessor();
 

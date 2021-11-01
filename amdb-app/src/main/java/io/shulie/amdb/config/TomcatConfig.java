@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.shulie.amdb.config;
 
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;

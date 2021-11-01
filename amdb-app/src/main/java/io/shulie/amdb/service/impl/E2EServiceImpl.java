@@ -406,7 +406,12 @@ public class E2EServiceImpl implements E2EService {
      * @return
      */
     private String getNodeId(E2EBaseRequest request) {
-        return getNodeId(request.getAppName(), request.getServiceName(), request.getMethodName(), request.getRpcType());
+        String edgeId = request.getEdgeId();
+        if (StringUtils.isBlank(edgeId)) {
+            return getNodeId(request.getAppName(), request.getServiceName(), request.getMethodName(), request.getRpcType());
+        } else {
+            return edgeId;
+        }
     }
 
     /**

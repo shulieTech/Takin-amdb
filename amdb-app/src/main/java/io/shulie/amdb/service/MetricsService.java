@@ -15,12 +15,24 @@
 
 package io.shulie.amdb.service;
 
+import java.util.List;
 import java.util.Map;
 
-import io.shulie.amdb.common.Response;
+import io.shulie.amdb.adaptors.common.Pair;
+import io.shulie.amdb.request.query.MetricsDetailQueryRequest;
+import io.shulie.amdb.request.query.MetricsFromInfluxdbQueryRequest;
 import io.shulie.amdb.request.query.MetricsQueryRequest;
+import io.shulie.amdb.response.metrics.MetricsDetailResponse;
 import io.shulie.amdb.response.metrics.MetricsResponse;
 
 public interface MetricsService {
     Map<String, MetricsResponse> getMetrics(MetricsQueryRequest request);
+
+    Pair<List<MetricsDetailResponse>, Integer> metricsDetailes(MetricsDetailQueryRequest request);
+
+    String entranceFromChickHouse(MetricsFromInfluxdbQueryRequest request);
+
+    Map<String, Object> metricsFromChickHouse(MetricsFromInfluxdbQueryRequest request);
+
+
 }

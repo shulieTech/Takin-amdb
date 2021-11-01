@@ -41,6 +41,12 @@
         truncate table t_amdb_app_instance_status
     </update>
 
+    <delete id="deleteAll">
+        delete
+        from t_amdb_app_instance_status
+        where 1 = 1;
+    </delete>
+
     <select id="selectDistinctVersionByParam" parameterType="io.shulie.amdb.entity.TAmdbAppInstanceStatusDO"
             resultType="string">
         select

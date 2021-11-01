@@ -46,7 +46,7 @@ import java.util.*;
 /**
  * @author vincent
  */
-// FIXME 如果增加分布式部署，需要增加分布式锁，保证每个path只有一个服务在处理
+// FIXME 如果增加分布式部署，需要增加分布式锁，保证每个path只有一个服务在处理 或者 只开启一个节点的zk监听(压力会到一个节点上面)
 @Slf4j
 public class InstanceAdaptor extends AbstractDefaultAdaptor {
 
@@ -98,7 +98,9 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
 
     @Override
     public Object process(DataContext dataContext) {
-        log.info("当前dataContext为:{}", dataContext);
+        if (log.isDebugEnabled()) {
+            log.debug("当前dataContext为:{}", dataContext);
+        }
         String path[] = dataContext.getPath().replaceAll(INSTANCE_PATH, "").split("/");
         String appName = path[0];
         InstanceModel instanceModel = (InstanceModel) dataContext.getModel();

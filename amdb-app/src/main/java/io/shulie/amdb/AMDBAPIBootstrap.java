@@ -20,7 +20,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import tk.mybatis.spring.annotation.MapperScan;
 
 import java.io.IOException;
 
@@ -29,7 +28,6 @@ import java.io.IOException;
  * @author: CaoYanFei@ShuLie.io
  * @create: 2020-07-15 22:26
  **/
-@MapperScan("io.shulie.amdb.mapper")
 @SpringBootApplication
 @EnableScheduling
 @EnableAsync
