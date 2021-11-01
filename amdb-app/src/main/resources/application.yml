@@ -63,7 +63,7 @@ zookeeper:
 
 datasource:
   # t_trace_all 数据源类型 支持mysql、clickhouse
-  traceAll: mysql
+  traceAll: clickhouse
 
 config:
   clickhouse:
