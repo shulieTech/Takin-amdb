@@ -512,12 +512,23 @@ public class MetricsServiceImpl implements MetricsService {
                 "(sum(toInt8(samplingInterval))/210) as allTotalTps\n" +
                 "from t_trace_all \n" + where1;
         Map<String, Object> modelList = traceDao.queryForMap(selectsql1);
-
+        if(modelList.get("allTotalCount")==null){
+            modelList.put("allTotalCount",0);
+        }
+        if(modelList.get("allTotalTps")==null){
+            modelList.put("allTotalTps",0);
+        }
+        if(modelList.get("allSuccessCount")==null){
+            modelList.put("allSuccessCount",0);
+        }
+        modelList.put("realSeconds",210);
         String selectsql2 = "select sum(toInt8(samplingInterval)) as allSuccessCount\n" +
                 "from t_trace_all \n" + where1 + " and resultCode in('00','200') ";
         Map<String, Object> successCount = traceDao.queryForMap(selectsql2);
         modelList.putAll(successCount);
-
+        if(modelList.get("allSuccessCount")==null){
+            modelList.put("allSuccessCount",0);
+        }
         return modelList;
     }
 
