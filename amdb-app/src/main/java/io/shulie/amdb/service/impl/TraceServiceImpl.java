@@ -421,19 +421,33 @@ public class TraceServiceImpl implements TraceService {
         List<String> andFilterList = new ArrayList<>();
         List<String> orFilterList = new ArrayList<>();
 
-//        if (StringUtils.isNotBlank(param.getEntranceList())) {
-//            List<String> entryList = Arrays.asList(param.getEntranceList().split(","));
-//            //如果为单独查询一个入口时,可能是两种情况,调试脚本查询指定业务活动数据/压测报告查看一个业务活动压测的流量明细
-//            //不管是哪一种,如果不含有入口规则变量,才可以匹配
-//            if (entryList.size() == 1 && !entryList.get(0).contains("}")) {
-//                String[] entranceInfo = entryList.get(0).split("#");
-//                if (StringUtils.isNotBlank(entranceInfo[0])) {
-//                    //压测引擎上报的流量明细是pressure-engine,并且parsedService和Method都为空
-//                    andFilterList.add("serviceName= '" + entranceInfo[1]
-//                            + "' and methodName='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "'");
-//                }
-//            }
-//        }
+        if (param.getStartTime() != null && param.getStartTime() > 0) {
+            andFilterList.add(
+                    "startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime() + 5000), "yyyy-MM-dd HH:mm:ss") + "'");
+        }
+        if (param.getEndTime() != null && param.getEndTime() > 0) {
+            andFilterList.add(
+                    "startDate <= '" + DateFormatUtils.format(new Date(param.getEndTime()), "yyyy-MM-dd HH:mm:ss") + "'");
+        }
+
+        //如果是调试流量,根据业务活动筛选
+        if ("debug".equals(param.getQuerySource())) {
+            if (StringUtils.isNotBlank(param.getEntranceList())) {
+                List<String> entryList = Arrays.asList(param.getEntranceList().split(","));
+                //如果为单独查询一个入口时,可能是两种情况,调试脚本查询指定业务活动数据/压测报告查看一个业务活动压测的流量明细
+                String[] entranceInfo = entryList.get(0).split("#");
+                if (StringUtils.isNotBlank(entranceInfo[0])) {
+                    //如果是入口规则,采取精确匹配,否则采用模糊匹配
+                    if(entranceInfo[1].contains("{")){
+                        andFilterList.add("parsedServiceName= '" + entranceInfo[1]
+                                + "' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "'");
+                    }else{
+                        andFilterList.add("parsedServiceName like '%" + entranceInfo[1]
+                                + "%' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "'");
+                    }
+                }
+            }
+        }
 
         andFilterList.add("taskId='" + param.getTaskId() + "'");
         if (StringUtils.isNotBlank(param.getResultType())) {
@@ -447,14 +461,7 @@ public class TraceServiceImpl implements TraceService {
                 andFilterList.add("(resultCode<>'00' and resultCode<>'05')");
             }
         }
-        if (param.getStartTime() != null && param.getStartTime() > 0) {
-            andFilterList.add(
-                    "startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime() + 5000), "yyyy-MM-dd HH:mm:ss") + "'");
-        }
-        if (param.getEndTime() != null && param.getEndTime() > 0) {
-            andFilterList.add(
-                    "startDate <= '" + DateFormatUtils.format(new Date(param.getEndTime()), "yyyy-MM-dd HH:mm:ss") + "'");
-        }
+
         return new Pair<>(andFilterList, orFilterList);
     }
 
