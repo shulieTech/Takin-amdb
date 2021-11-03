@@ -432,19 +432,25 @@ public class TraceServiceImpl implements TraceService {
 
         //如果是调试流量,根据业务活动筛选
         if ("debug".equals(param.getQuerySource())) {
+            StringBuilder stringBuilder = new StringBuilder();
             if (StringUtils.isNotBlank(param.getEntranceList())) {
                 List<String> entryList = Arrays.asList(param.getEntranceList().split(","));
                 //如果为单独查询一个入口时,可能是两种情况,调试脚本查询指定业务活动数据/压测报告查看一个业务活动压测的流量明细
                 String[] entranceInfo = entryList.get(0).split("#");
-                if (StringUtils.isNotBlank(entranceInfo[0])) {
+                if (StringUtils.isNotBlank(entranceInfo[1])) {
                     //如果是入口规则,采取精确匹配,否则采用模糊匹配
-                    if(entranceInfo[1].contains("{")){
-                        andFilterList.add("parsedServiceName= '" + entranceInfo[1]
-                                + "' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "'");
-                    }else{
-                        andFilterList.add("parsedServiceName like '%" + entranceInfo[1]
-                                + "%' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "'");
+                    if (entranceInfo[1].contains("{")) {
+                        stringBuilder.append("parsedServiceName= '" + entranceInfo[1] + "'");
+                    } else {
+                        stringBuilder.append("parsedServiceName like '%" + entranceInfo[1] + "%'");
                     }
+                    if (StringUtils.isNotBlank(entranceInfo[2])) {
+                        stringBuilder.append(" and parsedMethod='" + entranceInfo[2] + "'");
+                    }
+                    if (StringUtils.isNotBlank(entranceInfo[3])) {
+                        stringBuilder.append(" and rpcType='" + entranceInfo[3] + "'");
+                    }
+                    andFilterList.add(stringBuilder.toString());
                 }
             }
         }
