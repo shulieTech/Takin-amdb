@@ -62,7 +62,7 @@ zookeeper:
   server: pradar.host.zk01:2181,pradar.host.zk02:2181,pradar.host.zk03:2181
 
 datasource:
-  # t_trace_all 数据源类型 支持mysql、clickhouse(docker体验版默认使用mysql)
+  # t_trace_all 数据源类型 支持mysql、clickhouse
   traceAll: clickhouse
 
 config:
