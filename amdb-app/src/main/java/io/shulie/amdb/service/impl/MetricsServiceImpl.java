@@ -445,8 +445,12 @@ public class MetricsServiceImpl implements MetricsService {
                         result = left.getSuccessRatio() - right.getSuccessRatio();
                         break;
                 }
-                int diff = result > 0 ? 1 : -1;
-                return orderByAsc ? diff : -diff;
+                if(result==0){
+                    return 0;
+                }else {
+                    int diff = result > 0 ? 1 : -1;
+                    return orderByAsc ? diff : -diff;
+                }
             } else {
                 return leftAttention ? -1 : 1;
             }
