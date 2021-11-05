@@ -48,6 +48,6 @@ public class E2EBaseRequest {
     /**
      * 边ID
      */
-    @ApiModelProperty("链路图唯一边ID")
+    @ApiModelProperty("链路图唯一边ID,支持多个边ID,逗号分割")
     String edgeId;
 }
