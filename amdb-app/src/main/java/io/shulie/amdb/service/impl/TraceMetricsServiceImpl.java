@@ -390,7 +390,7 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
                 errorInfo.setErrorCount(metricsModel.getTotalErrorCount());
                 errorInfo.setErrorType(exceptionType);
                 //根据异常类型查最近一次的traceId
-                List<QueryResult.Result> tmpResult = influxDbManager.query("select traceId from " + E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS + " where time >= " + startTime + "000000 and time < " + endTime + "000000 and exceptionType='" + exceptionType + "' order by time desc limit 1");
+                List<QueryResult.Result> tmpResult = influxDbManager.query("select traceId from " + E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS + " where time >= " + startTime + "000000 and time < " + endTime + "000000 and exceptionType='" + exceptionType + "' and nodeId = '" + nodeId + "' order by time desc limit 1");
                 if (!tmpResult.isEmpty()) {
                     List<QueryResult.Series> tmpList = tmpResult.get(0).getSeries();
                     if (!tmpList.isEmpty()) {
