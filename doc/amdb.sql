@@ -689,7 +689,7 @@ CREATE TABLE IF NOT EXISTS `t_trace_all` (
 
 
 /* 2021-8-31  */
-alter table t_amdb_app_instance add index idx_app_id_flag(app_id,flag)
+alter table t_amdb_app_instance add index idx_app_id_flag(app_id,flag);
 
 /* 2021-9-14  */
 CREATE TABLE `t_amdb_agent_config` (
