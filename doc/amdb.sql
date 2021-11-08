@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS `t_amdb_app` (
     `app_type_name` varchar(32) NOT NULL DEFAULT '应用' COMMENT '应用类型名称',
     PRIMARY KEY (`id`),
     UNIQUE KEY `app_name_unique` (`app_name`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 
@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS `t_amdb_app_instance_status` (
     `gmt_modify` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `idx_uniq1` (`app_name`,`agent_id`,`ip`,`pid`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COMMENT='应用实例探针状态表';
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='应用实例探针状态表';
 
 
 
@@ -213,7 +213,7 @@ CREATE TABLE IF NOT EXISTS `t_amdb_app_server` (
     `gmt_modify` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `appName_serverName_index` (`app_name`,`server_name`) USING BTREE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 
@@ -412,7 +412,7 @@ CREATE TABLE IF NOT EXISTS `t_amdb_mapper_sql_info` (
     `branch` varchar(128) DEFAULT NULL,
     `line` int(4) DEFAULT NULL,
     PRIMARY KEY (`id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 
@@ -465,7 +465,7 @@ CREATE TABLE IF NOT EXISTS `t_amdb_pradar_e2e_assert_config` (
     `gmt_modify` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `node_assert_unique` (`node_id`,`assert_code`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 
@@ -483,7 +483,7 @@ CREATE TABLE IF NOT EXISTS `t_amdb_pradar_e2e_config` (
     `gmt_modify` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `node_unique` (`node_id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 
@@ -502,7 +502,7 @@ CREATE TABLE IF NOT EXISTS `t_amdb_pradar_link_config` (
     `gmt_modify` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `link_node_unique` (`link_id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='链路梳理-链路配置表';
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='链路梳理-链路配置表';
 
 
 
@@ -529,7 +529,7 @@ CREATE TABLE IF NOT EXISTS `t_amdb_pradar_link_edge` (
     `gmt_modify` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `link_edge_unique` (`link_id`,`edge_id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='链路梳理-链路边信息';
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='链路梳理-链路边信息';
 
 
 
@@ -552,7 +552,7 @@ CREATE TABLE IF NOT EXISTS `t_amdb_pradar_link_entrance` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `unique_entrance_id` (`entrance_id`) USING BTREE,
     KEY `idx_appName` (`app_name`) USING BTREE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='链路入口服务表';
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='链路入口服务表';
 
 
 
@@ -571,7 +571,7 @@ CREATE TABLE IF NOT EXISTS `t_amdb_pradar_link_node` (
     `gmt_modify` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `link_node_unique` (`link_id`,`app_id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='链路梳理-链路节点表';
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='链路梳理-链路节点表';
 
 
 
@@ -613,7 +613,7 @@ CREATE TABLE IF NOT EXISTS `t_amdb_publish_info` (
     `gmt_create` datetime(3) NOT NULL COMMENT '创建时间',
     `gmt_modify` datetime(3) NOT NULL COMMENT '更新时间',
     PRIMARY KEY (`id`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
 
@@ -675,7 +675,7 @@ CREATE TABLE IF NOT EXISTS `t_trace_all` (
     PRIMARY KEY (`id`),
     KEY `idx_trace_date` (`traceId`,`startDate`),
     KEY `idx_startDate` (`startDate`,`logType`,`rpcType`)
-    ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+    ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
 
 
