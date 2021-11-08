@@ -360,7 +360,7 @@ public class MetricsServiceImpl implements MetricsService {
         List<String> inFilterList = new ArrayList<>();
         List<String> orFilterList = new ArrayList<>();
         tagMap.forEach((k, v) -> {
-            if ("edgeId".equals(k) && v.contains(",")) {
+            if (("edgeId".equals(k) || "nodeId".equals(k)) && v.contains(",")) {
                 //rpc服务的method含有形参,亦是用逗号分割,暂时过滤其他字段的or查询,只支持edgeId
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append("(");
