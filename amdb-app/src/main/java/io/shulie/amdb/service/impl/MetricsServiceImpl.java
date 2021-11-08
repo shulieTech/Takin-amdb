@@ -357,11 +357,26 @@ public class MetricsServiceImpl implements MetricsService {
      * @return
      */
     private String parseWhereFilter(Map<String, String> tagMap) {
-        List<String> filterList = new ArrayList<>();
+        List<String> inFilterList = new ArrayList<>();
+        List<String> orFilterList = new ArrayList<>();
         tagMap.forEach((k, v) -> {
-            filterList.add(k + "='" + v + "'");
+            if (v.contains(",")) {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("(");
+                for (String single : v.split(",")) {
+                    stringBuilder.append(k + "='" + single + "'").append(" or ");
+                }
+                stringBuilder.delete(stringBuilder.lastIndexOf(" or "), stringBuilder.length());
+                stringBuilder.append(")");
+                orFilterList.add(stringBuilder.toString());
+            } else {
+                inFilterList.add(k + "='" + v + "'");
+            }
         });
-        return StringUtils.join(filterList, " and ");
+        if (orFilterList.isEmpty()) {
+            return StringUtils.join(inFilterList, " and ");
+        }
+        return StringUtils.join(inFilterList, " and ") + " and " + StringUtils.join(orFilterList, " and ");
     }
 
     /**
@@ -449,9 +464,9 @@ public class MetricsServiceImpl implements MetricsService {
                         result = left.getSuccessRatio() - right.getSuccessRatio();
                         break;
                 }
-                if(result==0){
+                if (result == 0) {
                     return 0;
-                }else {
+                } else {
                     int diff = result > 0 ? 1 : -1;
                     return orderByAsc ? diff : -diff;
                 }
@@ -516,22 +531,22 @@ public class MetricsServiceImpl implements MetricsService {
                 "(sum(toInt8(samplingInterval))/210) as allTotalTps\n" +
                 "from t_trace_all \n" + where1;
         Map<String, Object> modelList = traceDao.queryForMap(selectsql1);
-        if(modelList.get("allTotalCount")==null){
-            modelList.put("allTotalCount",0);
+        if (modelList.get("allTotalCount") == null) {
+            modelList.put("allTotalCount", 0);
         }
-        if(modelList.get("allTotalTps")==null){
-            modelList.put("allTotalTps",0);
+        if (modelList.get("allTotalTps") == null) {
+            modelList.put("allTotalTps", 0);
         }
-        if(modelList.get("allSuccessCount")==null){
-            modelList.put("allSuccessCount",0);
+        if (modelList.get("allSuccessCount") == null) {
+            modelList.put("allSuccessCount", 0);
         }
-        modelList.put("realSeconds",210);
+        modelList.put("realSeconds", 210);
         String selectsql2 = "select sum(toInt8(samplingInterval)) as allSuccessCount\n" +
                 "from t_trace_all \n" + where1 + " and resultCode in('00','200') ";
         Map<String, Object> successCount = traceDao.queryForMap(selectsql2);
         modelList.putAll(successCount);
-        if(modelList.get("allSuccessCount")==null){
-            modelList.put("allSuccessCount",0);
+        if (modelList.get("allSuccessCount") == null) {
+            modelList.put("allSuccessCount", 0);
         }
         return modelList;
     }
