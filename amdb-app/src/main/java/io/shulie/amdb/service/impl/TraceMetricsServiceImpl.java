@@ -35,6 +35,7 @@ import io.shulie.surge.data.common.utils.Pair;
 import io.shulie.surge.data.deploy.pradar.parser.utils.Md5Utils;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.influxdb.dto.QueryResult;
 import org.springframework.beans.BeanWrapperImpl;
@@ -390,10 +391,25 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
                 errorInfo.setErrorCount(metricsModel.getTotalErrorCount());
                 errorInfo.setErrorType(exceptionType);
                 //根据异常类型查最近一次的traceId
-                List<QueryResult.Result> tmpResult = influxDbManager.query("select traceId from " + E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS + " where time >= " + startTime + "000000 and time < " + endTime + "000000 and exceptionType='" + exceptionType + "' and nodeId = '" + nodeId + "' order by time desc limit 1");
-                if (!tmpResult.isEmpty()) {
+                List<QueryResult.Result> tmpResult = null;
+                if (nodeId != null) {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    if (nodeId.contains(",")) {
+                        stringBuilder.append("(");
+                        for (String single : nodeId.split(",")) {
+                            stringBuilder.append("nodeId='" + single + "'").append(" or ");
+                        }
+                        stringBuilder.delete(stringBuilder.lastIndexOf(" or "), stringBuilder.length());
+                        stringBuilder.append(")");
+                    } else {
+                        stringBuilder.append("nodeId = '" + nodeId + "'");
+                    }
+
+                    tmpResult = influxDbManager.query("select traceId from " + E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS + " where time >= " + startTime + "000000 and time < " + endTime + "000000 and exceptionType='" + exceptionType + "' and " + stringBuilder + " order by time desc limit 1");
+                }
+                if (CollectionUtils.isNotEmpty(tmpResult)) {
                     List<QueryResult.Series> tmpList = tmpResult.get(0).getSeries();
-                    if (!tmpList.isEmpty()) {
+                    if (CollectionUtils.isNotEmpty(tmpList)) {
                         errorInfo.setTraceId(StringUtil.parseStr(tmpList.get(0).getValues().get(0).get(1)));
                     }
                 } else {
