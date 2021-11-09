@@ -153,7 +153,7 @@ public class MetricsFromInfluxdbQueryRequest {
         if(StringUtils.isBlank(this.startTime)||
                 StringUtils.isBlank(this.endTime)||
                 StringUtils.isBlank(this.entranceStr)||
-                StringUtils.isBlank(this.fromAppName)||
+                //StringUtils.isBlank(this.fromAppName)||
                 StringUtils.isBlank(this.appName)||
                 StringUtils.isBlank(this.service)||
                 StringUtils.isBlank(this.method)
