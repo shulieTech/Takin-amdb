@@ -518,7 +518,7 @@ public class MetricsServiceImpl implements MetricsService {
         String t_method = request.getMethod();                  //方法
         StringBuilder where1 = new StringBuilder();
         where1.append(" where startDate between '" + startTime + "' and  '" + endTime + "' ");
-        if(StringUtils.isNotBlank(f_appName)){
+        if(StringUtils.isNotBlank(f_appName)&&!f_appName.endsWith("Virtual")){
             where1.append(" and upAppName = '" + f_appName + "' ");
         }
         where1.append(" and parsedServiceName ='" + t_service + "' and parsedMethod = '" + t_method + "' " +
