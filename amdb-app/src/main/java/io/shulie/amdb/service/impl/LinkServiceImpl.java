@@ -432,6 +432,12 @@ public class LinkServiceImpl implements LinkService {
                 criteria.andEqualTo("middlewareName", middlewareName);
             }
         }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
+        }
         //2021-06-01 为了兼容老接口,需要增加link_type!=1 过滤条件,将客户端出口数据过滤掉
         criteria.andNotEqualTo("linkType", "1");
 
@@ -530,6 +536,12 @@ public class LinkServiceImpl implements LinkService {
 
         if (StringUtils.isNotBlank(param.getQueryTye())) {
             criteria.andEqualTo("linkType", param.getQueryTye());
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
         }
 
         if (param.isDefaultWhiteFlag()) {
@@ -650,7 +662,7 @@ public class LinkServiceImpl implements LinkService {
                     .append(objectToString(param.getExtend(), ""));
             linkId = Md5Utils.md5(tags.toString());
         }
-        Pair<List<TAmdbPradarLinkNodeDO>, List<TAmdbPradarLinkEdgeDO>> pair = getPradarLinkInfo(linkId);
+        Pair<List<TAmdbPradarLinkNodeDO>, List<TAmdbPradarLinkEdgeDO>> pair = getPradarLinkInfo(linkId, param);
         // 从trace构建拓扑图
         if (CollectionUtils.isEmpty(pair.getLeft()) && param.isTrace() && StringUtil.isNotBlank(param.getRpcType())) {
             Map<String, Object> linkConfig = new LinkedHashMap<>();
@@ -659,6 +671,8 @@ public class LinkServiceImpl implements LinkService {
             linkConfig.put("rpcType", param.getRpcType());
             linkConfig.put("extend", param.getExtend());
             linkConfig.put("service", param.getServiceName());
+            linkConfig.put("userAppKey", param.getTenantAppKey());
+            linkConfig.put("envCode", param.getEnvCode());
             pair = getPradarLinkInfoFromTrace(linkId, linkConfig);
         }
         // 处理虚拟节点
@@ -807,14 +821,26 @@ public class LinkServiceImpl implements LinkService {
      * @param linkId
      * @return
      */
-    private Pair<List<TAmdbPradarLinkNodeDO>, List<TAmdbPradarLinkEdgeDO>> getPradarLinkInfo(String linkId) {
+    private Pair<List<TAmdbPradarLinkNodeDO>, List<TAmdbPradarLinkEdgeDO>> getPradarLinkInfo(String linkId, TopologyQueryParam param) {
         Example nodeExample = new Example(TAmdbPradarLinkNodeDO.class);
         Example.Criteria nodeCriteria = nodeExample.createCriteria();
         nodeCriteria.andEqualTo("linkId", linkId);
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            nodeCriteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            nodeCriteria.andEqualTo("envCode", param.getEnvCode());
+        }
         List<TAmdbPradarLinkNodeDO> nodeDOList = pradarLinkNodeMapper.selectByExample(nodeExample);
         Example edgeExample = new Example(TAmdbPradarLinkEdgeDO.class);
         Example.Criteria edgeCriteria = edgeExample.createCriteria();
         edgeCriteria.andEqualTo("linkId", linkId);
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            edgeCriteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            edgeCriteria.andEqualTo("envCode", param.getEnvCode());
+        }
         List<TAmdbPradarLinkEdgeDO> edgeDOList = pradarLinkEdgeMapper.selectByExample(edgeExample);
         return Pair.of(nodeDOList, edgeDOList);
     }

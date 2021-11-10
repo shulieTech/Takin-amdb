@@ -22,7 +22,7 @@ import tk.mybatis.mapper.common.MySqlMapper;
 
 public interface PradarLinkConfigMapper  extends Mapper<TAMDBPradarLinkConfigDO>, MySqlMapper<TAMDBPradarLinkConfigDO> {
     @Override
-    @Insert("insert ignore into t_amdb_pradar_link_config(link_id,service,method,extend,app_name,rpc_type) " +
-            " values(#{linkId},#{service},#{method},#{extend},#{appName},#{rpcType})")
+    @Insert("insert ignore into t_amdb_pradar_link_config(link_id,service,method,extend,app_name,rpc_type,user_app_key,env_code) " +
+            " values(#{linkId},#{service},#{method},#{extend},#{appName},#{rpcType},#{userAppKey},#{envCode})")
     int insert(TAMDBPradarLinkConfigDO tamdbPradarLinkConfigDO);
 }

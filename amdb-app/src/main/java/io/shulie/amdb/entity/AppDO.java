@@ -31,7 +31,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ApiModel("")
 @Table(name = "`t_amdb_app`")
-public class AppDO implements Serializable {
+public class AppDO extends BaseDatabaseDO {
     /**
      * 应用ID
      */

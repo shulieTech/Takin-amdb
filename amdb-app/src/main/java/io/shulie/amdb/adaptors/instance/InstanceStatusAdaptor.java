@@ -89,10 +89,10 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
 
         //如果从zk中获取到的数据模型不为空,则进入更新或者插入逻辑
         if (instanceStatusModel != null) {
+            instanceStatusModel.buildDefaultValue(appName);
             //实例DO更新
             updateOrInsertInstanceStatus(appName, instanceStatusModel, oldInstanceKey);
-            String newInstanceKey = appName + "#" + instanceStatusModel.getAddress() + "#" + instanceStatusModel.getPid();
-            INSTANCE_STATUS_CACHE.put(dataContext.getPath(), newInstanceKey);
+            INSTANCE_STATUS_CACHE.put(dataContext.getPath(), instanceStatusModel.cacheKey());
         } else {
             // 说明节点被删除，执行实例下线
             if (oldInstanceKey != null) {
@@ -125,10 +125,10 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
         Date curr = new Date();
         TAmdbAppInstanceStatusDO oldInstanceStatusDO = appInstanceStatusService.selectOneByParam(selectParam);
         if (oldInstanceStatusDO == null) {
-            TAmdbAppInstanceStatusDO instanceStatus = instanceStatus = getInsertInstanceStatusModel(newInstanceStatusModel, appName, curr);
+            TAmdbAppInstanceStatusDO instanceStatus = getInsertInstanceStatusModel(newInstanceStatusModel, appName, curr);
             appInstanceStatusService.insertOrUpdate(instanceStatus);
         } else {
-            TAmdbAppInstanceStatusDO instanceStatus = instanceStatus = getUpdateInstanceStatusModel(oldInstanceStatusDO, newInstanceStatusModel, curr);
+            TAmdbAppInstanceStatusDO instanceStatus = getUpdateInstanceStatusModel(oldInstanceStatusDO, newInstanceStatusModel, curr);
             appInstanceStatusService.update(instanceStatus);
         }
     }
@@ -156,6 +156,11 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
         appInstanceStatus.setErrorCode(instanceStatusModel.getErrorCode());
         appInstanceStatus.setErrorMsg(instanceStatusModel.getErrorMsg());
         appInstanceStatus.setProbeStatus(instanceStatusModel.getAgentStatus());
+
+        //租户相关
+        appInstanceStatus.setUserId(instanceStatusModel.getUserId());
+        appInstanceStatus.setUserAppKey(instanceStatusModel.getUserAppKey());
+        appInstanceStatus.setEnvCode(instanceStatusModel.getEnvCode());
 
         appInstanceStatus.setJvmArgs(instanceStatusModel.getJvmArgs());
         appInstanceStatus.setJdk(instanceStatusModel.getJdk());
@@ -217,6 +222,11 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
 
         dealWithInstanceStatusModel(newInstanceStatusModel);
 
+        //租户相关
+        oldInstanceStatusDO.setUserId(newInstanceStatusModel.getUserId());
+        oldInstanceStatusDO.setUserAppKey(newInstanceStatusModel.getUserAppKey());
+        oldInstanceStatusDO.setEnvCode(newInstanceStatusModel.getEnvCode());
+
         oldInstanceStatusDO.setProbeVersion(newInstanceStatusModel.getSimulatorVersion());
         oldInstanceStatusDO.setErrorCode(newInstanceStatusModel.getErrorCode());
         oldInstanceStatusDO.setErrorMsg(newInstanceStatusModel.getErrorMsg());
@@ -237,6 +247,8 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
         selectParam.setAppName(instanceInfo[0]);
         selectParam.setIp(instanceInfo[1]);
         selectParam.setPid(instanceInfo[2]);
+        selectParam.setUserAppKey(instanceInfo[3]);
+        selectParam.setEnvCode(instanceInfo[4]);
 
         TAmdbAppInstanceStatusDO amdbAppInstanceDO = appInstanceStatusService.selectOneByParam(selectParam);
         if (amdbAppInstanceDO == null) {

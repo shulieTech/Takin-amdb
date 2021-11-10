@@ -80,25 +80,6 @@ public class TraceController {
     }
 
     /**
-     * 调试流量明细
-     *
-     * @param param
-     * @return
-     */
-    @RequestMapping(value = "/getDebugTraceList", method = RequestMethod.GET)
-    public Response<List<EntryTraceInfoDTO>> getDebugTraceList(EntryTraceQueryParam param) {
-        logger.info("流量明细查询(调试流量)请求参数:{}", param);
-        try {
-            //设置查询来源为调试流量
-            param.setQuerySource("debug");
-            return traceService.getEntryTraceListByTaskId(param);
-        } catch (Exception e) {
-            logger.error("流量明细(调试流量)查询失败", e);
-            return Response.fail(AmdbExceptionEnums.TRACE_QUERY);
-        }
-    }
-
-    /**
      * 流量明细
      *
      * @param param

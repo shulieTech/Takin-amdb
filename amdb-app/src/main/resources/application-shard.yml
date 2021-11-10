@@ -1,0 +1,81 @@
+# 启动参数 java -jar amdb.jar --spring.config.location=/Users/anjone/gitwork/surge-deploy/surge-deploy-pradar/src/main/resources/shard.properties,classpath:/application-shard.yml
+server:
+  port: ${amdb.out.url.port}
+  servlet:
+    context-path: /
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 102400KB
+      max-request-size: 102400KB
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://${resource.mysql.host}:${resource.mysql.port}/amdb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    username: ${resource.mysql.password}
+    password: ${resource.mysql.username}
+    initialSize: 1
+    minIdle: 3
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 30000
+    validationQuery: select 'x'
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+    filters: stat,wall,slf4j
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath*:generator/**/*.xml
+
+pagehelper:
+  helperDialect: mysql
+  reasonable: false
+  supportMethodsArguments: true
+  params: count=countSql
+
+influx:
+  openurl: http://${resource.influxdb.host}:${resource.influxdb.port}
+  username: ${resource.influxdb.username}
+  password: ${resource.influxdb.password}
+  database: pradar
+
+zookeeper:
+  server: ${surge.config.data.zk.servers}
+
+datasource:
+  traceAll: mysql
+
+config:
+  clickhouse:
+    enable: true
+    url: ${resource.clickhouse.url}
+    userName: default
+    password: rU4zGjA/
+    enableRound: true
+  adaptor:
+    instance:
+      open: false
+  link:
+    processUnknow: false
+  e2e:
+    delaySec: 120
+  trace:
+    limit: 500
+
+app:
+  version: @project.version@
+  build:
+    time: @timestamp@

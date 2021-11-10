@@ -125,6 +125,12 @@ public class AppServiceImpl implements AppService {
         if (StringUtils.isNotBlank(param.getTenantKey())) {
             criteria.andEqualTo("tenant", param.getTenantKey());
         }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
+        }
         PageHelper.startPage(param.getCurrentPage(), param.getPageSize());
         List<AppDO> amdbApps = appMapper.selectByExample(example);
         List<AmdbAppResponse> responses = amdbApps.stream().map(amdbApp -> new AmdbAppResponse(param.getFields(), amdbApp)).collect(Collectors.toList());

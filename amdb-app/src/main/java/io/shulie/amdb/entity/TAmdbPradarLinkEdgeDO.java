@@ -24,7 +24,7 @@ import java.util.Date;
 
 @Data
 @Table(name = "`t_amdb_pradar_link_edge`")
-public class TAmdbPradarLinkEdgeDO {
+public class TAmdbPradarLinkEdgeDO extends BaseDatabaseDO {
     @Id
     @Column(name = "id")
     Integer id;

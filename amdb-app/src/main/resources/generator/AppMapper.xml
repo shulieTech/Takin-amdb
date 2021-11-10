@@ -109,6 +109,12 @@
             <if test="gmtModify != null">
                 and gmt_modify=#{gmtModify,jdbcType=TIMESTAMP}
             </if>
+            <if test="userAppKey != null">
+                and user_app_key = #{userAppKey,jdbcType=VARCHAR}
+            </if>
+            <if test="envCode != null">
+                and env_code = #{envCode,jdbcType=VARCHAR}
+            </if>
         </where>
     </select>
     <select id="selectByFilter" parameterType="java.lang.String" resultMap="BaseResultMap">

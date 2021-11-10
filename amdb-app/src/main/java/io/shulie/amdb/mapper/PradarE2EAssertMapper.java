@@ -23,11 +23,15 @@ import tk.mybatis.mapper.common.MySqlMapper;
 
 public interface PradarE2EAssertMapper extends Mapper<TAMDBPradarE2EAssertConfigDO>, MySqlMapper<TAMDBPradarE2EAssertConfigDO> {
     @Override
-    @Insert("insert ignore into t_amdb_pradar_e2e_assert_config(node_id,assert_code,assert_condition) " +
-            " values(#{nodeId},#{assertCode},#{assertCondition})")
+    @Insert("insert ignore into t_amdb_pradar_e2e_assert_config(node_id,assert_code,assert_condition,user_app_key,env_code) " +
+            " values(#{nodeId},#{assertCode},#{assertCondition},#{userAppKey},#{envCode})")
     int insert(TAMDBPradarE2EAssertConfigDO e2eAssertConfigDo);
 
     @Override
-    @Delete("delete from t_amdb_pradar_e2e_assert_config where node_id=#{nodeId} and assert_code=#{assertCode}")
+    @Delete("<script>"
+        + "delete from t_amdb_pradar_e2e_assert_config where node_id=#{nodeId} and assert_code=#{assertCode}"
+        + "<if test='userAppKey != null'> and user_app_key=#{userAppKey} </if>"
+        + "<if test='envCode != null'> and env_code=#{envCode} </if>"
+        + "</script>")
     int delete(TAMDBPradarE2EAssertConfigDO e2eAssertConfigDo);
 }

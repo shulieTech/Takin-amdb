@@ -13,27 +13,13 @@
  * limitations under the License.
  */
 
-package io.shulie.amdb.common.request.link;
+package io.shulie.amdb.adaptors.instance.model;
 
-import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
-import lombok.Data;
-import org.springframework.util.StringUtils;
+/**
+ * @author anjone
+ * @date 2021/9/29
+ */
+public interface Cacheable {
 
-@Data
-public class TopologyQueryParam extends AbstractAmdbBaseRequest {
-    String appName;
-    String linkId;
-    String serviceName;
-    String method;
-    String rpcType;
-    String extend;
-    Boolean isTrace;
-    private String id;
-    
-    public boolean isTrace() {
-        if (StringUtils.isEmpty(isTrace)) {
-            isTrace = true;
-        }
-        return isTrace;
-    }
+    String cacheKey();
 }

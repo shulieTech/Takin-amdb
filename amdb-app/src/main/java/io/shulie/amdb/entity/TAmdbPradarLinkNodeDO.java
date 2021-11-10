@@ -24,7 +24,7 @@ import java.util.Date;
 
 @Data
 @Table(name = "`t_amdb_pradar_link_node`")
-public class TAmdbPradarLinkNodeDO {
+public class TAmdbPradarLinkNodeDO extends BaseDatabaseDO {
     @Id
     @Column(name = "id")
     Integer id;

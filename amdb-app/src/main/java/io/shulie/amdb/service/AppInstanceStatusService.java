@@ -44,21 +44,20 @@ public interface AppInstanceStatusService {
     /**
      * 获取在线实例列表
      *
-     * @param appName
+     * @param param
      * @return
      */
-    Integer getOnlineInstanceCount(String appName);
+    Integer getOnlineInstanceCount(AppInstanceStatusQueryRequest param);
 
     /**
      * 获取特定状态实例列表
      *
-     * @param appName
-     * @param probeStatus
+     * @param param
      * @return
      */
-    Integer getSpecificStatusInstanceCount(String appName, String probeStatus);
+    Integer getSpecificStatusInstanceCount(AppInstanceStatusQueryRequest param);
 
-    List<String> getAllProbeVersionsByAppName(String appName);
+    List<String> getAllProbeVersionsByAppName(AppInstanceStatusQueryRequest param);
 
     void deleteByParams(AppInstanceStatusQueryRequest param);
 

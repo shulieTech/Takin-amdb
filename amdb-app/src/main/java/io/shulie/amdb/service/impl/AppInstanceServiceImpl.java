@@ -172,6 +172,12 @@ public class AppInstanceServiceImpl implements AppInstanceService {
         if (StringUtils.isNotBlank(param.getTenantKey())) {
             criteria.andEqualTo("tenant", param.getTenantKey());
         }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
+        }
         criteria.andCondition("(flag&1)=1");
         PageHelper.startPage(page, pageSize);
         List<TAmdbAppInstanceDO> amdbApps = appInstanceMapper.selectByExample(example);
@@ -188,6 +194,12 @@ public class AppInstanceServiceImpl implements AppInstanceService {
         }
         if (StringUtils.isNotBlank(param.getAppName())) {
             criteria.andEqualTo("appName", param.getAppName());
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
         }
         criteria.andCondition("(flag&1)=1");
         List<TAmdbAppInstanceDO> amdbAppInstances = appInstanceMapper.selectByExample(example);
@@ -269,6 +281,12 @@ public class AppInstanceServiceImpl implements AppInstanceService {
         String appNames = request.getAppNames();
         if (StringUtils.isNotBlank(appNames)) {
             criteria.andIn("appName", Arrays.asList(appNames.split(",")));
+        }
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", request.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            criteria.andEqualTo("envCode", request.getEnvCode());
         }
         example.orderBy("agentTimestamp").desc().orderBy("id").desc();
         PageHelper.startPage(request.getCurrentPage(), request.getPageSize());

@@ -31,6 +31,9 @@
         <result column="error_msg" jdbcType="VARCHAR" property="errorMsg"/>
         <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
         <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify"/>
+        <result column="user_app_key" jdbcType="VARCHAR" property="modifierName"/>
+        <result column="env_code" jdbcType="VARCHAR" property="modifierName"/>
+        <result column="user_id" jdbcType="VARCHAR" property="modifierName"/>
     </resultMap>
     <sql id="Base_Column_List">
         id
@@ -106,6 +109,12 @@
             <if test="gmtModify != null">
                 and gmt_modify=#{gmtModify,jdbcType=TIMESTAMP}
             </if>
+            <if test="userAppKey != null">
+                and user_app_key=#{userAppKey,jdbcType=VARCHAR}
+            </if>
+            <if test="envCode != null">
+                and env_code=#{envCode,jdbcType=VARCHAR}
+            </if>
             limit 1
         </where>
     </select>
@@ -129,7 +138,7 @@
     </insert>
     <update id="updateByPrimaryKeySelective" parameterType="io.shulie.amdb.entity.TAmdbAppInstanceStatusDO">
         update t_amdb_app_instance_status
-        <set>
+        <trim prefix="set" suffix="" suffixOverrides=",">
             <if test="appName != null">
                 app_name = #{appName,jdbcType=VARCHAR},
             </if>
@@ -166,13 +175,22 @@
             <if test="gmtCreate != null">
                 gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
             </if>
-            <if test="gmtModify != null">
-                gmt_modify = #{gmtModify,jdbcType=TIMESTAMP}
-            </if>
             <if test="agentStatus != null">
-                agent_status = #{agentStatus,jdbcType=VARCHAR}
+                agent_status = #{agentStatus,jdbcType=VARCHAR},
             </if>
-        </set>
+            <if test="userAppKey != null">
+                user_app_key = #{userAppKey},
+            </if>
+            <if test="envCode != null">
+                env_code = #{envCode, jdbcType=VARCHAR},
+            </if>
+            <if test="userId != null">
+                user_id = #{userId, jdbcType=VARCHAR},
+            </if>
+            <if test="gmtModify != null">
+                gmt_modify = #{gmtModify,jdbcType=TIMESTAMP},
+            </if>
+        </trim>
         where id = #{id,jdbcType=BIGINT}
     </update>
     <update id="updateByPrimaryKey" parameterType="io.shulie.amdb.entity.TAmdbAppInstanceStatusDO">
@@ -189,7 +207,10 @@
             error_code     = #{errorCode,jdbcType=VARCHAR},
             error_msg      = #{errorMsg,jdbcType=VARCHAR},
             gmt_create     = #{gmtCreate,jdbcType=TIMESTAMP},
-            gmt_modify     = #{gmtModify,jdbcType=TIMESTAMP}
+            gmt_modify     = #{gmtModify,jdbcType=TIMESTAMP},
+            user_app_key = #{userAppKey},
+            envCode = #{envCode, jdbcType=VARCHAR},
+            userId = #{userId, jdbcType=VARCHAR}
         where id = #{id,jdbcType=BIGINT}
     </update>
 
@@ -251,6 +272,15 @@
             <if test="agentErrorMsg != null">
                 agent_error_msg,
             </if>
+            <if test="userAppKey != null">
+                user_app_key,
+            </if>
+            <if test="envCode != null">
+                env_code,
+            </if>
+            <if test="userId != null">
+                user_id,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="appName != null">
@@ -308,6 +338,15 @@
             </if>
             <if test="agentErrorMsg != null">
                 #{agentErrorMsg,jdbcType=VARCHAR},
+            </if>
+            <if test="userAppKey != null">
+                #{userAppKey},
+            </if>
+            <if test="envCode != null">
+                #{envCode, jdbcType=VARCHAR},
+            </if>
+            <if test="userId != null">
+                #{userId, jdbcType=VARCHAR},
             </if>
         </trim>
         <include refid="update_duplicate_key_frame"/>
@@ -367,6 +406,15 @@
         </if>
         <if test="agentErrorMsg != null">
             agent_error_msg = #{agentErrorMsg,jdbcType=VARCHAR},
+        </if>
+        <if test="userAppKey != null">
+            user_app_key = #{userAppKey},
+        </if>
+        <if test="envCode != null">
+            env_code = #{envCode, jdbcType=VARCHAR},
+        </if>
+        <if test="userId != null">
+            user_id = #{userId, jdbcType=VARCHAR},
         </if>
         gmt_modify = now()
     </sql>

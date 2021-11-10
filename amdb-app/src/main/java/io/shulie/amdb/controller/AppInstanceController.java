@@ -163,6 +163,9 @@ public class AppInstanceController {
     @RequestMapping(value = "/queryAgentInfo", method = RequestMethod.POST)
     public Response<List<AgentInfoDTO>> queryAgentInfo(AmdbAgentInfoQueryRequest request) {
         log.info("查询agent日志 ：{}", request);
+        if (request.getPageSize() == Integer.MAX_VALUE || request.getStartDate() == null || request.getEndDate() == null) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
+        }
         try {
             return Response.success(appInstanceService.queryAgentInfo(request));
         } catch (Exception e) {

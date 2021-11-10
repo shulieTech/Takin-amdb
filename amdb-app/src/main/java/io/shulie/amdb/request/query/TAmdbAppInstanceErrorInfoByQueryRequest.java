@@ -15,10 +15,11 @@
 
 package io.shulie.amdb.request.query;
 
+import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
 import lombok.Data;
 
 @Data
-public class TAmdbAppInstanceErrorInfoByQueryRequest {
+public class TAmdbAppInstanceErrorInfoByQueryRequest extends AbstractAmdbBaseRequest {
     String appId;
     String appName;
 }
