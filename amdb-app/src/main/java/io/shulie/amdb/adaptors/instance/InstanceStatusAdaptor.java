@@ -27,7 +27,9 @@ import io.shulie.amdb.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author vincent
@@ -159,7 +161,7 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
 
         //租户相关
         appInstanceStatus.setUserId(instanceStatusModel.getUserId());
-        appInstanceStatus.setUserAppKey(instanceStatusModel.getUserAppKey());
+        appInstanceStatus.setUserAppKey(instanceStatusModel.getTenantAppKey());
         appInstanceStatus.setEnvCode(instanceStatusModel.getEnvCode());
 
         appInstanceStatus.setJvmArgs(instanceStatusModel.getJvmArgs());
@@ -224,7 +226,7 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
 
         //租户相关
         oldInstanceStatusDO.setUserId(newInstanceStatusModel.getUserId());
-        oldInstanceStatusDO.setUserAppKey(newInstanceStatusModel.getUserAppKey());
+        oldInstanceStatusDO.setUserAppKey(newInstanceStatusModel.getTenantAppKey());
         oldInstanceStatusDO.setEnvCode(newInstanceStatusModel.getEnvCode());
 
         oldInstanceStatusDO.setProbeVersion(newInstanceStatusModel.getSimulatorVersion());

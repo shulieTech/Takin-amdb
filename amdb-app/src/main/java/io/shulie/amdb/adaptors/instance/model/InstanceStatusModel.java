@@ -59,7 +59,7 @@ public class InstanceStatusModel implements AdaptorModel, Cacheable {
     //应用java home下的tools.jar包路径，如果不存在，是个空字符串
     private String toolsJarPath;
     // 租户标识
-    private String userAppKey;
+    private String tenantAppKey;
     // 环境标识
     private String envCode;
     // 用户标识
@@ -80,8 +80,8 @@ public class InstanceStatusModel implements AdaptorModel, Cacheable {
         if (StringUtils.isEmpty(userId)) {
             userId = DEFAULT_USER_ID;
         }
-        if (StringUtils.isEmpty(userAppKey)) {
-            userAppKey = DEFAULT_TENANT_KEY;
+        if (StringUtils.isEmpty(tenantAppKey)) {
+            tenantAppKey = DEFAULT_TENANT_KEY;
         }
         if (StringUtils.isEmpty(envCode)) {
             envCode = DEFAULT_ENV_CODE;
@@ -92,7 +92,7 @@ public class InstanceStatusModel implements AdaptorModel, Cacheable {
     public String cacheKey() {
         return cacheKey != null ?
                 cacheKey :
-                (cacheKey = appName + "#" + address + "#" + pid + "#" + userAppKey + "#" + envCode);
+                (cacheKey = appName + "#" + address + "#" + pid + "#" + tenantAppKey + "#" + envCode);
     }
 }
 

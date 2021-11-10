@@ -167,7 +167,7 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
             selectParam.setIp(instanceModel.getAddress());
             // 老的没有，说明服务重启缓存重置，这种情况下只能根据AgentID来更新
             selectParam.setAgentId(instanceModel.getAgentId());
-            selectParam.setUserAppKey(instanceModel.getUserAppKey());
+            selectParam.setUserAppKey(instanceModel.getTenantAppKey());
             selectParam.setEnvCode(instanceModel.getEnvCode());
         } else {
             String instanceInfo[] = oldInstanceKey.split("#");
@@ -246,7 +246,7 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
 
         //租户相关
         amdbAppInstance.setUserId(instanceModel.getUserId());
-        amdbAppInstance.setUserAppKey(instanceModel.getUserAppKey());
+        amdbAppInstance.setUserAppKey(instanceModel.getTenantAppKey());
         amdbAppInstance.setEnvCode(instanceModel.getEnvCode());
 
 //        if (instanceModel.getErrorCode() != null && instanceModel.getErrorCode().trim().length() > 0) {
@@ -429,7 +429,7 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         instanceStatus.setAgentErrorMsg(instanceModel.getErrorMsg());
         instanceStatus.setAgentStatus(instanceModel.getAgentStatus());
         instanceStatus.setEnvCode(instanceModel.getEnvCode());
-        instanceStatus.setUserAppKey(instanceModel.getUserAppKey());
+        instanceStatus.setUserAppKey(instanceModel.getTenantAppKey());
         instanceStatus.setUserId(instanceModel.getUserId());
         return instanceStatus;
     }
