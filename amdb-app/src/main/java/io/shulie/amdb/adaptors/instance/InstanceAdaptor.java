@@ -131,24 +131,26 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         // 判断APP记录是否存在
         AppDO params = new AppDO();
         params.setAppName(appName);
-        AppDO appDO = appService.selectOneByParam(params);
-        if (appDO == null) {
-            appDO = getTamdAppCreateModelByInstanceModel(appName, instanceModel, curr);
+        params.setUserAppKey(instanceModel.getTenantAppKey());
+        params.setEnvCode(instanceModel.getEnvCode());
+        AppDO inDataBaseAppDo = appService.selectOneByParam(params);
+        if (inDataBaseAppDo == null) {
+            inDataBaseAppDo = getTamdAppCreateModelByInstanceModel(appName, instanceModel, curr);
             // insert,拿到返回ID
-            Response insertResponse = appService.insert(appDO);
-            appDO.setId(NumberUtils.toLong(insertResponse.getData() + ""));
+            Response insertResponse = appService.insert(inDataBaseAppDo);
+            inDataBaseAppDo.setId(NumberUtils.toLong(insertResponse.getData() + ""));
         } else {
-            appDO = getTamdAppUpdateModelByInstanceModel(instanceModel, appDO, curr);
+            inDataBaseAppDo = getTamdAppUpdateModelByInstanceModel(instanceModel, inDataBaseAppDo, curr);
             // update
-            appService.update(appDO);
+            appService.update(inDataBaseAppDo);
         }
         //更新实例信息
         TAmdbAppInstanceDO appInstanceDO = queryOldInstance(appName, instanceModel, oldInstanceKey);
         if (appInstanceDO == null) {
-            TAmdbAppInstanceDO amdbAppInstance = getTamdAppInstanceCreateModelByInstanceModel(appDO, instanceModel, curr);
+            TAmdbAppInstanceDO amdbAppInstance = getTamdAppInstanceCreateModelByInstanceModel(inDataBaseAppDo, instanceModel, curr);
             appInstanceService.insert(amdbAppInstance);
         } else {
-            TAmdbAppInstanceDO amdbAppInstance = getTamdAppInstanceUpdateModelByInstanceModel(appDO, instanceModel, appInstanceDO, curr);
+            TAmdbAppInstanceDO amdbAppInstance = getTamdAppInstanceUpdateModelByInstanceModel(inDataBaseAppDo, instanceModel, appInstanceDO, curr);
             appInstanceService.update(amdbAppInstance);
         }
 
@@ -203,6 +205,9 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         tAmdbApp.setModifierName("");
         tAmdbApp.setGmtCreate(curr);
         tAmdbApp.setGmtModify(curr);
+        tAmdbApp.setUserAppKey(instanceModel.getTenantAppKey());
+        tAmdbApp.setEnvCode(instanceModel.getEnvCode());
+        tAmdbApp.setUserId(instanceModel.getUserId());
         return tAmdbApp;
     }
 
@@ -210,19 +215,22 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
      * APP更新对象
      *
      * @param instanceModel
-     * @param oldAmdbApp
+     * @param inDataBaseAppDo
      * @param curr
      * @return
      */
-    private AppDO getTamdAppUpdateModelByInstanceModel(InstanceModel instanceModel, AppDO oldAmdbApp, Date curr) {
-        Map<String, Object> ext = JSON.parseObject(oldAmdbApp.getExt() == null ? "{}" : oldAmdbApp.getExt());
+    private AppDO getTamdAppUpdateModelByInstanceModel(InstanceModel instanceModel, AppDO inDataBaseAppDo, Date curr) {
+        Map<String, Object> ext = JSON.parseObject(inDataBaseAppDo.getExt() == null ? "{}" : inDataBaseAppDo.getExt());
         if (ext == null) {
             ext = new HashMap<>();
         }
         ext.put("jars", instanceModel.getJars());
-        oldAmdbApp.setExt(JSON.toJSONString(ext));
-        oldAmdbApp.setGmtModify(curr);
-        return oldAmdbApp;
+        inDataBaseAppDo.setExt(JSON.toJSONString(ext));
+        inDataBaseAppDo.setGmtModify(curr);
+        inDataBaseAppDo.setUserAppKey(instanceModel.getTenantAppKey());
+        inDataBaseAppDo.setEnvCode(instanceModel.getEnvCode());
+        inDataBaseAppDo.setUserId(instanceModel.getUserId());
+        return inDataBaseAppDo;
     }
 
     /**

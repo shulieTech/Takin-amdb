@@ -1,11 +1,10 @@
 package io.shulie.amdb.entity;
 
-import java.io.Serializable;
-
-import javax.persistence.Column;
-
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+
+import javax.persistence.Column;
+import java.io.Serializable;
 
 @Data
 public class BaseDatabaseDO implements Serializable {
@@ -14,6 +13,7 @@ public class BaseDatabaseDO implements Serializable {
      * 租户标识
      */
     @ApiModelProperty("租户标识")
+    @Column(name = "`user_app_key`")
     private String userAppKey;
 
     /**
