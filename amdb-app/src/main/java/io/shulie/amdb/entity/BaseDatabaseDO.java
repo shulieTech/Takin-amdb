@@ -25,7 +25,7 @@ public class BaseDatabaseDO implements Serializable {
     /**
      * 用户Id
      */
-    @ApiModelProperty("环境标识")
+    @ApiModelProperty("用户Id")
     @Column(name = "`user_id`")
     private String userId;
 }
