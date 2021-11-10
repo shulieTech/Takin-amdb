@@ -513,7 +513,9 @@ public class MetricsServiceImpl implements MetricsService {
         String endTime = request.getEndTime();
         String entranceStr = request.getEntranceStr();
         int clusterTest = request.getClusterTest();             //-1,混合  0,业务  1,压测
-        String f_appName = request.getFromAppName();           //上游应用
+        String f_appName = request.getFromAppName();            //上游应用
+        String middlewareName = request.getMiddlewareName();    //上游应用
+
         String t_appName = request.getAppName();                //应用
         String t_service = request.getService();                //接口
         String t_method = request.getMethod();                  //方法
@@ -521,6 +523,9 @@ public class MetricsServiceImpl implements MetricsService {
         where1.append(" where startDate between '" + startTime + "' and  '" + endTime + "' ");
         if(StringUtils.isNotBlank(f_appName)&&!f_appName.endsWith("Virtual")){
             where1.append(" and upAppName = '" + f_appName + "' ");
+        }
+        if(StringUtils.isNotBlank(middlewareName)){
+            where1.append(" and middlewareName = '" + middlewareName + "' ");
         }
         where1.append(" and parsedServiceName ='" + t_service + "' and parsedMethod = '" + t_method + "' " +
                         "and parsedAppName = '" + t_appName + "' " +

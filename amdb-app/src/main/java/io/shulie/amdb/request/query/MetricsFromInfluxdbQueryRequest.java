@@ -32,10 +32,12 @@ public class MetricsFromInfluxdbQueryRequest {
     String inMethod;           //入口方法
 
     String entranceStr;         //入口集合
-    String fromAppName;        //上游应用
+    String fromAppName;         //上游应用
+    String middlewareName;      //容器,界面区分多变
     String appName;             //应用
     String service;             //接口
     String method;              //方法
+
     int clusterTest;            //-1,混合  0,业务  1,压测
 
     public String getStartTime() {
@@ -135,7 +137,13 @@ public class MetricsFromInfluxdbQueryRequest {
         this.entranceStr = entranceStr;
     }
 
+    public String getMiddlewareName() {
+        return middlewareName;
+    }
 
+    public void setMiddlewareName(String middlewareName) {
+        this.middlewareName = middlewareName;
+    }
 
     public boolean isNotEmptyForEntrance(){
         if(StringUtils.isBlank(this.startTime)||
