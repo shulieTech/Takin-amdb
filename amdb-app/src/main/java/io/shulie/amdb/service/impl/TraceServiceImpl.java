@@ -26,6 +26,8 @@ import io.shulie.amdb.dao.ITraceDao;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.service.TraceService;
 import io.shulie.amdb.utils.StringUtil;
+import io.shulie.surge.config.clickhouse.ClickhouseTemplateHolder;
+import io.shulie.surge.config.clickhouse.ClickhouseTemplateManager;
 import io.shulie.surge.data.common.utils.Pair;
 import io.shulie.surge.data.deploy.pradar.link.model.TTrackClickhouseModel;
 import io.shulie.surge.data.deploy.pradar.parser.MiddlewareType;
@@ -46,6 +48,8 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import javax.annotation.Resource;
+
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 @Service
@@ -65,6 +69,9 @@ public class TraceServiceImpl implements TraceService {
     @Value("${config.trace.limit}")
     private String traceQueryLimit;
 
+    @Resource
+    private ClickhouseTemplateManager clickhouseTemplateManager;
+
     @Override
     public Response<List<EntryTraceInfoDTO>> getEntryTraceInfo(EntryTraceQueryParam param) {
         Boolean e2eFlag = false;
@@ -83,18 +90,21 @@ public class TraceServiceImpl implements TraceService {
         if (isEmpty(andFilterList)) {
             return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "查询条件为空");
         }
-        String sql = "select " + TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(
+        ClickhouseTemplateHolder holder = clickhouseTemplateManager.getTemplateHolder(param.getTenantAppKey(), param.getEnvCode(), false);
+        String tableName = holder.getTableName();
+        String sql = "select " + TRACE_SELECT_FILED + " from " + tableName + " where " + StringUtils.join(
                 andFilterList, " and ");
         if (CollectionUtils.isNotEmpty(orFilterList)) {
             sql += " and (" + StringUtils.join(orFilterList, " or ") + ")";
         }
         sql += (e2eFlag ? " order by startTime desc " : " order by traceId desc ") + getLimitInfo(param);
         // 入口trace列表
+        ClickhouseTemplateManager.HOLDER.set(holder);
         List<TTrackClickhouseModel> traceModelList = traceDao.queryForList(sql, TTrackClickhouseModel.class);
 
         if (e2eFlag) {
             Response result = Response.success(traceModelList.stream().map(model -> convert(model)).collect(Collectors.toList()));
-            setResponseCount(andFilterList, orFilterList, result);
+            setResponseCount(param, andFilterList, orFilterList, result);
             return result;
         }
 
@@ -105,7 +115,7 @@ public class TraceServiceImpl implements TraceService {
         Map<String, TTrackClickhouseModel> traceId2EngineTraceMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(traceModelList)) {
             String engineSql = "select " + TRACE_SELECT_FILED
-                    + " from t_trace_all where traceId in ('"
+                    + " from " + tableName + " where traceId in ('"
                     + StringUtils.join(traceId2TraceMap.keySet(), "','")
                     + "') and logType='5' and appName='pressure-engine'";
 
@@ -121,8 +131,8 @@ public class TraceServiceImpl implements TraceService {
                         + "'";
             }
             // 查询
-            List<TTrackClickhouseModel> traceEngineModelList = traceDao.queryForList(engineSql,
-                    TTrackClickhouseModel.class);
+            ClickhouseTemplateManager.HOLDER.set(holder);
+            List<TTrackClickhouseModel> traceEngineModelList = traceDao.queryForList(engineSql, TTrackClickhouseModel.class);
             traceId2EngineTraceMap = traceEngineModelList.stream().collect(
                     Collectors.toMap(TTrackClickhouseModel::getTraceId, model -> model, (k1, k2) -> k1));
         }
@@ -130,7 +140,7 @@ public class TraceServiceImpl implements TraceService {
         // 合并结果
         List<EntryTraceInfoDTO> entryTraceInfoDtos = mergeEngineTraceAndTrace(traceId2EngineTraceMap, traceId2TraceMap);
         Response<List<EntryTraceInfoDTO>> result = Response.success(entryTraceInfoDtos);
-        setResponseCount(andFilterList, orFilterList, result);
+        setResponseCount(param, andFilterList, orFilterList, result);
         return result;
     }
 
@@ -148,17 +158,18 @@ public class TraceServiceImpl implements TraceService {
         if (isEmpty(andFilterList)) {
             return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "查询条件为空");
         }
-
+        ClickhouseTemplateHolder holder = clickhouseTemplateManager.getTemplateHolder(param.getTenantAppKey(), param.getEnvCode(), false);
+        String tableName = holder.getTableName();
         // 分页
         String limit = getLimitInfo(param);
         // 流量引擎日志
         String sql = null;
         // 如果查询响应失败和断言失败,则对重复数据进行去重
         if ("0".equals(param.getResultType()) || "2".equals(param.getResultType())) {
-            sql = "select distinct" + TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(
+            sql = "select distinct" + TRACE_SELECT_FILED + " from " + tableName + " where " + StringUtils.join(
                     andFilterList, " and ");
         } else {
-            sql = "select " + TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(
+            sql = "select " + TRACE_SELECT_FILED + " from " + tableName + " where " + StringUtils.join(
                     andFilterList, " and ");
         }
         if (CollectionUtils.isNotEmpty(orFilterList)) {
@@ -166,6 +177,7 @@ public class TraceServiceImpl implements TraceService {
         }
         //1027 三变让改成接口耗时降序排序
         sql += " order by cost desc " + limit;
+        ClickhouseTemplateManager.HOLDER.set(holder);
         List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql, TTrackClickhouseModel.class);
 //        Map<String, TTrackClickhouseModel> traceId2EngineTraceMap = modelList.stream().collect(
 //                Collectors.toMap(TTrackClickhouseModel::getTraceId, model -> model, (k1, k2) -> k1));
@@ -188,9 +200,9 @@ public class TraceServiceImpl implements TraceService {
         entryTraceInfoDtos = mergeEngineTraceAndTrace(traceId2EngineTraceMap, traceId2TraceMap);*/
         Response result = Response.success(modelList.stream().map(model -> convert(model)).collect(Collectors.toList()));
         if ("0".equals(param.getResultType()) || "2".equals(param.getResultType())) {
-            setDistinctResponseCount(andFilterList, orFilterList, result);
+            setDistinctResponseCount(param, andFilterList, orFilterList, result);
         } else {
-            setResponseCount(andFilterList, orFilterList, result);
+            setResponseCount(param, andFilterList, orFilterList, result);
         }
         return result;
     }
@@ -532,8 +544,10 @@ public class TraceServiceImpl implements TraceService {
         return limit;
     }
 
-    private void setResponseCount(List<String> andFilterList, List<String> orFilterList, Response response) {
-        String countSql = "select count(1) as total " + " from t_trace_all where " + StringUtils.join(andFilterList,
+    private void setResponseCount(EntryTraceQueryParam param, List<String> andFilterList, List<String> orFilterList, Response response) {
+        ClickhouseTemplateHolder holder = clickhouseTemplateManager.getTemplateHolder(param.getTenantAppKey(), param.getEnvCode(), false);
+        ClickhouseTemplateManager.HOLDER.set(holder);
+        String countSql = "select count(1) as total " + " from " +  holder.getTableName() + " where " + StringUtils.join(andFilterList,
                 " and ");
         if (CollectionUtils.isNotEmpty(orFilterList)) {
             countSql += " and (" + StringUtils.join(orFilterList, " or ") + ")";
@@ -543,8 +557,10 @@ public class TraceServiceImpl implements TraceService {
         response.setTotal(total);
     }
 
-    private void setDistinctResponseCount(List<String> andFilterList, List<String> orFilterList, Response response) {
-        String countSql = "select count(1) as total " + " from ( select distinct " + TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(andFilterList,
+    private void setDistinctResponseCount(EntryTraceQueryParam param, List<String> andFilterList, List<String> orFilterList, Response response) {
+        ClickhouseTemplateHolder holder = clickhouseTemplateManager.getTemplateHolder(param.getTenantAppKey(), param.getEnvCode(), false);
+        ClickhouseTemplateManager.HOLDER.set(holder);
+        String countSql = "select count(1) as total " + " from ( select distinct " + TRACE_SELECT_FILED + " from " + holder.getTableName() + " where " + StringUtils.join(andFilterList,
                 " and ");
         if (CollectionUtils.isNotEmpty(orFilterList)) {
             countSql += " and (" + StringUtils.join(orFilterList, " or ") + "))";
@@ -558,7 +574,7 @@ public class TraceServiceImpl implements TraceService {
 
     @Override
     public Response<Map<String, List<RpcBased>>> getTraceInfo(EntryTraceQueryParam param) {
-
+        ClickhouseTemplateHolder holder = clickhouseTemplateManager.getTemplateHolder(param.getTenantAppKey(), param.getEnvCode(), false);
         // 拼装过滤条件
         List<String> andFilterList = new ArrayList<>();
         List<String> orFilterList = new ArrayList<>();
@@ -617,17 +633,20 @@ public class TraceServiceImpl implements TraceService {
         } else {
             limit = "limit 10";
         }
-        String sql = "select traceId from t_trace_all where " + StringUtils.join(
+        ClickhouseTemplateManager.HOLDER.set(holder);
+        String tableName = holder.getTableName();
+        String sql = "select traceId from " + tableName + " where " + StringUtils.join(
                 andFilterList, " and ");
         if (CollectionUtils.isNotEmpty(orFilterList)) {
             sql += " and (" + StringUtils.join(orFilterList, " or ") + ")";
         }
-        String countSql = "select count(1) as total " + " from t_trace_all where " + StringUtils.join(andFilterList,
+        String countSql = "select count(1) as total " + " from " + tableName + " where " + StringUtils.join(andFilterList,
                 " and ");
         if (CollectionUtils.isNotEmpty(orFilterList)) {
             countSql += " and (" + StringUtils.join(orFilterList, " or ") + ")";
         }
         sql += " order by traceId desc " + limit;
+        ClickhouseTemplateManager.HOLDER.set(holder);
         List<Map<String, Object>> modelList = traceDao.queryForList(sql);
         Map<String, List<RpcBased>> traceMap = new HashMap<>();
         for (Map<String, Object> map : modelList) {
@@ -636,6 +655,7 @@ public class TraceServiceImpl implements TraceService {
             tmp.setTraceId(traceId);
             traceMap.put(traceId, getTraceDetail(tmp));
         }
+        ClickhouseTemplateManager.HOLDER.set(holder);
         Map<String, Object> countInfo = traceDao.queryForMap(countSql);
         long total = NumberUtils.toLong("" + countInfo.get("total"), 0);
         Response result = Response.success(traceMap);
@@ -651,23 +671,27 @@ public class TraceServiceImpl implements TraceService {
         StringBuilder sql = new StringBuilder();
         StringBuilder countSql = new StringBuilder();
 
+        ClickhouseTemplateHolder holder = clickhouseTemplateManager.getTemplateHolder(param.getTenantAppKey(), param.getEnvCode(), false);
+        String tableName = holder.getTableName();
         //先统计数量,再分页进行查询
-        countSql.append("select count(1) as total from (select distinct request from t_trace_all where");
+        countSql.append("select count(1) as total from (select distinct request from " + tableName + " where");
         if (StringUtil.isNotBlank(param.getStartTime()) && StringUtil.isNotBlank(param.getEndTime())) {
             countSql.append(" startDate between '" + param.getStartTime() + "' and '" + param.getEndTime() + "' and ");
         }
         countSql.append(" appName = '" + param.getAppName() + "' and parsedServiceName = '" + param.getServiceName() + "' and parsedMethod = '" + param.getMethodName() + "' and rpcType = '" + param.getRpcType() + "' and request not in ('','{}')) ");
+        ClickhouseTemplateManager.HOLDER.set(holder);
         Map<String, Object> countInfo = traceDao.queryForMap(countSql.toString());
         long total = NumberUtils.toLong("" + countInfo.get("total"), 0);
         int page = (total / pageSize == 0) ? 1 : (int) (total % pageSize == 0 ? (total % pageSize) : total / pageSize + 1);
 
         for (int i = 1; i <= page; i++) {
-            sql.append("select distinct request from t_trace_all where ");
+            sql.append("select distinct request from " + tableName + " where ");
             if (StringUtil.isNotBlank(param.getStartTime()) && StringUtil.isNotBlank(param.getEndTime())) {
                 sql.append(" startDate between '" + param.getStartTime() + "' and '" + param.getEndTime() + "' and ");
             }
             sql.append(" appName = '" + param.getAppName() + "' and parsedServiceName = '" + param.getServiceName() + "' and parsedMethod = '" + param.getMethodName() + "' and rpcType = '" + param.getRpcType() + "' and request not in ('','{}') ");
             sql.append("limit " + ((i - 1) * pageSize) + "," + pageSize);
+            ClickhouseTemplateManager.HOLDER.set(holder);
             List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
 
             List<Map<String, Object>> resultList = new ArrayList<>();
@@ -720,23 +744,26 @@ public class TraceServiceImpl implements TraceService {
         List<String> orFilterList = filters.getSecond();
         // 分页
         String limit = getLimitInfo(param);
+        ClickhouseTemplateHolder holder = clickhouseTemplateManager.getTemplateHolder(param.getTenantAppKey(), param.getEnvCode(), false);
         // 流量引擎日志
-        StringBuilder sql = new StringBuilder("select * from t_trace_all where " + StringUtils.join(
+        String tableName = holder.getTableName();
+        StringBuilder sql = new StringBuilder("select * from " + tableName + " where " + StringUtils.join(
                 andFilterList, " and "));
         if (CollectionUtils.isNotEmpty(orFilterList)) {
             sql.append(" and (" + StringUtils.join(orFilterList, " or ") + ")");
         }
         //1027 三变让改成接口耗时降序排序
         sql.append(limit);
-
+        ClickhouseTemplateManager.HOLDER.set(holder);
         List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
         Response result = null;
         if (!modelList.isEmpty()) {
             result = Response.success(modelList);
-            StringBuilder countSql = new StringBuilder("select count(1) as total from t_trace_all where " + StringUtils.join(andFilterList, " and "));
+            StringBuilder countSql = new StringBuilder("select count(1) as total from " + tableName + " where " + StringUtils.join(andFilterList, " and "));
             if (CollectionUtils.isNotEmpty(orFilterList)) {
                 sql.append(" and (" + StringUtils.join(orFilterList, " or ") + ")");
             }
+            ClickhouseTemplateManager.HOLDER.set(holder);
             Map<String, Object> countInfo = traceDao.queryForMap(countSql.toString());
             result.setTotal(NumberUtils.toLong("" + countInfo.get("total"), 0));
             return result;
@@ -750,7 +777,8 @@ public class TraceServiceImpl implements TraceService {
     @Override
     public List<RpcBased> getTraceDetail(TraceStackQueryParam param) {
         StringBuilder sql = new StringBuilder();
-        sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where 1=1 ");
+        ClickhouseTemplateHolder holder = clickhouseTemplateManager.getTemplateHolder(param.getTenantAppKey(), param.getEnvCode(), false);
+        sql.append("select " + TRACE_SELECT_FILED + " from " + holder.getTableName() + " where 1=1 ");
         if (StringUtil.isNotBlank(param.getStartTime()) && StringUtil.isNotBlank(param.getEndTime())) {
             sql.append(" and startDate between '" + param.getStartTime() + "' and '" + param.getEndTime() + "' ");
         }
@@ -762,6 +790,7 @@ public class TraceServiceImpl implements TraceService {
         }
         sql.append(" and traceId='" + param.getTraceId()
                 + "' order by rpcId limit " + traceQueryLimit);
+        ClickhouseTemplateManager.HOLDER.set(holder);
         List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
         /*List<TTrackClickhouseModel> engineModelList = modelList.stream().filter(model -> 5 == model.getLogType())
                 .collect(Collectors.toList());*/

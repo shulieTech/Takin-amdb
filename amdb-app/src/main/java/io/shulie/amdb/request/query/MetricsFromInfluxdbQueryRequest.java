@@ -15,6 +15,7 @@
 
 package io.shulie.amdb.request.query;
 
+import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
@@ -23,7 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @Data
-public class MetricsFromInfluxdbQueryRequest {
+public class MetricsFromInfluxdbQueryRequest extends AbstractAmdbBaseRequest {
     String startTime;
     String endTime;
 

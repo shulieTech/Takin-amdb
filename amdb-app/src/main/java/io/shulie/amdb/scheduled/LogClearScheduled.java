@@ -16,6 +16,8 @@
 package io.shulie.amdb.scheduled;
 
 import io.shulie.amdb.dao.ITraceDao;
+import io.shulie.surge.config.clickhouse.ClickhouseTemplateHolder;
+import io.shulie.surge.config.clickhouse.ClickhouseTemplateManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -38,15 +40,22 @@ public class LogClearScheduled {
     @Value("${datasource.traceAll}")
     private String traceAll;
 
+    @Resource
+    private ClickhouseTemplateManager clickhouseTemplateManager;
+
     @Scheduled(cron = "0 0 2 * * ?")
     public void cleanInfo() {
         if ("mysql".equalsIgnoreCase(traceAll)) {
             log.info("定时清除链路日志数据");
+            // 此处任意构造一个request
+            ClickhouseTemplateHolder holder = clickhouseTemplateManager.getTemplateHolder("", "", false);
+            ClickhouseTemplateManager.HOLDER.set(holder);
             Date date = traceDao.queryForObject("select now()", Date.class);
             long threeDayAgo = date.getTime() - 3 * 24 * 60 * 60 * 1000;
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
             String format = simpleDateFormat.format(new Date(threeDayAgo));
-            traceDao.execute("delete from t_trace_all where startDate < '" + format + "'");
+            ClickhouseTemplateManager.HOLDER.set(holder);
+            traceDao.execute("delete from " + holder.getTableName() + " where startDate < '" + format + "'");
         }
     }
 }

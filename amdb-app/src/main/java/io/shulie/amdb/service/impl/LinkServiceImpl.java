@@ -748,6 +748,8 @@ public class LinkServiceImpl implements LinkService {
         //如果没传值则赋默认值
         request.put("rpcId", StringUtils.isBlank(param.getRpcId()) ? "0" : param.getRpcId());
         request.put("logType", StringUtils.isBlank(param.getLogType()) ? "1" : param.getLogType());
+        request.put("userAppKey", param.getTenantAppKey());
+        request.put("envCode", param.getEnvCode());
 
         //初始化
         linkProcessor.init();

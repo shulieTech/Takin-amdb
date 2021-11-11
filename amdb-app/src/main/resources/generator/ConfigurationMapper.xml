@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2021 Shulie Technology, Co.Ltd
+  ~ Email: shulie@shulie.io
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shulie.amdb.mapper.ConfigurationMapper">
+
+    <delete id="deleteItemByConfigurationId">
+        delete from t_amdb_configuration_item where configuration_id = #{id}
+    </delete>
+
+    <select id="findItemKeyByType" resultType="io.shulie.amdb.entity.ConfigurationItemKeyDO">
+        select id, configuration_type configurationType, `name`, `desc`, `status`, value_type valueType, default_value defaultValue
+        from t_amdb_configuration_item_key
+        where configuration_type = #{id}
+    </select>
+
+    <insert id="insertItemList" parameterType="io.shulie.amdb.entity.ConfigurationItemDO">
+        insert into t_amdb_configuration_item (configuration_id, `key`, `value`)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.configurationId}, #{item.key}, #{item.value})
+        </foreach>
+    </insert>
+
+    <resultMap id="validConfiguration" type="io.shulie.amdb.entity.ConfigurationDO">
+        <id property="number" column="confNumber"/>
+        <result property="name" column="confName"/>
+        <result property="desc" column="confDesc"/>
+        <result property="type" column="confType"/>
+        <result property="availableEnv" column="confAvailableEnv"/>
+        <collection property="itemDOList" ofType="io.shulie.amdb.entity.ConfigurationItemDO">
+            <result property="key" column="itemKey"/>
+            <result property="value" column="itemValue"/>
+        </collection>
+    </resultMap>
+
+    <select id="query" resultMap="validConfiguration" parameterType="io.shulie.amdb.entity.ConfigurationDO">
+        select
+            conf.`number` confNumber,
+            conf.`name` confName,
+            conf.`desc` confDesc,
+            conf.`type` confType,
+            conf.`available_env` confAvailableEnv,
+            item.`key` itemKey,
+            item.`value` itemValue
+        from t_amdb_configuration conf left join t_amdb_configuration_item item on conf.id = item.configuration_id
+        <trim prefix="where" prefixOverrides="and">
+            <if test="number != null and number != ''">
+                and conf.`number` = #{number}
+            </if>
+            <if test="type != null and type != ''">
+                and conf.`type` = #{type}
+            </if>
+            <if test="name != null and name != ''">
+                and conf.`name` like concat(concat('%', #{name}), '%')
+            </if>
+            <if test="status != null">
+                and conf.`status` = #{status}
+            </if>
+            <if test="availableEnv != null">
+                and conf.available_env = #{availableEnv}
+            </if>
+            <if test="deleted != null">
+                and conf.`is_delete` = #{deleted}
+            </if>
+        </trim>
+    </select>
+</mapper>

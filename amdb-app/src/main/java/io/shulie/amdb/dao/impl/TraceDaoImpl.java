@@ -18,29 +18,16 @@ package io.shulie.amdb.dao.impl;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import io.shulie.amdb.dao.ITraceDao;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.jdbc.core.JdbcTemplate;
+import io.shulie.surge.config.clickhouse.ClickhouseTemplateManager;
 import org.springframework.stereotype.Service;
-import ru.yandex.clickhouse.BalancedClickhouseDataSource;
-import ru.yandex.clickhouse.settings.ClickHouseProperties;
 
-import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service("traceDaoImpl")
-public class TraceDaoImpl implements ITraceDao, ApplicationContextAware, InitializingBean {
-
-    private transient ApplicationContext applicationContext;
-
-    private volatile JdbcTemplate jdbcTemplate;
+public class TraceDaoImpl implements ITraceDao {
 
     /**
      * 查询map
@@ -50,12 +37,15 @@ public class TraceDaoImpl implements ITraceDao, ApplicationContextAware, Initial
      */
     @Override
     public Map<String, Object> queryForMap(String sql) {
-        return jdbcTemplate.queryForMap(sql);
+        Map<String, Object> result = ClickhouseTemplateManager.HOLDER.get().getTemplate().queryForMap(sql);
+        ClickhouseTemplateManager.HOLDER.remove();
+        return result;
     }
 
     @Override
     public void execute(String sql) {
-        jdbcTemplate.execute(sql);
+        ClickhouseTemplateManager.HOLDER.get().getTemplate().execute(sql);
+        ClickhouseTemplateManager.HOLDER.remove();
     }
 
     /**
@@ -97,39 +87,8 @@ public class TraceDaoImpl implements ITraceDao, ApplicationContextAware, Initial
      */
     @Override
     public List<Map<String, Object>> queryForList(String sql) {
-        return jdbcTemplate.queryForList(sql);
-    }
-
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        String datasource = applicationContext.getEnvironment()
-                .getProperty("datasource.traceAll", String.class);
-
-        Objects.requireNonNull(datasource);
-
-        switch (datasource.toLowerCase()) {
-            case "mysql":
-                getSetMysqlAmdbJdbcTemplate();
-                break;
-            case "clickhouse":
-                getSetClickhouseJdbcTemplate();
-                break;
-            default:
-                throw new RuntimeException("unknown datasource " + datasource + " for t_trace_all");
-        }
-    }
-
-    private void getSetMysqlAmdbJdbcTemplate() {
-        this.jdbcTemplate = applicationContext.getBean(JdbcTemplate.class);
-    }
-
-    private void getSetClickhouseJdbcTemplate() {
-        this.jdbcTemplate = applicationContext.getBean("clickhouseJdbcTemplate",JdbcTemplate.class);
+        List<Map<String, Object>> result = ClickhouseTemplateManager.HOLDER.get().getTemplate().queryForList(sql);
+        ClickhouseTemplateManager.HOLDER.remove();
+        return result;
     }
 }

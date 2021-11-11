@@ -15,15 +15,20 @@
 
 package io.shulie.amdb.configration;
 
+import io.shulie.surge.config.clickhouse.ClickhouseTemplateManager;
 import io.shulie.surge.data.deploy.pradar.link.processor.LinkProcessor;
-import io.shulie.surge.data.sink.clickhouse.ClickHouseSupport;
 import io.shulie.surge.data.sink.mysql.MysqlSupport;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.lang.reflect.Field;
+import java.util.Properties;
+
+import static io.shulie.surge.config.clickhouse.ClickhouseTemplateManager.*;
 
 /**
  * @author anjone
@@ -41,15 +46,7 @@ public class SurgeComponentConfiguration {
     }
 
     @Bean
-    public ClickHouseSupport clickHouseSupport(@Value("${config.clickhouse.url}") String clickhouseUrl,
-                                               @Value("${config.clickhouse.username}") String clickhouseUserName,
-                                               @Value("${config.clickhouse.password}") String clickhousePassword) {
-        return new ClickHouseSupport(clickhouseUrl, clickhouseUserName, clickhousePassword, 200, false);
-    }
-
-
-    @Bean
-    public LinkProcessor linkProcessor(@Autowired ClickHouseSupport clickHouseSupport,
+    public LinkProcessor linkProcessor(@Autowired ClickhouseTemplateManager clickhouseTemplateManager,
                                        @Autowired MysqlSupport mysqlSupport,
                                        @Value("${datasource.traceAll}") String dataSourceType) {
 
@@ -60,9 +57,9 @@ public class SurgeComponentConfiguration {
             mysqlSupportField.setAccessible(true);
             mysqlSupportField.set(linkProcessor, mysqlSupport);
 
-            Field clickHouseSupportFile = LinkProcessor.class.getDeclaredField("clickHouseSupport");
-            clickHouseSupportFile.setAccessible(true);
-            clickHouseSupportFile.set(linkProcessor, clickHouseSupport);
+            Field clickhouseTemplateManagerField = LinkProcessor.class.getDeclaredField("clickhouseTemplateManager");
+            clickhouseTemplateManagerField.setAccessible(true);
+            clickhouseTemplateManagerField.set(linkProcessor, clickhouseTemplateManager);
 
             linkProcessor.setDataSourceType(dataSourceType);
 
@@ -75,5 +72,47 @@ public class SurgeComponentConfiguration {
         }
 
         return linkProcessor;
+    }
+
+    @Bean
+    public ClickhouseTemplateManager clickhouseTemplateManager(MysqlSupport mysqlSupport,
+        @Autowired @Qualifier("clickhouseConfig") Properties clickhouseConfig,
+        @Autowired @Qualifier("troWebConfig") Properties troWebConfig,
+        @Value("${config.script-path.clickhouse:}") String scriptFilePath,
+        @Value("${datasource.traceAll:clickhouse}") String dataSourceType
+    ) {
+        Properties properties = new Properties();
+        properties.putAll(clickhouseConfig);
+        properties.putAll(troWebConfig);
+        ClickhouseTemplateManager clickhouseTemplateManager = new ClickhouseTemplateManager(mysqlSupport, dataSourceType);
+        if (StringUtils.isBlank(scriptFilePath)) {
+            scriptFilePath = SurgeComponentConfiguration.class.getProtectionDomain().getCodeSource().getLocation().getPath() + "config";
+        }
+        clickhouseTemplateManager.setFileParentPath(scriptFilePath);
+        clickhouseTemplateManager.init(properties);
+        return clickhouseTemplateManager;
+    }
+
+    @Bean
+    public Properties clickhouseConfig(@Value("${config.clickhouse.url:}") String clickhouseUrl,
+        @Value("${config.clickhouse.username:}") String clickhouseUserName,
+        @Value("${config.clickhouse.password:}") String clickhousePassword
+    ) {
+        Properties properties = new Properties();
+        properties.put(CONFIG_CLICKHOUSE_URL, clickhouseUrl);
+        properties.put(CONFIG_CLICKHOUSE_USER_NAME, clickhouseUserName);
+        properties.put(CONFIG_CLICKHOUSE_PASSWORD, clickhousePassword);
+        return properties;
+    }
+
+    @Bean
+    public Properties troWebConfig(@Value("${tro.url.ip:}") String troIp, @Value("${tro.port:}") String troPort,
+        @Value("${tro.api.config.path:}") String troCkClusterPath
+    ) {
+        Properties properties = new Properties();
+        properties.put(TRO_IP, troIp);
+        properties.put(TRO_PORT, troPort);
+        properties.put(TRO_CONFIG_PATH, troCkClusterPath);
+        return properties;
     }
 }

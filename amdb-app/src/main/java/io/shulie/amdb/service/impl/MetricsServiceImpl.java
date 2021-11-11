@@ -28,6 +28,8 @@ import io.shulie.amdb.response.metrics.MetricsDetailResponse;
 import io.shulie.amdb.response.metrics.MetricsResponse;
 import io.shulie.amdb.service.MetricsService;
 import io.shulie.amdb.utils.InfluxDBManager;
+import io.shulie.surge.config.clickhouse.ClickhouseTemplateHolder;
+import io.shulie.surge.config.clickhouse.ClickhouseTemplateManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -59,6 +61,9 @@ public class MetricsServiceImpl implements MetricsService {
     @Autowired
     @Qualifier("traceDaoImpl")
     ITraceDao traceDao;
+
+    @Resource
+    private ClickhouseTemplateManager clickhouseTemplateManager;
 
     @Override
     public Map<String, MetricsResponse> getMetrics(MetricsQueryRequest request) {
@@ -491,8 +496,10 @@ public class MetricsServiceImpl implements MetricsService {
         String in_appName = request.getInAppName();          //入口应用
         String in_service = request.getInService();          //入口接口
         String in_method = request.getInMethod();            //入口方法
-        String sql1 = "select DISTINCT entranceId from t_trace_all " +
-                "where startDate between '" + startTime + "' and  '" + endTime + "' " +
+        ClickhouseTemplateHolder holder = clickhouseTemplateManager.getTemplateHolder(request.getTenantAppKey(), request.getEnvCode(), false);
+        ClickhouseTemplateManager.HOLDER.set(holder);
+        String sql1 = "select DISTINCT entranceId from " + holder.getTableName() +
+                " where startDate between '" + startTime + "' and  '" + endTime + "' " +
                 "and parsedServiceName ='" + in_service + "' and parsedMethod = '" + in_method + "' " +
                 //"and logType ='3' "+
                 "and parsedAppName = '" + in_appName + "'";
@@ -519,6 +526,9 @@ public class MetricsServiceImpl implements MetricsService {
         String t_appName = request.getAppName();                //应用
         String t_service = request.getService();                //接口
         String t_method = request.getMethod();                  //方法
+        ClickhouseTemplateHolder holder = clickhouseTemplateManager.getTemplateHolder(request.getTenantAppKey(), request.getEnvCode(), false);
+        ClickhouseTemplateManager.HOLDER.set(holder);
+        String tableName = holder.getTableName();
         StringBuilder where1 = new StringBuilder();
         where1.append(" where startDate between '" + startTime + "' and  '" + endTime + "' ");
         if(StringUtils.isNotBlank(f_appName)&&!f_appName.endsWith("Virtual")){
@@ -537,7 +547,7 @@ public class MetricsServiceImpl implements MetricsService {
                 "MAX(cost) as allMaxRt,\n" +
                 "sum(cost) as allTotalRt,\n" +
                 "(sum(toInt8(samplingInterval))/210) as allTotalTps\n" +
-                "from t_trace_all \n" + where1;
+                "from " + tableName + " \n" + where1;
         Map<String, Object> modelList = traceDao.queryForMap(selectsql1);
         if (modelList.get("allTotalCount") == null) {
             modelList.put("allTotalCount", 0);
@@ -550,7 +560,8 @@ public class MetricsServiceImpl implements MetricsService {
         }
         modelList.put("realSeconds", 210);
         String selectsql2 = "select sum(toInt8(samplingInterval)) as allSuccessCount\n" +
-                "from t_trace_all \n" + where1 + " and resultCode in('00','200') ";
+                "from " + tableName + " \n" + where1 + " and resultCode in('00','200') ";
+        ClickhouseTemplateManager.HOLDER.set(holder);
         Map<String, Object> successCount = traceDao.queryForMap(selectsql2);
         modelList.putAll(successCount);
         if (modelList.get("allSuccessCount") == null) {
