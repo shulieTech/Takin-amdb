@@ -55,7 +55,7 @@ public class TraceMetricsRequest extends AbstractAmdbBaseRequest {
             String tenantAppKey = getTenantAppKey();
             String envCode = getEnvCode();
             e2eNodeRequestList.forEach(request -> {
-                request.setTenant(tenantAppKey);
+                request.setTenantAppKey(tenantAppKey);
                 request.setEnvCode(envCode);
             });
         }
