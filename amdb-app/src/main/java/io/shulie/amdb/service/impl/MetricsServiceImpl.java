@@ -494,6 +494,7 @@ public class MetricsServiceImpl implements MetricsService {
         String sql1 = "select DISTINCT entranceId from t_trace_all " +
                 "where startDate between '" + startTime + "' and  '" + endTime + "' " +
                 "and parsedServiceName ='" + in_service + "' and parsedMethod = '" + in_method + "' " +
+                //"and logType ='3' "+
                 "and parsedAppName = '" + in_appName + "'";
         List<Map<String, Object>> entranceIdList = traceDao.queryForList(sql1);
         StringBuilder sb = new StringBuilder();
@@ -512,15 +513,21 @@ public class MetricsServiceImpl implements MetricsService {
         String endTime = request.getEndTime();
         String entranceStr = request.getEntranceStr();
         int clusterTest = request.getClusterTest();             //-1,混合  0,业务  1,压测
-        String f_appName = request.getFromAppName();           //上游应用
+        String f_appName = request.getFromAppName();            //上游应用
+        String middlewareName = request.getMiddlewareName();    //上游应用
+
         String t_appName = request.getAppName();                //应用
         String t_service = request.getService();                //接口
         String t_method = request.getMethod();                  //方法
         StringBuilder where1 = new StringBuilder();
-        where1.append(
-                "where startDate between '" + startTime + "' and  '" + endTime + "' " +
-                        "and upAppName = '" + f_appName + "' " +
-                        "and parsedServiceName ='" + t_service + "' and parsedMethod = '" + t_method + "' " +
+        where1.append(" where startDate between '" + startTime + "' and  '" + endTime + "' ");
+        if(StringUtils.isNotBlank(f_appName)&&!f_appName.endsWith("Virtual")){
+            where1.append(" and upAppName = '" + f_appName + "' ");
+        }
+        if(StringUtils.isNotBlank(middlewareName)){
+            where1.append(" and middlewareName = '" + middlewareName + "' ");
+        }
+        where1.append(" and parsedServiceName ='" + t_service + "' and parsedMethod = '" + t_method + "' " +
                         "and parsedAppName = '" + t_appName + "' " +
                         "and entranceId in(" + entranceStr + ") ");
         if (clusterTest != -1) {
