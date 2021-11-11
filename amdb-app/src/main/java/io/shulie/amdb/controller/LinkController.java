@@ -143,7 +143,7 @@ public class LinkController {
      * @return
      */
     @RequestMapping(value = "/calculateLinkTopology", method = RequestMethod.POST)
-    public Response<String> calculateLinkTopology(TraceStackQueryParam param) {
+    public Response<String> calculateLinkTopology(@RequestBody TraceStackQueryParam param) {
         log.info("指定调用链生成拓扑图 param:{}", param);
         try {
             return linkService.calculateTopology(param);
