@@ -19,6 +19,7 @@ import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
@@ -49,4 +50,15 @@ public class TraceMetricsRequest extends AbstractAmdbBaseRequest {
     @ApiModelProperty("边ID,逗号分隔")
     String edgeIds;
 
+    public List<E2ENodeMetricsRequest> getE2eNodeRequestList() {
+        if (!CollectionUtils.isEmpty(e2eNodeRequestList)) {
+            String tenantAppKey = getTenantAppKey();
+            String envCode = getEnvCode();
+            e2eNodeRequestList.forEach(request -> {
+                request.setTenant(tenantAppKey);
+                request.setEnvCode(envCode);
+            });
+        }
+        return e2eNodeRequestList;
+    }
 }
