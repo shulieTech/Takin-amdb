@@ -414,6 +414,12 @@ public class TraceServiceImpl implements TraceService {
         if (CollectionUtils.isNotEmpty(param.getTraceIdList())) {
             andFilterList.add("traceId in ('" + StringUtils.join(param.getTraceIdList(), "','") + "')");
         }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            andFilterList.add("userAppKey='" + param.getTenantAppKey() + "'");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            andFilterList.add("envCode='" + param.getEnvCode() + "'");
+        }
         return new Pair<>(andFilterList, orFilterList);
     }
 
@@ -467,7 +473,12 @@ public class TraceServiceImpl implements TraceService {
                 andFilterList.add("(resultCode<>'00' and resultCode<>'05')");
             }
         }
-
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            andFilterList.add("userAppKey='" + param.getTenantAppKey() + "'");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            andFilterList.add("envCode='" + param.getEnvCode() + "'");
+        }
         return new Pair<>(andFilterList, orFilterList);
     }
 
@@ -500,6 +511,12 @@ public class TraceServiceImpl implements TraceService {
         }
         if (CollectionUtils.isNotEmpty(param.getTraceIdList())) {
             andFilterList.add("traceId in ('" + StringUtils.join(param.getTraceIdList(), "','") + "')");
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            andFilterList.add("userAppKey='" + param.getTenantAppKey() + "'");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            andFilterList.add("envCode='" + param.getEnvCode() + "'");
         }
         return new Pair<>(andFilterList, orFilterList);
     }
@@ -742,6 +759,12 @@ public class TraceServiceImpl implements TraceService {
         sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where ");
         if (StringUtil.isNotBlank(param.getStartTime()) && StringUtil.isNotBlank(param.getEndTime())) {
             sql.append("startDate between '" + param.getStartTime() + "' and '" + param.getEndTime() + "' and ");
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            sql.append(" userAppKey='").append(param.getTenantAppKey()).append("' ");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            sql.append(" envCode='").append(param.getEnvCode()).append("' ");
         }
         sql.append(" traceId='" + param.getTraceId()
                 + "' order by rpcId limit " + traceQueryLimit);

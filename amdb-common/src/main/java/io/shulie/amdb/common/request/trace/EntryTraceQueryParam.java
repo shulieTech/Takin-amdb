@@ -15,6 +15,7 @@
 
 package io.shulie.amdb.common.request.trace;
 
+import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -24,7 +25,7 @@ import java.util.Set;
 
 @Data
 @ApiModel
-public class EntryTraceQueryParam {
+public class EntryTraceQueryParam extends AbstractAmdbBaseRequest {
     @ApiModelProperty("是否压测流量")
     String clusterTest;
     @ApiModelProperty("结果类型(1代表失败请求,0代表成功请求)")
