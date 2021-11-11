@@ -100,7 +100,7 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
                 break;
         }
         if (StringUtils.isNotBlank(param.getTenantAppKey())) {
-            buffer.append(" and userAppKey='").append(param.getTenantAppKey()).append("'");
+            buffer.append(" and tenantAppKey='").append(param.getTenantAppKey()).append("'");
         }
         if (StringUtils.isNotBlank(param.getEnvCode())) {
             buffer.append(" and envCode='").append(param.getEnvCode()).append("'");
@@ -558,7 +558,7 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
                     tagMap.put("clusterTest", "true");
                 }
                 if (StringUtils.isNotBlank(request.getTenantAppKey())) {
-                    tagMap.put("userAppKey", request.getTenantAppKey());
+                    tagMap.put("tenantAppKey", request.getTenantAppKey());
                 }
                 if (StringUtils.isNotBlank(request.getEnvCode())) {
                     tagMap.put("envCode", request.getEnvCode());
@@ -575,7 +575,7 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
                 //e2e的断言指标表里clusterTest使用1/0区分的
                 tagMap.put("clusterTest", clusterTest + "");
                 if (StringUtils.isNotBlank(request.getTenantAppKey())) {
-                    tagMap.put("userAppKey", request.getTenantAppKey());
+                    tagMap.put("tenantAppKey", request.getTenantAppKey());
                 }
                 if (StringUtils.isNotBlank(request.getEnvCode())) {
                     tagMap.put("envCode", request.getEnvCode());
@@ -647,7 +647,7 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
             tagMap.put("method", request.getMethodName());
             tagMap.put("rpcType", request.getRpcType());
             if (StringUtils.isNotBlank(request.getTenantAppKey())) {
-                tagMap.put("userAppKey", request.getTenantAppKey());
+                tagMap.put("tenantAppKey", request.getTenantAppKey());
             }
             if (StringUtils.isNotBlank(request.getEnvCode())) {
                 tagMap.put("envCode", request.getEnvCode());
