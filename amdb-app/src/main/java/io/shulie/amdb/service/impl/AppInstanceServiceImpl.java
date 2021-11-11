@@ -253,8 +253,8 @@ public class AppInstanceServiceImpl implements AppInstanceService {
     public PageInfo<AgentInfoDTO> queryAgentInfo(AmdbAgentInfoQueryRequest request) {
         Example example = new Example(TAmdbAgentInfoDO.class);
         Example.Criteria criteria = example.createCriteria();
-        if (StringUtils.isNotBlank(request.getUserAppKey())) {
-            criteria.andEqualTo("userAppKey", request.getUserAppKey());
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", request.getTenantAppKey());
         }
         if (StringUtils.isNotBlank(request.getAppName())) {
             criteria.andEqualTo("appName", request.getAppName());

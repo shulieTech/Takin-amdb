@@ -21,7 +21,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * @author anjone
@@ -53,11 +52,6 @@ public class AmdbAgentInfoQueryRequest extends PagingRequest implements Serializ
      */
     @ApiModelProperty("AgentId")
     private String agentId;
-
-    /**
-     *
-     */
-    private String userAppKey;
 
     /**
      * 开始时间
