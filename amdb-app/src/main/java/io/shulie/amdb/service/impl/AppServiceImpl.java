@@ -180,6 +180,12 @@ public class AppServiceImpl implements AppService {
         if (StringUtils.isNotBlank(request.getDataSource())) {
             criteria.andEqualTo("dataSource", request.getDataSource());
         }
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", request.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            criteria.andEqualTo("envCode", request.getEnvCode());
+        }
         PageHelper.startPage(request.getCurrentPage(), request.getPageSize());
         return PageInfo.of(appShadowDatabaseMapper.selectByExample(example));
     }
