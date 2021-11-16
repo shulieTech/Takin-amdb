@@ -26,6 +26,7 @@ import java.util.Date;
 public class MetricsFromInfluxdbQueryRequest {
     String startTime;
     String endTime;
+    int timeGap;
 
     String inAppName;          //入口应用
     String inService;          //入口接口
@@ -50,13 +51,15 @@ public class MetricsFromInfluxdbQueryRequest {
 
     SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     public String getEndTime() {
-        //不做复杂考虑验证,直接前推1.5分钟
-        try {
-            Date date =df.parse(this.endTime);
-            date.setTime(date.getTime() - (90*1000));
-            this.endTime = df.format(date);
-        } catch (ParseException e) {
-            e.printStackTrace();
+        if(this.timeGap==0){    //非点击列表进入,自动刷新或手动刷新情况进入
+            //不做复杂考虑验证,直接前推1.5分钟
+            try {
+                Date date =df.parse(this.endTime);
+                date.setTime(date.getTime() - (90*1000));
+                this.endTime = df.format(date);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
         }
         return endTime;
     }
@@ -135,6 +138,17 @@ public class MetricsFromInfluxdbQueryRequest {
 
     public void setEntranceStr(String entranceStr) {
         this.entranceStr = entranceStr;
+    }
+
+    public int getTimeGap() {
+        if(this.timeGap==0){
+            this.timeGap = 210; //300s-90s=210s 前推1分30s
+        }
+        return timeGap;
+    }
+
+    public void setTimeGap(int timeGap) {
+        this.timeGap = timeGap;
     }
 
     public String getMiddlewareName() {

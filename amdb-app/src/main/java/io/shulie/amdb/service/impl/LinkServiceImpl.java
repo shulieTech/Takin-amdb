@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.link.entrance.ExitInfoDTO;
 import io.shulie.amdb.common.dto.link.entrance.ServiceInfoDTO;
+import io.shulie.amdb.common.dto.link.topology.LinkEdgeDTO;
 import io.shulie.amdb.common.dto.link.topology.LinkTopologyDTO;
 import io.shulie.amdb.common.enums.EdgeTypeEnum;
 import io.shulie.amdb.common.enums.EdgeTypeGroupEnum;
@@ -698,7 +699,45 @@ public class LinkServiceImpl implements LinkService {
             linkEdgeDTO.setServerAppName(edgeDO.getServerAppName());
             return linkEdgeDTO;
         }).collect(Collectors.toList()));
-        return Response.success(linkTopologyDTO);
+        String isTemp = LinkProcessor.threadLocal.get();
+        if(isTemp!=null&&"tempLinkTopology".equals(isTemp)) {
+            return Response.success(removeUpNodeForLinkTopology(linkTopologyDTO));
+        }else {
+            return Response.success(linkTopologyDTO);
+        }
+    }
+
+    private LinkTopologyDTO removeUpNodeForLinkTopology(LinkTopologyDTO linkTopologyDTO){
+        //把上游服务删除，保持和现有链路图风格一致
+        String virtualAppId = "";   //虚拟节点ID,即第一个有效节点
+        for(io.shulie.amdb.common.dto.link.topology.LinkNodeDTO node : linkTopologyDTO.getNodes()){
+            if(node.getNodeName().endsWith("Virtual")){
+                virtualAppId = node.getNodeId().replace("-Virtual","");
+            }
+        }
+        //移除边
+        List<LinkEdgeDTO> edges = new ArrayList<>();
+        List<String> errorNodes = new ArrayList<>();
+        for(LinkEdgeDTO edge : linkTopologyDTO.getEdges()){
+            if(virtualAppId.equals(edge.getTargetId())&&!edge.getSourceId().startsWith(virtualAppId)){
+                errorNodes.add(edge.getSourceId());
+            }else{
+                edges.add(edge);
+            }
+        }
+        //移除点
+        List<io.shulie.amdb.common.dto.link.topology.LinkNodeDTO> nodes = new ArrayList<>();
+        for(io.shulie.amdb.common.dto.link.topology.LinkNodeDTO node : linkTopologyDTO.getNodes()){
+            if(errorNodes.contains(node.getNodeId())){
+                //移除
+            }else{
+                nodes.add(node);
+            }
+        }
+        LinkTopologyDTO newLinkTopologyDTO = new LinkTopologyDTO();
+        newLinkTopologyDTO.setEdges(edges);
+        newLinkTopologyDTO.setNodes(nodes);
+        return newLinkTopologyDTO;
     }
 
     @Override

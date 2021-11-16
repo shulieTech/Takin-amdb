@@ -165,6 +165,8 @@ public class MetricsServiceImpl implements MetricsService {
         String appName = request.getAppName();
         String startTime = request.getStartTime();
         String endTime = request.getEndTime();
+        String realEndTime = "";
+
 
         //拼接SQL-必填字段
         sb.append("select appName,service,method,middlewareName,total,rpcType from trace_metrics " +
@@ -230,14 +232,15 @@ public class MetricsServiceImpl implements MetricsService {
         }
 
         //计算数据间隔描述，为计算tps准备
-        long diffInMillis = 300;
+        int diffInMillis = 300;
         String maxTime = resultList.get(0).getTime();
         String minTime = resultList.get(size - 1).getTime();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         try {
             Date firstDate = sdf.parse(minTime.replace("T", " ").replace("+08:00", ""));
             Date secondDate = sdf.parse(maxTime.replace("T", " ").replace("+08:00", ""));
-            diffInMillis = Math.abs(secondDate.getTime() - firstDate.getTime()) / 1000;
+            realEndTime = sdf.format(secondDate);
+            diffInMillis = ((int) (Math.abs(secondDate.getTime() - firstDate.getTime()) / 1000));
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -283,6 +286,9 @@ public class MetricsServiceImpl implements MetricsService {
                 response.setTps(tps);                                   //tps
                 response.setResponseConsuming(responseConsuming);       //耗时
                 response.setSuccessRatio(successRatio);                 //成功率
+                response.setStartTime(startTime);
+                response.setEndTime(realEndTime);
+                response.setTimeGap(diffInMillis);
                 resultList2.add(response);
             }
         }
@@ -494,12 +500,17 @@ public class MetricsServiceImpl implements MetricsService {
         String sql1 = "select DISTINCT entranceId from t_trace_all " +
                 "where startDate between '" + startTime + "' and  '" + endTime + "' " +
                 "and parsedServiceName ='" + in_service + "' and parsedMethod = '" + in_method + "' " +
-                //"and logType ='3' "+
+//                "and logType in ('1','2') "+
+                "and (" +
+                " (logType = '1' and rpcType in('0','1','3','7'))"+             //
+                " or (logType = '2' and rpcType in('1','3','4','5','6','8'))"+  //
+                " or (logType = '3' and rpcType in('0','1','3'))"+              //
+                " )" +
                 "and parsedAppName = '" + in_appName + "'";
         List<Map<String, Object>> entranceIdList = traceDao.queryForList(sql1);
         StringBuilder sb = new StringBuilder();
         for (Map<String, Object> temp : entranceIdList) {
-            String tempEntranceId = temp.get("entranceId") != null ? temp.get("entranceId").toString() : "test";
+            String tempEntranceId = temp.get("entranceId")!=null&&StringUtils.isNotBlank(temp.get("entranceId").toString()) ? temp.get("entranceId").toString() : "empty";
             if (sb.length() != 0) {
                 sb.append(",");
             }
@@ -511,6 +522,7 @@ public class MetricsServiceImpl implements MetricsService {
     public Map<String, Object> metricsFromChickHouse(MetricsFromInfluxdbQueryRequest request) {
         String startTime = request.getStartTime();
         String endTime = request.getEndTime();
+        int timeGap = request.getTimeGap();
         String entranceStr = request.getEntranceStr();
         int clusterTest = request.getClusterTest();             //-1,混合  0,业务  1,压测
         String f_appName = request.getFromAppName();            //上游应用
@@ -521,22 +533,36 @@ public class MetricsServiceImpl implements MetricsService {
         String t_method = request.getMethod();                  //方法
         StringBuilder where1 = new StringBuilder();
         where1.append(" where startDate between '" + startTime + "' and  '" + endTime + "' ");
+//        where1.append(" and logType in ('1','2') ");
+        where1.append(" and (" +
+        " (logType = '1' and rpcType in('0','1','3','7'))"+             //
+        " or (logType = '2' and rpcType in('1','3','4','5','6','8'))"+  //
+        " or (logType = '3' and rpcType in('0','1','3'))"+              //
+        " ) ");
         if(StringUtils.isNotBlank(f_appName)&&!f_appName.endsWith("Virtual")){
             where1.append(" and upAppName = '" + f_appName + "' ");
         }
-        if(StringUtils.isNotBlank(middlewareName)){
+        if(StringUtils.isNotBlank(middlewareName)&&!"virtual".equals(middlewareName)){
             where1.append(" and middlewareName = '" + middlewareName + "' ");
+        }else{
+            //where1.append(" and ((logType = '1' and rpcType in('0','1','3','7')) or middlewareName is null or middlewareName = '')");
         }
         where1.append(" and parsedServiceName ='" + t_service + "' and parsedMethod = '" + t_method + "' " +
-                        "and parsedAppName = '" + t_appName + "' " +
-                        "and entranceId in(" + entranceStr + ") ");
+                        "and parsedAppName = '" + t_appName + "' ");
+
+        //if(entranceStr.contains("empty")){
+            where1.append("and (entranceId in(" + entranceStr + ") or entranceId='' or entranceId is null )");
+        //}else{
+        //    where1.append("and entranceId in(" + entranceStr + ") ");
+        //}
+
         if (clusterTest != -1) {
             where1.append(" and clusterTest = '" + (0 == clusterTest ? "0" : "1") + "'");
         }
         String selectsql1 = "select sum(toInt8(samplingInterval)) as allTotalCount,\n" +
                 "MAX(cost) as allMaxRt,\n" +
                 "sum(cost) as allTotalRt,\n" +
-                "(sum(toInt8(samplingInterval))/210) as allTotalTps\n" +
+                "(sum(toInt8(samplingInterval))/"+timeGap+") as allTotalTps\n" +
                 "from t_trace_all \n" + where1;
         Map<String, Object> modelList = traceDao.queryForMap(selectsql1);
         if (modelList.get("allTotalCount") == null) {
@@ -548,7 +574,7 @@ public class MetricsServiceImpl implements MetricsService {
         if (modelList.get("allSuccessCount") == null) {
             modelList.put("allSuccessCount", 0);
         }
-        modelList.put("realSeconds", 210);
+        modelList.put("realSeconds", timeGap);
         String selectsql2 = "select sum(toInt8(samplingInterval)) as allSuccessCount\n" +
                 "from t_trace_all \n" + where1 + " and resultCode in('00','200') ";
         Map<String, Object> successCount = traceDao.queryForMap(selectsql2);
