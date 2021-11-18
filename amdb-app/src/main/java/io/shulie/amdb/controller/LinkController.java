@@ -30,6 +30,7 @@ import io.shulie.amdb.request.LinkRequest;
 import io.shulie.amdb.service.LinkService;
 import io.shulie.amdb.service.LinkUnKnowService;
 import io.shulie.amdb.utils.PageInfo;
+import io.shulie.surge.data.deploy.pradar.link.processor.LinkProcessor;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -129,7 +130,27 @@ public class LinkController {
     public Response<LinkTopologyDTO> getLinkTopology(TopologyQueryParam param) {
         log.info("查询拓扑图 param:{}", JSON.toJSONString(param));
         try {
-            return linkService.getLinkTopology(param);
+            Response<LinkTopologyDTO> result = linkService.getLinkTopology(param);
+            return result;
+        } catch (Exception e) {
+            log.error("查询拓扑图失败", e);
+            return Response.fail(AmdbExceptionEnums.LINK_QUERY);
+        }
+    }
+
+    /**
+     * 查询(临时)拓扑图
+     *
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "/getLinkTopologyForTemp", method = RequestMethod.GET)
+    public Response<LinkTopologyDTO> getLinkTopologyForTemp(TopologyQueryParam param) {
+        log.info("查询拓扑图 param:{}", JSON.toJSONString(param));
+        try {
+            LinkProcessor.threadLocal.set("tempLinkTopology");
+            Response<LinkTopologyDTO> response = linkService.getLinkTopology(param);
+            return response;
         } catch (Exception e) {
             log.error("查询拓扑图失败", e);
             return Response.fail(AmdbExceptionEnums.LINK_QUERY);

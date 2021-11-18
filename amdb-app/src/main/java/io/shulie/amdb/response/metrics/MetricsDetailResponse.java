@@ -37,6 +37,9 @@ public class MetricsDetailResponse implements Serializable {
     float responseConsuming;        //相应耗时
     float successRatio;             //成功率
     int rpcType;
+    String startTime;
+    String endTime;
+    int timeGap;
 
 
     //关联业务活动
@@ -122,6 +125,30 @@ public class MetricsDetailResponse implements Serializable {
 
     public void setRpcType(int rpcType) {
         this.rpcType = rpcType;
+    }
+
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
+    public int getTimeGap() {
+        return timeGap;
+    }
+
+    public void setTimeGap(int timeGap) {
+        this.timeGap = timeGap;
     }
 
     public boolean equals(Object obj){
