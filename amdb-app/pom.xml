@@ -21,7 +21,7 @@
 
     <groupId>io.shulie.amdb</groupId>
     <artifactId>amdb-app</artifactId>
-    <version>2.5</version>
+    <version>2.6</version>
     <packaging>jar</packaging>
 
     <parent>
@@ -202,7 +202,7 @@
         <dependency>
             <groupId>io.shulie.amdb</groupId>
             <artifactId>amdb-common</artifactId>
-            <version>1.0.2.2</version>
+            <version>1.0.3-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>ru.yandex.clickhouse</groupId>
