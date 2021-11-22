@@ -754,6 +754,12 @@ public class TraceServiceImpl implements TraceService {
         if (StringUtil.isNotBlank(param.getStartTime()) && StringUtil.isNotBlank(param.getEndTime())) {
             sql.append(" and startDate between '" + param.getStartTime() + "' and '" + param.getEndTime() + "' ");
         }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+        }
         sql.append(" and traceId='" + param.getTraceId()
                 + "' order by rpcId limit " + traceQueryLimit);
         List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
