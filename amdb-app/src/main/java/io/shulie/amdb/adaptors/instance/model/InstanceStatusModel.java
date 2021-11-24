@@ -17,10 +17,11 @@ package io.shulie.amdb.adaptors.instance.model;
 
 
 import io.shulie.amdb.adaptors.AdaptorModel;
+import io.shulie.amdb.scheduled.TenantConfigScheduled;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
-import static io.shulie.amdb.common.request.AbstractAmdbBaseRequest.*;
+import static io.shulie.amdb.common.request.AbstractAmdbBaseRequest.DEFAULT_USER_ID;
 
 /**
  * agent实例状态模型
@@ -81,10 +82,10 @@ public class InstanceStatusModel implements AdaptorModel, Cacheable {
             userId = DEFAULT_USER_ID;
         }
         if (StringUtils.isEmpty(tenantAppKey)) {
-            tenantAppKey = DEFAULT_TENANT_KEY;
+            tenantAppKey = TenantConfigScheduled.getTenantConfigByAppName(appName).get("tenantAppKey");
         }
         if (StringUtils.isEmpty(envCode)) {
-            envCode = DEFAULT_ENV_CODE;
+            envCode = TenantConfigScheduled.getTenantConfigByAppName(appName).get("envCode");
         }
     }
 
