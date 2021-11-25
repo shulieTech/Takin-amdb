@@ -18,6 +18,6 @@ public class TroDataServiceImpl implements TroDataService {
 
     @Override
     public String queryTroData(TrodataQueryParam param) {
-        return troDataMapper.queryConfigValueByParams(param.getAppName(), param.getConfigKey());
+        return troDataMapper.queryConfigValueByParams(param.getUserAppKey(), param.getEnvCode(), param.getAppName(), param.getConfigKey());
     }
 }
