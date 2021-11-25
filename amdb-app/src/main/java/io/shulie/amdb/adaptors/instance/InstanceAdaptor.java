@@ -495,6 +495,7 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
                 configDO.setStatus(Boolean.parseBoolean(status));
                 configDO.setUserAppKey(instanceModel.getTenantAppKey());
                 configDO.setEnvCode(instanceModel.getEnvCode());
+                configDO.setUserId(instanceModel.getUserId());
                 ret.add(configDO);
             });
         }
@@ -516,6 +517,7 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
                 configDO.setStatus(Boolean.parseBoolean(status));
                 configDO.setUserAppKey(instanceModel.getTenantAppKey());
                 configDO.setEnvCode(instanceModel.getEnvCode());
+                configDO.setUserId(instanceModel.getUserId());
                 ret.add(configDO);
             });
         }
