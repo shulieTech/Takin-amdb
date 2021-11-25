@@ -32,7 +32,7 @@ public class TroDataController {
     @RequestMapping(value = "/queryTroData", method = RequestMethod.GET)
     public Response<String> queryTroData(TrodataQueryParam param) {
         try {
-            if (param.getAppName() == null || param.getConfigKey() == null) {
+            if (param.getUserAppKey() == null || param.getEnvCode() == null || param.getAppName() == null || param.getConfigKey() == null) {
                 return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
             }
             return Response.success(troDataService.queryTroData(param));
