@@ -21,12 +21,19 @@ public class TroDataServiceImpl implements TroDataService {
 
     @Override
     public String queryTroData(TrodataQueryParam param) {
-        //根据租户
+        //查询应用配置
         String samplingIntervel = troDataMapper.queryConfigValueByParams(param.getUserAppKey(), param.getEnvCode(), param.getAppName(), param.getConfigKey());
-        log.info("query app samplingInterval params:{},result:{}", param, samplingIntervel);
         if (StringUtils.isBlank(samplingIntervel)) {
-            //查询全局配置
-            return troDataMapper.queryDefaultConfigValueByParams(param.getConfigKey());
+            //查询对应租户对应环境配置
+            samplingIntervel = troDataMapper.queryTenantConfigValueByParams(param.getUserAppKey(), param.getEnvCode(), param.getConfigKey());
+            if (StringUtils.isBlank(samplingIntervel)) {
+                //查询全局配置
+                return troDataMapper.queryGlobalConfigValueByParams(param.getConfigKey());
+            } else {
+                log.info("query tenant samplingInterval params:{},result:{}", param, samplingIntervel);
+            }
+        } else {
+            log.info("query app samplingInterval params:{},result:{}", param, samplingIntervel);
         }
         return samplingIntervel;
     }
