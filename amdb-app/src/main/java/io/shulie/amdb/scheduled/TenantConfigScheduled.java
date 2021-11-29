@@ -110,8 +110,8 @@ public class TenantConfigScheduled implements ApplicationContextAware {
 
     public static Map<String, String> getTenantConfigByAppName(String appName) {
         Map<String, String> config = Maps.newHashMap();
-        //第一次过来,如果租户配置为空,需要手动触发一次查询
-        if (tenantConfigMap.isEmpty()) {
+        //首次启动应用,如果租户配置为空,需要手动触发一次查询 || 新的老探针应用接入时,此时缓存中没有该应用配置,也需要触发一次查询
+        if (tenantConfigMap.isEmpty() || !tenantConfigMap.containsKey(appName)) {
             ConfigurableEnvironment contextEnvironment = applicationContext.getEnvironment();
             TenantConfigScheduled tenantConfigScheduled = new TenantConfigScheduled();
             tenantConfigScheduled.setHost(contextEnvironment.getProperty("config.tenantConfig.host"));
