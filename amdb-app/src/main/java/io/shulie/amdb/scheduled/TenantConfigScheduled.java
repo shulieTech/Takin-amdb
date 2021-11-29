@@ -118,6 +118,7 @@ public class TenantConfigScheduled implements ApplicationContextAware {
             tenantConfigScheduled.setPort(contextEnvironment.getProperty("config.tenantConfig.port"));
             tenantConfigScheduled.setTenantConfigUrl(contextEnvironment.getProperty("config.tenantConfig.url"));
             tenantConfigScheduled.queryTenantConfig();
+            log.info("应用启动或新应用接入:{},获取配置{}", appName, tenantConfigMap.get(appName));
         }
         if (tenantConfigMap.containsKey(appName)) {
             config.put("tenantAppKey", tenantConfigMap.get(appName).split("#")[0]);
