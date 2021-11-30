@@ -18,7 +18,6 @@ package io.shulie.amdb.entity;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.*;
 
@@ -33,7 +32,7 @@ import lombok.ToString;
 @EqualsAndHashCode
 @ApiModel("")
 @Table(name = "`t_amdb_link_node`")
-public class LinkNodeDO implements Serializable {
+public class LinkNodeDO extends BaseDatabaseDO {
     /**
      * 主键
      */

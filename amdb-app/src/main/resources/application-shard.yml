@@ -1,5 +1,6 @@
+# 启动参数 java -jar amdb.jar --spring.config.location=/Users/anjone/gitwork/surge-deploy/surge-deploy-pradar/src/main/resources/shard.properties,classpath:/application-shard.yml
 server:
-  port: 10032
+  port: ${amdb.out.url.port}
   servlet:
     context-path: /
 
@@ -16,9 +17,9 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://pradar.host.mysql.amdb:3306/amdb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
-    username: root
-    password: shulie@2020
+    url: jdbc:mysql://${resource.mysql.host}:${resource.mysql.port}/amdb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    username: ${resource.mysql.password}
+    password: ${resource.mysql.username}
     initialSize: 1
     minIdle: 3
     maxActive: 20
@@ -34,13 +35,6 @@ spring:
     filters: stat,wall,slf4j
     connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
 
-tro:
-  datasource:
-    driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://pradar.host.mysql.tro:3306/trodb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
-    username: root
-    password: shulie@2020
-
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
@@ -53,22 +47,21 @@ pagehelper:
   params: count=countSql
 
 influx:
-  openurl: http://pradar.host.influxdb:8086
-  username: pradar
-  password: pradar
+  openurl: http://${resource.influxdb.host}:${resource.influxdb.port}
+  username: ${resource.influxdb.username}
+  password: ${resource.influxdb.password}
   database: pradar
 
 zookeeper:
-  server: pradar.host.zk01:2181,pradar.host.zk02:2181,pradar.host.zk03:2181
+  server: ${surge.config.data.zk.servers}
 
 datasource:
-  # t_trace_all 数据源类型 支持mysql、clickhouse
-  traceAll: clickhouse
+  traceAll: mysql
 
 config:
   clickhouse:
     enable: true
-    url: jdbc:clickhouse://pradar.host.clickhouse01:8123,pradar.host.clickhouse02:8123/default
+    url: ${resource.clickhouse.url}
     userName: default
     password: rU4zGjA/
     enableRound: true
@@ -81,12 +74,6 @@ config:
     delaySec: 120
   trace:
     limit: 500
-  agentlog:
-    reserveDays: 7
-  tenantConfig:
-    host: pradar.host.troweb
-    port: 10008
-    url: /takin-web/api/tenant/app/all
 
 app:
   version: @project.version@

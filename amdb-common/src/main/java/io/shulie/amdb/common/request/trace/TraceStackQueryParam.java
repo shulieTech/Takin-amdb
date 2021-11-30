@@ -15,13 +15,14 @@
 
 package io.shulie.amdb.common.request.trace;
 
+import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
 @ApiModel
-public class TraceStackQueryParam {
+public class TraceStackQueryParam extends AbstractAmdbBaseRequest {
     @ApiModelProperty("调用类型")
     String rpcType;
     @ApiModelProperty("接口名称")

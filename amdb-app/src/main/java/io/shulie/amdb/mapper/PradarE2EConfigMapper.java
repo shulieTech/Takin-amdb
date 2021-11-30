@@ -23,11 +23,15 @@ import tk.mybatis.mapper.common.MySqlMapper;
 
 public interface PradarE2EConfigMapper extends Mapper<TAMDBPradarE2EConfigDO>, MySqlMapper<TAMDBPradarE2EConfigDO> {
     @Override
-    @Insert("insert ignore into t_amdb_pradar_e2e_config(node_id,service,method,app_name,rpc_type) " +
-            " values(#{nodeId},#{service},#{method},#{appName},#{rpcType})")
+    @Insert("insert ignore into t_amdb_pradar_e2e_config(node_id,service,method,app_name,rpc_type,user_app_key,env_code) " +
+            " values(#{nodeId},#{service},#{method},#{appName},#{rpcType},#{userAppKey},#{envCode})")
     int insert(TAMDBPradarE2EConfigDO e2eConfigDo);
 
     @Override
-    @Delete("delete from t_amdb_pradar_e2e_config where node_id=#{nodeId}")
+    @Delete("<script>"
+        + "delete from t_amdb_pradar_e2e_config where node_id=#{nodeId}"
+        + "<if test='userAppKey != null'> and user_app_key=#{userAppKey} </if>"
+        + "<if test='envCode != null'> and env_code=#{envCode} </if>"
+        + "</script>")
     int delete(TAMDBPradarE2EConfigDO e2eConfigDo);
 }

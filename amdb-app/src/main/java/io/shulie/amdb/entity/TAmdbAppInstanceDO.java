@@ -17,22 +17,18 @@ package io.shulie.amdb.entity;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Date;
+import javax.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import java.io.Serializable;
-import java.util.Date;
 
 @Getter
 @Setter
 @EqualsAndHashCode
 @ApiModel("")
 @Table(name = "`t_amdb_app_instance`")
-public class TAmdbAppInstanceDO implements Serializable {
+public class TAmdbAppInstanceDO extends BaseDatabaseDO {
     /**
      * 实例id
      */
@@ -192,6 +188,9 @@ public class TAmdbAppInstanceDO implements Serializable {
         sb.append(", gmtCreate=").append(gmtCreate);
         sb.append(", gmtModify=").append(gmtModify);
         sb.append(", agentLanguage=").append(agentLanguage);
+        sb.append(", hostname=").append(hostname);
+        sb.append(", envCode=").append(getEnvCode());
+        sb.append(", userId=").append(getUserId());
         sb.append(", ext=").append(ext);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");

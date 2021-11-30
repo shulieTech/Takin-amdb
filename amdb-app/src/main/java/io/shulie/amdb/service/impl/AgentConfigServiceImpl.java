@@ -55,7 +55,12 @@ public class AgentConfigServiceImpl implements AgentConfigService {
         if (request.getStatus() != null) {
             criteria.andEqualTo("status", request.getStatus());
         }
-
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", request.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            criteria.andEqualTo("envCode", request.getEnvCode());
+        }
         PageHelper.startPage(request.getCurrentPage(), request.getPageSize());
         List<TAmdbAgentConfigDO> tAmdbAgentConfigDOS = amdbAgentConfigDOMapper.selectByExample(example);
 
@@ -71,6 +76,12 @@ public class AgentConfigServiceImpl implements AgentConfigService {
         }
         if (StringUtils.isNotBlank(param.getConfigKey())) {
             tAmdbAgentConfigDO.setConfigKey(param.getConfigKey());
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            tAmdbAgentConfigDO.setUserAppKey(param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            tAmdbAgentConfigDO.setEnvCode(param.getEnvCode());
         }
         AgentStatInfoDTO ret = new AgentStatInfoDTO();
         int sum = amdbAgentConfigDOMapper.selectCount(tAmdbAgentConfigDO);

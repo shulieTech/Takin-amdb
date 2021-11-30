@@ -76,9 +76,9 @@
         </javaModelGenerator>
 
         <!-- 对于生成的mapper.xml所在目录 -->
-        <!--<sqlMapGenerator targetPackage="${java.sqlmap.target.package}"
+        <sqlMapGenerator targetPackage="${java.sqlmap.target.package}"
                          targetProject="${java.sqlmap.target.project}"/>
--->
+
         <!-- 配置mapper对应的java映射  也可以叫dao层 -->
         <javaClientGenerator targetPackage="${java.client.target.package}"
                              targetProject="${java.client.target.project}"
@@ -90,7 +90,8 @@
          -->
         <!--<table schema="amdb" tableName="t_amdb_app_server_metrics" domainObjectName="AppServerMetricsDO"/>
     -->
-        <table schema="amdb" tableName="t_amdb_pradar_link_entrance" domainObjectName="PradarLinkEntranceDO"/>
+        <table schema="amdb" tableName="t_amdb_agent_config" domainObjectName="TAmdbAgentConfigDO" enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false"/>
+        <table schema="amdb" tableName="t_amdb_agent_info" domainObjectName="TAmdbAgentInfoDO" enableCountByExample="false" enableUpdateByExample="false" enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false"/>
         <!--<table schema="amdb" tableName="t_amdb_app_instance" domainObjectName="TAmdbAppInstance"/>
         <table schema="amdb" tableName="t_amdb_app_server" domainObjectName="TAmdbAppServer"/>-->
     </context>

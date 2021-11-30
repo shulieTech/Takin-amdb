@@ -24,7 +24,6 @@ import lombok.ToString;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.io.Serializable;
 import java.util.Date;
 
 @Getter
@@ -33,7 +32,7 @@ import java.util.Date;
 @EqualsAndHashCode
 @ApiModel("")
 @Table(name = "`t_amdb_agent_config`")
-public class TAmdbAgentConfigDO implements Serializable {
+public class TAmdbAgentConfigDO extends BaseDatabaseDO {
     @Id
     @Column(name = "`id`")
     @ApiModelProperty("")

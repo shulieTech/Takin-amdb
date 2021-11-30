@@ -15,15 +15,17 @@
 
 package io.shulie.amdb.request.query;
 
+import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
 @Data
 @ApiModel("节点指标数据查询")
-public class TraceMetricsRequest {
+public class TraceMetricsRequest extends AbstractAmdbBaseRequest {
 
     /**
      * 起始时间
@@ -48,4 +50,15 @@ public class TraceMetricsRequest {
     @ApiModelProperty("边ID,逗号分隔")
     String edgeIds;
 
+    public List<E2ENodeMetricsRequest> getE2eNodeRequestList() {
+        if (!CollectionUtils.isEmpty(e2eNodeRequestList)) {
+            String tenantAppKey = getTenantAppKey();
+            String envCode = getEnvCode();
+            e2eNodeRequestList.forEach(request -> {
+                request.setTenantAppKey(tenantAppKey);
+                request.setEnvCode(envCode);
+            });
+        }
+        return e2eNodeRequestList;
+    }
 }

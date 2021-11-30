@@ -25,7 +25,7 @@ import lombok.Data;
 
 @Table(name = "t_amdb_pradar_e2e_config")
 @Data
-public class TAMDBPradarE2EConfigDO {
+public class TAMDBPradarE2EConfigDO extends BaseDatabaseDO {
     @Id
     @Column(name = "`id`")
     Long id;

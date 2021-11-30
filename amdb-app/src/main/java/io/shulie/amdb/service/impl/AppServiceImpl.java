@@ -125,6 +125,12 @@ public class AppServiceImpl implements AppService {
         if (StringUtils.isNotBlank(param.getTenantKey())) {
             criteria.andEqualTo("tenant", param.getTenantKey());
         }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
+        }
         PageHelper.startPage(param.getCurrentPage(), param.getPageSize());
         List<AppDO> amdbApps = appMapper.selectByExample(example);
         List<AmdbAppResponse> responses = amdbApps.stream().map(amdbApp -> new AmdbAppResponse(param.getFields(), amdbApp)).collect(Collectors.toList());
@@ -173,6 +179,12 @@ public class AppServiceImpl implements AppService {
         criteria.andEqualTo("appName", request.getAppName());
         if (StringUtils.isNotBlank(request.getDataSource())) {
             criteria.andEqualTo("dataSource", request.getDataSource());
+        }
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", request.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            criteria.andEqualTo("envCode", request.getEnvCode());
         }
         PageHelper.startPage(request.getCurrentPage(), request.getPageSize());
         return PageInfo.of(appShadowDatabaseMapper.selectByExample(example));

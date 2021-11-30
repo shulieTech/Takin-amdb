@@ -414,6 +414,12 @@ public class TraceServiceImpl implements TraceService {
         if (CollectionUtils.isNotEmpty(param.getTraceIdList())) {
             andFilterList.add("traceId in ('" + StringUtils.join(param.getTraceIdList(), "','") + "')");
         }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            andFilterList.add("userAppKey='" + param.getTenantAppKey() + "'");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            andFilterList.add("envCode='" + param.getEnvCode() + "'");
+        }
         return new Pair<>(andFilterList, orFilterList);
     }
 
@@ -467,7 +473,6 @@ public class TraceServiceImpl implements TraceService {
                 andFilterList.add("(resultCode<>'00' and resultCode<>'05')");
             }
         }
-
         return new Pair<>(andFilterList, orFilterList);
     }
 
@@ -500,6 +505,12 @@ public class TraceServiceImpl implements TraceService {
         }
         if (CollectionUtils.isNotEmpty(param.getTraceIdList())) {
             andFilterList.add("traceId in ('" + StringUtils.join(param.getTraceIdList(), "','") + "')");
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            andFilterList.add("userAppKey='" + param.getTenantAppKey() + "'");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            andFilterList.add("envCode='" + param.getEnvCode() + "'");
         }
         return new Pair<>(andFilterList, orFilterList);
     }
@@ -739,11 +750,17 @@ public class TraceServiceImpl implements TraceService {
     @Override
     public List<RpcBased> getTraceDetail(TraceStackQueryParam param) {
         StringBuilder sql = new StringBuilder();
-        sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where ");
+        sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where 1=1 ");
         if (StringUtil.isNotBlank(param.getStartTime()) && StringUtil.isNotBlank(param.getEndTime())) {
-            sql.append("startDate between '" + param.getStartTime() + "' and '" + param.getEndTime() + "' and ");
+            sql.append(" and startDate between '" + param.getStartTime() + "' and '" + param.getEndTime() + "' ");
         }
-        sql.append(" traceId='" + param.getTraceId()
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+        }
+        sql.append(" and traceId='" + param.getTraceId()
                 + "' order by rpcId limit " + traceQueryLimit);
         List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
         /*List<TTrackClickhouseModel> engineModelList = modelList.stream().filter(model -> 5 == model.getLogType())

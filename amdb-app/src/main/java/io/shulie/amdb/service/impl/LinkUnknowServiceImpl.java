@@ -23,6 +23,7 @@ import io.shulie.amdb.mapper.PradarLinkNodeMapper;
 import io.shulie.amdb.service.LinkUnKnowService;
 import io.shulie.surge.data.deploy.pradar.parser.utils.Md5Utils;
 import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +75,12 @@ public class LinkUnknowServiceImpl implements LinkUnKnowService {
             Example.Criteria criteria = example.createCriteria();
             criteria.andEqualTo("linkId", linkId);
             criteria.andEqualTo("appId", param.getId());
+            if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+                criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+            }
+            if (StringUtils.isNotBlank(param.getEnvCode())) {
+                criteria.andEqualTo("envCode", param.getEnvCode());
+            }
             TAmdbPradarLinkNodeDO update = new TAmdbPradarLinkNodeDO();
             update.setAppName(EXT_SERVER);
             pradarLinkNodeMapper.updateByExampleSelective(update, example);
