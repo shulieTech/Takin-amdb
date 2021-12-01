@@ -38,7 +38,7 @@ public class TroDataController {
             return Response.success(troDataService.queryTroData(param));
         } catch (Exception e) {
             log.error("查询应用自定义探针配置异常{},异常堆栈:{}", e, e.getStackTrace());
-            return Response.fail(AmdbExceptionEnums.TRODATA_NODE_QUERY);
+            return Response.fail(AmdbExceptionEnums.TRODATA_QUERY);
         }
     }
 }
