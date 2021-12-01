@@ -9,10 +9,7 @@ import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -27,7 +24,7 @@ public class StoController {
     StoService stoService;
 
     @PostMapping("/getServiceMetrics")
-    public Response<StoQueryDTO> getServiceMetrics(@RequestHeader("userAppKey") String userAppKey, StoQueryRequest requestParam) {
+    public Response<StoQueryDTO> getServiceMetrics(@RequestHeader("userAppKey") String userAppKey, @RequestBody StoQueryRequest requestParam) {
         //系统鉴权,如果是申通调用,则满足调用条件
         if (requestParam.getUserAppKey().equals(userAppKey)) {
             //参数校验
