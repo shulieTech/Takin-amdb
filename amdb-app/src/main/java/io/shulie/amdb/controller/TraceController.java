@@ -68,8 +68,8 @@ public class TraceController {
     @RequestMapping(value = "/getAllTraceList", method = RequestMethod.POST)
     public Response<List<TTrackClickhouseModel>> getAllTraceList(@RequestBody EntryTraceQueryParam param) {
         logger.info("流量明细查询(审查接口) 请求参数:{}", param);
-        if (CollectionUtils.isEmpty(param.getAppNames()) || param.getStartTime() == null || param.getEndTime() == null) {
-            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "appNames | startTime | endTime");
+        if (param.DEFAULT_TENANT_KEY.equals(param.getTenantAppKey()) || param.getStartTime() == null || param.getEndTime() == null) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "userAppKey | startTime | endTime");
         }
         try {
             return traceService.getAllTraceList(param);
