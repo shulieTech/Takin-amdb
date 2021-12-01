@@ -49,6 +49,9 @@ public class StoServiceImpl implements StoService {
             metricQuerySql.append("select appName,parsedServiceName,parsedMethod,parsedMiddlewareName,sum(toInt8(samplingInterval)) as invokeCount,sum(cost) as totalCost,count(1) as count,toDecimal32(invokeCount/" + request.getInterval() + ",3) as tps,toDecimal32((totalCost/count),3) as rt,concat(appName,parsedServiceName,parsedMethod,parsedMiddlewareName) as key from t_trace_all where");
             metricQuerySql.append(condition);
             metricQuerySql.append(" group by appName,parsedServiceName,parsedMethod,parsedMiddlewareName");
+            if (request.getInvokeCount() > 0) {
+                metricQuerySql.append(" having invokeCount > " + request.getInvokeCount());
+            }
             List<Map<String, Object>> metricsList = traceDao.queryForList(metricQuerySql.toString());
 
             //取成功调用次数

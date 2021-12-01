@@ -55,8 +55,8 @@ public class StoController {
             request.setInterval((endTime.getTime() - startTime.getTime()) / 1000);
 
 
-            //如果当前时间 - 开始时间 > 3天,参数校验不满足
-            if (System.currentTimeMillis() - startTime.getTime() > 3 * 24 * 60 * 60 * 1000) {
+            //如果当前时间 - 开始时间 > 3天,参数校验不满足 || 结束时间>当前时间
+            if (System.currentTimeMillis() - startTime.getTime() > 3 * 24 * 60 * 60 * 1000 || endTime.getTime() > System.currentTimeMillis()) {
                 return false;
             }
         } catch (ParseException e) {
