@@ -20,6 +20,7 @@ import io.shulie.amdb.common.Response;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.request.query.MetricsDetailQueryRequest;
 import io.shulie.amdb.request.query.MetricsFromInfluxdbQueryRequest;
+import io.shulie.amdb.request.query.MetricsFromInfluxdbRequest;
 import io.shulie.amdb.request.query.MetricsQueryRequest;
 import io.shulie.amdb.response.metrics.MetricsDetailResponse;
 import io.shulie.amdb.response.metrics.MetricsFromInfluxdbResponse;
@@ -89,6 +90,17 @@ public class MetricsController {
             return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
         }
         Map<String, Object> resultList = metricsService.metricsFromChickHouse(request);
+        Response response= Response.success(resultList);
+        response.setTotal(resultList.size());
+        return response;
+    }
+
+    @RequestMapping(value = "/metricFromInfluxdb", method = RequestMethod.POST)
+    public Response metricFromInfluxdb(@RequestBody MetricsFromInfluxdbRequest request) {
+        if (StringUtils.isBlank(request.getEagleId())||request.getStartMilli()==0||request.getEndMilli()==0) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
+        }
+        Map<String, Long> resultList = metricsService.metricFromInfluxdb(request);
         Response response= Response.success(resultList);
         response.setTotal(resultList.size());
         return response;
