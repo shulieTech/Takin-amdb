@@ -57,8 +57,12 @@ public class LinkConfigServiceImpl implements LinkConfigService {
         configDO.setExtend(calculateParam.getExtend());
         configDO.setMethod(calculateParam.getMethod());
         configDO.setRpcType(calculateParam.getRpcType());
-        configDO.setUserAppKey(calculateParam.getTenantAppKey());
-        configDO.setEnvCode(calculateParam.getEnvCode());
+        if (StringUtils.isNotBlank(calculateParam.getTenantAppKey())) {
+            configDO.setUserAppKey(calculateParam.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(calculateParam.getEnvCode())) {
+            configDO.setEnvCode(calculateParam.getEnvCode());
+        }
         pradarLinkConfigMapper.insert(configDO);
         return Response.success(linkId);
     }

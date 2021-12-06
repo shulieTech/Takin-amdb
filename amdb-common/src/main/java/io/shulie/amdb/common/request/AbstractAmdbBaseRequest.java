@@ -36,11 +36,11 @@ public abstract class AbstractAmdbBaseRequest {
     /**
      * 租户标识
      */
-    private String tenantAppKey = DEFAULT_TENANT_KEY;
+    private String tenantAppKey;
     /**
      * 环境标识
      */
-    private String envCode = DEFAULT_ENV_CODE;
+    private String envCode;
 
     public static final String DEFAULT_TENANT_KEY = "default";
 

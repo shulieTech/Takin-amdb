@@ -19,6 +19,7 @@ import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -54,10 +55,12 @@ public class TraceMetricsRequest extends AbstractAmdbBaseRequest {
         if (!CollectionUtils.isEmpty(e2eNodeRequestList)) {
             String tenantAppKey = getTenantAppKey();
             String envCode = getEnvCode();
-            e2eNodeRequestList.forEach(request -> {
-                request.setTenantAppKey(tenantAppKey);
-                request.setEnvCode(envCode);
-            });
+            if (StringUtils.isNotBlank(tenantAppKey) && StringUtils.isNotBlank(envCode)) {
+                e2eNodeRequestList.forEach(request -> {
+                    request.setTenantAppKey(tenantAppKey);
+                    request.setEnvCode(envCode);
+                });
+            }
         }
         return e2eNodeRequestList;
     }

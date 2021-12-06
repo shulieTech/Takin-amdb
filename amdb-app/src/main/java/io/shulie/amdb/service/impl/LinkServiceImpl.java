@@ -672,8 +672,12 @@ public class LinkServiceImpl implements LinkService {
             linkConfig.put("rpcType", param.getRpcType());
             linkConfig.put("extend", param.getExtend());
             linkConfig.put("service", param.getServiceName());
-            linkConfig.put("userAppKey", param.getTenantAppKey());
-            linkConfig.put("envCode", param.getEnvCode());
+            if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+                linkConfig.put("userAppKey", param.getTenantAppKey());
+            }
+            if (StringUtils.isNotBlank(param.getEnvCode())) {
+                linkConfig.put("envCode", param.getEnvCode());
+            }
             pair = getPradarLinkInfoFromTrace(linkId, linkConfig);
         }
         // 处理虚拟节点
@@ -714,37 +718,37 @@ public class LinkServiceImpl implements LinkService {
             return linkEdgeDTO;
         }).collect(Collectors.toList()));
         String isTemp = LinkProcessor.threadLocal.get();
-        if(isTemp!=null&&"tempLinkTopology".equals(isTemp)) {
+        if (isTemp != null && "tempLinkTopology".equals(isTemp)) {
             return Response.success(removeUpNodeForLinkTopology(linkTopologyDTO));
-        }else {
+        } else {
             return Response.success(linkTopologyDTO);
         }
     }
 
-    private LinkTopologyDTO removeUpNodeForLinkTopology(LinkTopologyDTO linkTopologyDTO){
+    private LinkTopologyDTO removeUpNodeForLinkTopology(LinkTopologyDTO linkTopologyDTO) {
         //把上游服务删除，保持和现有链路图风格一致
         String virtualAppId = "";   //虚拟节点ID,即第一个有效节点
-        for(io.shulie.amdb.common.dto.link.topology.LinkNodeDTO node : linkTopologyDTO.getNodes()){
-            if(node.getNodeName().endsWith("Virtual")){
-                virtualAppId = node.getNodeId().replace("-Virtual","");
+        for (io.shulie.amdb.common.dto.link.topology.LinkNodeDTO node : linkTopologyDTO.getNodes()) {
+            if (node.getNodeName().endsWith("Virtual")) {
+                virtualAppId = node.getNodeId().replace("-Virtual", "");
             }
         }
         //移除边
         List<LinkEdgeDTO> edges = new ArrayList<>();
         List<String> errorNodes = new ArrayList<>();
-        for(LinkEdgeDTO edge : linkTopologyDTO.getEdges()){
-            if(virtualAppId.equals(edge.getTargetId())&&!edge.getSourceId().startsWith(virtualAppId)){
+        for (LinkEdgeDTO edge : linkTopologyDTO.getEdges()) {
+            if (virtualAppId.equals(edge.getTargetId()) && !edge.getSourceId().startsWith(virtualAppId)) {
                 errorNodes.add(edge.getSourceId());
-            }else{
+            } else {
                 edges.add(edge);
             }
         }
         //移除点
         List<io.shulie.amdb.common.dto.link.topology.LinkNodeDTO> nodes = new ArrayList<>();
-        for(io.shulie.amdb.common.dto.link.topology.LinkNodeDTO node : linkTopologyDTO.getNodes()){
-            if(errorNodes.contains(node.getNodeId())){
+        for (io.shulie.amdb.common.dto.link.topology.LinkNodeDTO node : linkTopologyDTO.getNodes()) {
+            if (errorNodes.contains(node.getNodeId())) {
                 //移除
-            }else{
+            } else {
                 nodes.add(node);
             }
         }

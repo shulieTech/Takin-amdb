@@ -229,8 +229,12 @@ public class E2EServiceImpl implements E2EService {
         tamdbPradarE2eConfigDo.setMethod(request.getMethodName());
         tamdbPradarE2eConfigDo.setRpcType(request.getRpcType());
         tamdbPradarE2eConfigDo.setNodeId(nodeId);
-        tamdbPradarE2eConfigDo.setUserAppKey(request.getTenantAppKey());
-        tamdbPradarE2eConfigDo.setEnvCode(request.getEnvCode());
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            tamdbPradarE2eConfigDo.setUserAppKey(request.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            tamdbPradarE2eConfigDo.setEnvCode(request.getEnvCode());
+        }
         pradarE2eConfigMapper.insert(tamdbPradarE2eConfigDo);
     }
 
@@ -244,8 +248,12 @@ public class E2EServiceImpl implements E2EService {
         TAMDBPradarE2EConfigDO tamdbPradarE2eConfigDo = new TAMDBPradarE2EConfigDO();
         String nodeId = getNodeId(request);
         tamdbPradarE2eConfigDo.setNodeId(nodeId);
-        tamdbPradarE2eConfigDo.setUserAppKey(request.getTenantAppKey());
-        tamdbPradarE2eConfigDo.setEnvCode(request.getEnvCode());
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            tamdbPradarE2eConfigDo.setUserAppKey(request.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            tamdbPradarE2eConfigDo.setEnvCode(request.getEnvCode());
+        }
         pradarE2eConfigMapper.delete(tamdbPradarE2eConfigDo);
     }
 
@@ -261,8 +269,12 @@ public class E2EServiceImpl implements E2EService {
         assertConfigDO.setNodeId(nodeId);
         assertConfigDO.setAssertCode(request.getAssertCode());
         assertConfigDO.setAssertCondition(request.getAssertCondition());
-        assertConfigDO.setUserAppKey(request.getTenantAppKey());
-        assertConfigDO.setEnvCode(request.getEnvCode());
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            assertConfigDO.setUserAppKey(request.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            assertConfigDO.setEnvCode(request.getEnvCode());
+        }
         pradarE2eAssertMapper.insert(assertConfigDO);
     }
 
@@ -277,8 +289,12 @@ public class E2EServiceImpl implements E2EService {
         String nodeId = getNodeId(request);
         assertConfigDO.setNodeId(nodeId);
         assertConfigDO.setAssertCode(request.getAssertCode());
-        assertConfigDO.setUserAppKey(request.getTenantAppKey());
-        assertConfigDO.setEnvCode(request.getEnvCode());
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            assertConfigDO.setUserAppKey(request.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            assertConfigDO.setEnvCode(request.getEnvCode());
+        }
         pradarE2eAssertMapper.delete(assertConfigDO);
     }
 
