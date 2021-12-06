@@ -23,6 +23,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -53,6 +54,9 @@ public class TenantConfigScheduled implements ApplicationContextAware {
 
     @Value("${config.tenantConfig.url}")
     private String tenantConfigUrl;
+
+    @Value("${config.tenantConfig.defaultTenantAppKey}")
+    private String defaultTenantAppKey;
 
     private static GenericApplicationContext applicationContext;
 
@@ -111,8 +115,8 @@ public class TenantConfigScheduled implements ApplicationContextAware {
     public static Map<String, String> getTenantConfigByAppName(String appName) {
         Map<String, String> config = Maps.newHashMap();
         //首次启动应用,如果租户配置为空,需要手动触发一次查询 || 新的老探针应用接入时,此时缓存中没有该应用配置,也需要触发一次查询
+        ConfigurableEnvironment contextEnvironment = applicationContext.getEnvironment();
         if (tenantConfigMap.isEmpty() || !tenantConfigMap.containsKey(appName)) {
-            ConfigurableEnvironment contextEnvironment = applicationContext.getEnvironment();
             TenantConfigScheduled tenantConfigScheduled = new TenantConfigScheduled();
             tenantConfigScheduled.setHost(contextEnvironment.getProperty("config.tenantConfig.host"));
             tenantConfigScheduled.setPort(contextEnvironment.getProperty("config.tenantConfig.port"));
@@ -124,7 +128,7 @@ public class TenantConfigScheduled implements ApplicationContextAware {
             config.put("tenantAppKey", tenantConfigMap.get(appName).split("#")[0]);
             config.put("envCode", tenantConfigMap.get(appName).split("#")[1]);
         } else {
-            config.put("tenantAppKey", "default");
+            config.put("tenantAppKey", StringUtils.defaultString(contextEnvironment.getProperty("config.tenantConfig.defaultTenantAppKey"), "default"));
             config.put("envCode", "test");
         }
         return config;
