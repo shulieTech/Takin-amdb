@@ -18,6 +18,7 @@ package io.shulie.amdb.controller;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,5 +53,10 @@ public class VersionController {
         ret.put("version", serviceVersion);
         ret.put("buildTime", serviceBuildDate);
         return ret;
+    }
+
+    @GetMapping(value = "/api/health")
+    public String checkHealth() {
+        return "success";
     }
 }
