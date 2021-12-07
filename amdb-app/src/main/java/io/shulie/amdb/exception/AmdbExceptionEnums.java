@@ -32,29 +32,29 @@ public enum AmdbExceptionEnums {
 
     /**
      * 应用模块异常
-     *
+     * <p>
      * 应用模块      AMDB_0201_UXXXX
      * 应用实例模块   AMDB_0202_UXXXX
      * 应用状态      AMDB_0203_UXXXX
      */
-    APP_SELECT("AMDB_0201_U00000","应用信息数据查询异常"),
-    APP_UPDATE("AMDB_0201_U00001","应用信息数据更新异常"),
-    APP_INSTANCE_SELECT("AMDB_0202_U00000","应用实例查询异常"),
-    APP_INSTANCE_UPDATE("AMDB_0202_U00001","应用实例更新异常"),
-    APP_INSTANCE_INFO_SELECT("AMDB_0202_U00002","应用实例信息查询异常"),
-    APP_INSTANCE_STATUS_SELECT("AMDB_0203_U00000","应用状态查询异常"),
-    APP_SHADOW_DATABASE_SELECT("AMDB_0204_U00000","应用影子库表查询异常"),
-    APP_SHADOW_BIZ_TABLE_SELECT("AMDB_0204_U00001","应用业务表查询异常"),
+    APP_SELECT("AMDB_0201_U00000", "应用信息数据查询异常"),
+    APP_UPDATE("AMDB_0201_U00001", "应用信息数据更新异常"),
+    APP_INSTANCE_SELECT("AMDB_0202_U00000", "应用实例查询异常"),
+    APP_INSTANCE_UPDATE("AMDB_0202_U00001", "应用实例更新异常"),
+    APP_INSTANCE_INFO_SELECT("AMDB_0202_U00002", "应用实例信息查询异常"),
+    APP_INSTANCE_STATUS_SELECT("AMDB_0203_U00000", "应用状态查询异常"),
+    APP_SHADOW_DATABASE_SELECT("AMDB_0204_U00000", "应用影子库表查询异常"),
+    APP_SHADOW_BIZ_TABLE_SELECT("AMDB_0204_U00001", "应用业务表查询异常"),
 
 
     /**
      * 链路配置 AMDB_0301_UXXXX
      * 链路梳理 AMDB_0302_UXXXX
      */
-    LINK_CONFIG_QUERY("AMDB_0301_U00000","链路配置数据查询异常"),
-    LINK_CONFIG_UPDATE("AMDB_0301_U00001","链路配置数据更新异常"),
-    LINK_QUERY("AMDB_0302_U00000","链路数据查询异常"),
-    LINK_UPDATE("AMDB_0302_U00001","链路数据更新异常"),
+    LINK_CONFIG_QUERY("AMDB_0301_U00000", "链路配置数据查询异常"),
+    LINK_CONFIG_UPDATE("AMDB_0301_U00001", "链路配置数据更新异常"),
+    LINK_QUERY("AMDB_0302_U00000", "链路数据查询异常"),
+    LINK_UPDATE("AMDB_0302_U00001", "链路数据更新异常"),
     LINK_UNDEFINE("AMDB_0302_U00002", "链路不存在"),
     LINK_ENTRANCE_DUPLICATION("AMDB_0302_U00003", "链路入口不唯一"),
     LINK_PARENT_NODE_UNDEFINE("AMDB_0302_U00004", "父节点为空"),
@@ -63,8 +63,8 @@ public enum AmdbExceptionEnums {
     /**
      * trace日志异常 AMDB_0400_UXXXX
      */
-    TRACE_QUERY("AMDB_0$00_U0000","trace数据查询异常"),
-    TRACE_DETAIL_QUERY("AMDB_0400_U0001","trace详情查询异常"),
+    TRACE_QUERY("AMDB_0$00_U0000", "trace数据查询异常"),
+    TRACE_DETAIL_QUERY("AMDB_0400_U0001", "trace详情查询异常"),
     TRACE_EMPTY_SELECT_FILED("AMDB_0400_U0003", "trace查询失败,参数错误，未指定查询结果字段列表"),
     TRACE_QUERY_WARN("AMDB_0400_U0004", "警告: %s"),
 
@@ -84,7 +84,13 @@ public enum AmdbExceptionEnums {
     /**
      * 应用自定义探针配置查询异常 AMDB_0700_UXXXX
      */
-    TRODATA_NODE_QUERY("AMDB_0700_U0000", "应用自定义探针配置查询异常"),
+    TRODATA_QUERY("AMDB_0700_U0000", "应用自定义探针配置查询异常"),
+
+    /**
+     * 申通服务指标查询鉴权不通过 AMDB_0800_UXXXX
+     */
+    STO_QUERY_NOT_AUTH("AMDB_0800_U0000", "鉴权不通过,请传入正确的userAppKey"),
+    STO_QUERY_ILLEGAL_PARAM("AMDB_0800_U0001", "参数不合法,请检查"),
     ;
 
     private final String code;
