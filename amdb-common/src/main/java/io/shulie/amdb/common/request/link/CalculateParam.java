@@ -15,11 +15,12 @@
 
 package io.shulie.amdb.common.request.link;
 
+import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
-public class CalculateParam {
+public class CalculateParam extends AbstractAmdbBaseRequest {
     @ApiModelProperty(required = true, allowEmptyValue = false)
     String appName;
     @ApiModelProperty(required = true, allowEmptyValue = false)

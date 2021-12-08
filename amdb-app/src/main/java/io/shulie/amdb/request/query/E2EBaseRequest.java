@@ -15,11 +15,12 @@
 
 package io.shulie.amdb.request.query;
 
+import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
-public class E2EBaseRequest {
+public class E2EBaseRequest extends AbstractAmdbBaseRequest {
     /**
      * 租户标识
      */

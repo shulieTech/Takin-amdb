@@ -74,8 +74,9 @@ public class MetricsServiceImpl implements MetricsService {
             //构造聚合指标查询sql
             String aggrerateSql = "select " + parseAliasFields(request.getFieldMap()) +
                     " from  " + request.getMeasurementName() + " where " + parseWhereFilter(tagMap) + " and time >= " +
-                    formatTimestamp(request.getStartTime()) + " and time < " + formatTimestamp(request.getEndTime()) + " " +
-                    parseGroupBy(request.getGroups());
+                    formatTimestamp(request.getStartTime()) + " and time < " + formatTimestamp(request.getEndTime()) + " ";
+            aggrerateSql += parseGroupBy(request.getGroups());
+
             //log.info("聚合指标查询sql:{}", aggrerateSql);
             List<QueryResult.Result> aggrerateResult = influxDbManager.query(aggrerateSql);
 
@@ -178,6 +179,13 @@ public class MetricsServiceImpl implements MetricsService {
         if (request.getClusterTest() != -1) {
             sb.append(" and clusterTest = '" + (0 == request.getClusterTest() ? "false" : "true") + "'");
         }
+        //拼接租户，环境隔离
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            sb.append(" and tenantAppKey='" + request.getTenantAppKey() + "' ");
+        }
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            sb.append(" and envCode='" + request.getEnvCode() + "' ");
+        }
         //拼接SQL-服务名称
         String serviceName = request.getServiceName();
         if (StringUtils.isNotBlank(serviceName)) {
@@ -275,6 +283,13 @@ public class MetricsServiceImpl implements MetricsService {
                         "and method = '" + response.getMethod() + "'\n";
                 if (request.getClusterTest() != -1) {
                     sql += " and clusterTest = '" + (0 == request.getClusterTest() ? "false" : "true") + "'\n";
+                }
+                //拼接租户，环境隔离
+                if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+                    sql += " and tenantAppKey='" + request.getTenantAppKey() + "' ";
+                }
+                if (StringUtils.isNotBlank(request.getEnvCode())) {
+                    sql += " and envCode='" + request.getEnvCode() + "' ";
                 }
                 sql += "group by appName,service,method\n" +
                         " TZ('Asia/Shanghai')";
@@ -505,15 +520,21 @@ public class MetricsServiceImpl implements MetricsService {
                 "and parsedServiceName ='" + in_service + "' and parsedMethod = '" + in_method + "' " +
 //                "and logType in ('1','2') "+
                 "and (" +
-                " (logType = '1' and rpcType in('0','1','3','7'))"+             //
-                " or (logType = '2' and rpcType in('1','3','4','5','6','8'))"+  //
-                " or (logType = '3' and rpcType in('0','1','3'))"+              //
+                " (logType = '1' and rpcType in('0','1','3','7'))" +             //
+                " or (logType = '2' and rpcType in('1','3','4','5','6','8'))" +  //
+                " or (logType = '3' and rpcType in('0','1','3'))" +              //
                 " )" +
-                "and parsedAppName = '" + in_appName + "'";
+                " and parsedAppName = '" + in_appName + "' ";
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            sql1 += " and userAppKey='" + request.getTenantAppKey() + "' ";
+        }
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            sql1 += " and envCode='" + request.getEnvCode() + "' ";
+        }
         List<Map<String, Object>> entranceIdList = traceDao.queryForList(sql1);
         StringBuilder sb = new StringBuilder();
         for (Map<String, Object> temp : entranceIdList) {
-            String tempEntranceId = temp.get("entranceId")!=null&&StringUtils.isNotBlank(temp.get("entranceId").toString()) ? temp.get("entranceId").toString() : "empty";
+            String tempEntranceId = temp.get("entranceId") != null && StringUtils.isNotBlank(temp.get("entranceId").toString()) ? temp.get("entranceId").toString() : "empty";
             if (sb.length() != 0) {
                 sb.append(",");
             }
@@ -536,25 +557,30 @@ public class MetricsServiceImpl implements MetricsService {
         String t_method = request.getMethod();                  //方法
         StringBuilder where1 = new StringBuilder();
         where1.append(" where startDate between '" + startTime + "' and  '" + endTime + "' ");
-//        where1.append(" and logType in ('1','2') ");
         where1.append(" and (" +
-        " (logType = '1' and rpcType in('0','1','3','7'))"+             //
-        " or (logType = '2' and rpcType in('1','3','4','5','6','8'))"+  //
-        " or (logType = '3' and rpcType in('0','1','3'))"+              //
-        " ) ");
-        if(StringUtils.isNotBlank(f_appName)&&!f_appName.endsWith("Virtual")){
+                " (logType = '1' and rpcType in('0','1','3','7'))" +             //
+                " or (logType = '2' and rpcType in('1','3','4','5','6','8'))" +  //
+                " or (logType = '3' and rpcType in('0','1','3'))" +              //
+                " ) ");
+        if (StringUtils.isNotBlank(f_appName) && !f_appName.endsWith("Virtual")) {
             where1.append(" and upAppName = '" + f_appName + "' ");
         }
-        if(StringUtils.isNotBlank(middlewareName)&&!"virtual".equals(middlewareName)){
+        if (StringUtils.isNotBlank(middlewareName) && !"virtual".equals(middlewareName)) {
             where1.append(" and middlewareName = '" + middlewareName + "' ");
-        }else{
+        } else {
             //where1.append(" and ((logType = '1' and rpcType in('0','1','3','7')) or middlewareName is null or middlewareName = '')");
         }
         where1.append(" and parsedServiceName ='" + t_service + "' and parsedMethod = '" + t_method + "' " +
-                        "and parsedAppName = '" + t_appName + "' ");
-
+                "and parsedAppName = '" + t_appName + "' ");
+        //区分租户，环境隔离
+        if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+            where1.append(" and userAppKey='" + request.getTenantAppKey() + "' ");
+        }
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            where1.append(" and envCode='" + request.getEnvCode() + "' ");
+        }
         //if(entranceStr.contains("empty")){
-            where1.append("and (entranceId in(" + entranceStr + ") or entranceId='' or entranceId is null )");
+        where1.append("and (entranceId in(" + entranceStr + ") or entranceId='' or entranceId is null )");
         //}else{
         //    where1.append("and entranceId in(" + entranceStr + ") ");
         //}
@@ -565,7 +591,7 @@ public class MetricsServiceImpl implements MetricsService {
         String selectsql1 = "select sum(toInt8(samplingInterval)) as allTotalCount,\n" +
                 "MAX(cost) as allMaxRt,\n" +
                 "sum(cost) as allTotalRt,\n" +
-                "(sum(toInt8(samplingInterval))/"+timeGap+") as allTotalTps\n" +
+                "(sum(toInt8(samplingInterval))/" + timeGap + ") as allTotalTps\n" +
                 "from t_trace_all \n" + where1;
         Map<String, Object> modelList = traceDao.queryForMap(selectsql1);
         if (modelList.get("allTotalCount") == null) {

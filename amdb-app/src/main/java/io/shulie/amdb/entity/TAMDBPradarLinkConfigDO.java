@@ -24,7 +24,7 @@ import java.util.Date;
 
 @Data
 @Table(name = "`t_amdb_pradar_link_config`")
-public class TAMDBPradarLinkConfigDO {
+public class TAMDBPradarLinkConfigDO extends BaseDatabaseDO {
     /**
      * ID
      */

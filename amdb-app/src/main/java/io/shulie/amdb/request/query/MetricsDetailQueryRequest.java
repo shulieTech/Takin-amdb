@@ -15,6 +15,7 @@
 
 package io.shulie.amdb.request.query;
 
+import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
@@ -22,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class MetricsDetailQueryRequest {
+public class MetricsDetailQueryRequest extends AbstractAmdbBaseRequest {
 
     String appName;
 

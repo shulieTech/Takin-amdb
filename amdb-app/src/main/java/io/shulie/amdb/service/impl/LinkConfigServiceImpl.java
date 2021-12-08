@@ -26,6 +26,7 @@ import io.shulie.amdb.mapper.PradarLinkNodeMapper;
 import io.shulie.amdb.service.LinkConfigService;
 import io.shulie.surge.data.deploy.pradar.parser.utils.Md5Utils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 
@@ -56,6 +57,12 @@ public class LinkConfigServiceImpl implements LinkConfigService {
         configDO.setExtend(calculateParam.getExtend());
         configDO.setMethod(calculateParam.getMethod());
         configDO.setRpcType(calculateParam.getRpcType());
+        if (StringUtils.isNotBlank(calculateParam.getTenantAppKey())) {
+            configDO.setUserAppKey(calculateParam.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(calculateParam.getEnvCode())) {
+            configDO.setEnvCode(calculateParam.getEnvCode());
+        }
         pradarLinkConfigMapper.insert(configDO);
         return Response.success(linkId);
     }
@@ -80,17 +87,35 @@ public class LinkConfigServiceImpl implements LinkConfigService {
         Example example = new Example(TAMDBPradarLinkConfigDO.class);
         Example.Criteria nodeCriteria = example.createCriteria();
         nodeCriteria.andEqualTo("linkId", linkId);
+        if (StringUtils.isNotBlank(calculateParam.getTenantAppKey())) {
+            nodeCriteria.andEqualTo("userAppKey", calculateParam.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(calculateParam.getEnvCode())) {
+            nodeCriteria.andEqualTo("envCode", calculateParam.getEnvCode());
+        }
         pradarLinkConfigMapper.deleteByExample(example);
 
         // 删除点跟边信息
         Example exampleNode = new Example(TAmdbPradarLinkNodeDO.class);
         Example.Criteria nodeCriteriaNode = exampleNode.createCriteria();
         nodeCriteriaNode.andEqualTo("linkId", linkId);
+        if (StringUtils.isNotBlank(calculateParam.getTenantAppKey())) {
+            nodeCriteriaNode.andEqualTo("userAppKey", calculateParam.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(calculateParam.getEnvCode())) {
+            nodeCriteriaNode.andEqualTo("envCode", calculateParam.getEnvCode());
+        }
         pradarLinkNodeMapper.deleteByExample(exampleNode);
 
         Example exampleEdge = new Example(TAmdbPradarLinkEdgeDO.class);
         Example.Criteria nodeCriteriaEdge = exampleEdge.createCriteria();
         nodeCriteriaEdge.andEqualTo("linkId", linkId);
+        if (StringUtils.isNotBlank(calculateParam.getTenantAppKey())) {
+            nodeCriteriaEdge.andEqualTo("userAppKey", calculateParam.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(calculateParam.getEnvCode())) {
+            nodeCriteriaEdge.andEqualTo("envCode", calculateParam.getEnvCode());
+        }
         pradarLinkEdgeMapper.deleteByExample(exampleNode);
         return Response.success(linkId);
     }

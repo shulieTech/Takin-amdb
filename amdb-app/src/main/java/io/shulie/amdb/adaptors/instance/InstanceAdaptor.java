@@ -106,11 +106,13 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         InstanceModel instanceModel = (InstanceModel) dataContext.getModel();
         String oldInstanceKey = INSTANCEID_CACHE.get(dataContext.getPath());
         if (instanceModel != null) {
+            instanceModel.buildDefaultValue(appName);
+
             updateAppAndInstance(appName, instanceModel, oldInstanceKey);
             //配置DO更新
             updateAgentConfig(appName, instanceModel);
-            String newInstanceKey = appName + "#" + instanceModel.getAddress() + "#" + instanceModel.getPid();
-            INSTANCEID_CACHE.put(dataContext.getPath(), newInstanceKey);
+
+            INSTANCEID_CACHE.put(dataContext.getPath(), instanceModel.cacheKey());
         } else {
             // 说明节点被删除，执行实例下线
             if (oldInstanceKey != null) {
@@ -129,38 +131,26 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         // 判断APP记录是否存在
         AppDO params = new AppDO();
         params.setAppName(appName);
-        AppDO appDO = appService.selectOneByParam(params);
-        if (appDO == null) {
-            appDO = getTamdAppCreateModelByInstanceModel(appName, instanceModel, curr);
+        params.setUserAppKey(instanceModel.getTenantAppKey());
+        params.setEnvCode(instanceModel.getEnvCode());
+        AppDO inDataBaseAppDo = appService.selectOneByParam(params);
+        if (inDataBaseAppDo == null) {
+            inDataBaseAppDo = getTamdAppCreateModelByInstanceModel(appName, instanceModel, curr);
             // insert,拿到返回ID
-            Response insertResponse = appService.insert(appDO);
-            appDO.setId(NumberUtils.toLong(insertResponse.getData() + ""));
+            Response insertResponse = appService.insert(inDataBaseAppDo);
+            inDataBaseAppDo.setId(NumberUtils.toLong(insertResponse.getData() + ""));
         } else {
-            appDO = getTamdAppUpdateModelByInstanceModel(instanceModel, appDO, curr);
+            inDataBaseAppDo = getTamdAppUpdateModelByInstanceModel(instanceModel, inDataBaseAppDo, curr);
             // update
-            appService.update(appDO);
+            appService.update(inDataBaseAppDo);
         }
-        // 判断instance是否存在
-        TAmdbAppInstanceDO amdbAppInstance = null;
-        TAmdbAppInstanceDO selectParam = new TAmdbAppInstanceDO();
-        // 如果有更新则需要拿到原来的唯一值检索
-        if (StringUtils.isBlank(oldInstanceKey)) {
-            selectParam.setAppName(appName);
-            selectParam.setIp(instanceModel.getAddress());
-            // 老的没有，说明服务重启缓存重置，这种情况下只能根据AgentID来更新
-            selectParam.setAgentId(instanceModel.getAgentId());
-        } else {
-            String instanceInfo[] = oldInstanceKey.split("#");
-            selectParam.setAppName(instanceInfo[0]);
-            selectParam.setIp(instanceInfo[1]);
-            selectParam.setPid(instanceInfo[2]);
-        }
-        TAmdbAppInstanceDO appInstanceDO = appInstanceService.selectOneByParam(selectParam);
+        //更新实例信息
+        TAmdbAppInstanceDO appInstanceDO = queryOldInstance(appName, instanceModel, oldInstanceKey);
         if (appInstanceDO == null) {
-            amdbAppInstance = getTamdAppInstanceCreateModelByInstanceModel(appDO, instanceModel, curr);
+            TAmdbAppInstanceDO amdbAppInstance = getTamdAppInstanceCreateModelByInstanceModel(inDataBaseAppDo, instanceModel, curr);
             appInstanceService.insert(amdbAppInstance);
         } else {
-            amdbAppInstance = getTamdAppInstanceUpdateModelByInstanceModel(appDO, instanceModel, appInstanceDO, curr);
+            TAmdbAppInstanceDO amdbAppInstance = getTamdAppInstanceUpdateModelByInstanceModel(inDataBaseAppDo, instanceModel, appInstanceDO, curr);
             appInstanceService.update(amdbAppInstance);
         }
 
@@ -168,6 +158,28 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         dealWithProbeStatusModel(instanceModel);
         TAmdbAppInstanceStatusDO instanceStatus = createInstanceStatus(appName, instanceModel);
         appInstanceStatusService.insertOrUpdate(instanceStatus);
+    }
+
+    private TAmdbAppInstanceDO queryOldInstance(String appName, InstanceModel instanceModel, String oldInstanceKey) {
+        // 判断instance是否存在
+        TAmdbAppInstanceDO selectParam = new TAmdbAppInstanceDO();
+        // 如果有更新则需要拿到原来的唯一值检索
+        if (StringUtils.isBlank(oldInstanceKey)) {
+            selectParam.setAppName(appName);
+            selectParam.setIp(instanceModel.getAddress());
+            // 老的没有，说明服务重启缓存重置，这种情况下只能根据AgentID来更新
+            selectParam.setAgentId(instanceModel.getAgentId());
+            selectParam.setUserAppKey(instanceModel.getTenantAppKey());
+            selectParam.setEnvCode(instanceModel.getEnvCode());
+        } else {
+            String instanceInfo[] = oldInstanceKey.split("#");
+            selectParam.setAppName(instanceInfo[0]);
+            selectParam.setIp(instanceInfo[1]);
+            selectParam.setPid(instanceInfo[2]);
+            selectParam.setUserAppKey(instanceInfo[3]);
+            selectParam.setEnvCode(instanceInfo[4]);
+        }
+        return appInstanceService.selectOneByParam(selectParam);
     }
 
     /**
@@ -193,6 +205,9 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         tAmdbApp.setModifierName("");
         tAmdbApp.setGmtCreate(curr);
         tAmdbApp.setGmtModify(curr);
+        tAmdbApp.setUserAppKey(instanceModel.getTenantAppKey());
+        tAmdbApp.setEnvCode(instanceModel.getEnvCode());
+        tAmdbApp.setUserId(instanceModel.getUserId());
         return tAmdbApp;
     }
 
@@ -200,19 +215,22 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
      * APP更新对象
      *
      * @param instanceModel
-     * @param oldAmdbApp
+     * @param inDataBaseAppDo
      * @param curr
      * @return
      */
-    private AppDO getTamdAppUpdateModelByInstanceModel(InstanceModel instanceModel, AppDO oldAmdbApp, Date curr) {
-        Map<String, Object> ext = JSON.parseObject(oldAmdbApp.getExt() == null ? "{}" : oldAmdbApp.getExt());
+    private AppDO getTamdAppUpdateModelByInstanceModel(InstanceModel instanceModel, AppDO inDataBaseAppDo, Date curr) {
+        Map<String, Object> ext = JSON.parseObject(inDataBaseAppDo.getExt() == null ? "{}" : inDataBaseAppDo.getExt());
         if (ext == null) {
             ext = new HashMap<>();
         }
         ext.put("jars", instanceModel.getJars());
-        oldAmdbApp.setExt(JSON.toJSONString(ext));
-        oldAmdbApp.setGmtModify(curr);
-        return oldAmdbApp;
+        inDataBaseAppDo.setExt(JSON.toJSONString(ext));
+        inDataBaseAppDo.setGmtModify(curr);
+        inDataBaseAppDo.setUserAppKey(instanceModel.getTenantAppKey());
+        inDataBaseAppDo.setEnvCode(instanceModel.getEnvCode());
+        inDataBaseAppDo.setUserId(instanceModel.getUserId());
+        return inDataBaseAppDo;
     }
 
     /**
@@ -233,6 +251,12 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         amdbAppInstance.setAgentVersion(instanceModel.getAgentVersion());
         amdbAppInstance.setMd5(instanceModel.getMd5());
         amdbAppInstance.setAgentLanguage(instanceModel.getAgentLanguage());
+
+        //租户相关
+        amdbAppInstance.setUserId(instanceModel.getUserId());
+        amdbAppInstance.setUserAppKey(instanceModel.getTenantAppKey());
+        amdbAppInstance.setEnvCode(instanceModel.getEnvCode());
+
 //        if (instanceModel.getErrorCode() != null && instanceModel.getErrorCode().trim().length() > 0) {
 //            Map<String, Map<String, Object>> errorMsgInfos = new HashMap<String, Map<String, Object>>();
 //            Map<String, Object> errorMsgInfo = new HashMap<String, Object>();
@@ -412,6 +436,9 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         instanceStatus.setAgentErrorCode(instanceModel.getErrorCode());
         instanceStatus.setAgentErrorMsg(instanceModel.getErrorMsg());
         instanceStatus.setAgentStatus(instanceModel.getAgentStatus());
+        instanceStatus.setEnvCode(instanceModel.getEnvCode());
+        instanceStatus.setUserAppKey(instanceModel.getTenantAppKey());
+        instanceStatus.setUserId(instanceModel.getUserId());
         return instanceStatus;
     }
 
@@ -466,6 +493,9 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
                     status = configCheck.get("status");
                 }
                 configDO.setStatus(Boolean.parseBoolean(status));
+                configDO.setUserAppKey(instanceModel.getTenantAppKey());
+                configDO.setEnvCode(instanceModel.getEnvCode());
+                configDO.setUserId(instanceModel.getUserId());
                 ret.add(configDO);
             });
         }
@@ -485,6 +515,9 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
                     status = configCheck.get("status");
                 }
                 configDO.setStatus(Boolean.parseBoolean(status));
+                configDO.setUserAppKey(instanceModel.getTenantAppKey());
+                configDO.setEnvCode(instanceModel.getEnvCode());
+                configDO.setUserId(instanceModel.getUserId());
                 ret.add(configDO);
             });
         }

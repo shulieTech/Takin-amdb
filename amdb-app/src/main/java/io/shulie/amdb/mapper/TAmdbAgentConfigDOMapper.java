@@ -27,9 +27,9 @@ public interface TAmdbAgentConfigDOMapper extends Mapper<TAmdbAgentConfigDO> {
 
     @Insert({
             "<script>",
-            "insert into t_amdb_agent_config(app_name, agent_id, config_key, config_value, status) values ",
+            "insert into t_amdb_agent_config(app_name, agent_id, config_key, config_value, status,user_app_key,env_code,user_id) values ",
             "<foreach collection='agentConfigs' item='agentConfig' index='index' separator=','>",
-            "(#{agentConfig.appName}, #{agentConfig.agentId}, #{agentConfig.configKey}, #{agentConfig.configValue}, #{agentConfig.status})",
+            "(#{agentConfig.appName}, #{agentConfig.agentId}, #{agentConfig.configKey}, #{agentConfig.configValue}, #{agentConfig.status},#{agentConfig.userAppKey},#{agentConfig.envCode},#{agentConfig.userId})",
             "</foreach>",
             "</script>"
     })

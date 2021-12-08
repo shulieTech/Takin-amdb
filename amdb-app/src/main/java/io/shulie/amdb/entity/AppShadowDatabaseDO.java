@@ -14,7 +14,7 @@ import lombok.Data;
 @Data
 @ApiModel
 @Table(name = "`t_amdb_app_shadowdatabase`")
-public class AppShadowDatabaseDO implements Serializable {
+public class AppShadowDatabaseDO extends BaseDatabaseDO {
 
     private static final long serialVersionUID = 7223051889499533896L;
 

@@ -25,7 +25,6 @@ import lombok.ToString;
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.io.Serializable;
 import java.util.Date;
 
 @Getter
@@ -34,7 +33,7 @@ import java.util.Date;
 @EqualsAndHashCode
 @ApiModel("")
 @Table(name = "`t_amdb_pradar_link_entrance`")
-public class PradarLinkEntranceDO implements Serializable {
+public class PradarLinkEntranceDO extends BaseDatabaseDO {
     /**
      * ID
      */

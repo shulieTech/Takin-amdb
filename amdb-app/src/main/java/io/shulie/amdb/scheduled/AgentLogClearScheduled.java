@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * @author sunshiyu
- * @description agentinfo定时(每隔5小孩)日志清理功能(清理7天前日志, 时间可配置)
+ * @description agentinfo定时(每隔5h)日志清理功能(清理7天前日志, 时间可配置)
  * @datetime 2021-08-26 12:11 下午
  */
 @Slf4j

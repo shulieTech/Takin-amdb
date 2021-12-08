@@ -148,7 +148,12 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
         if (minUpdateDate != null) {
             criteria.andGreaterThan("gmtModify", DateFormatUtils.format(new Date(minUpdateDate), "yyyy/MM/dd HH:mm:ss"));
         }
-
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
+        }
         int page = param.getCurrentPage();
         int pageSize = param.getPageSize();
         PageHelper.startPage(page, pageSize);
@@ -162,9 +167,9 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
     public AmdbAppInstanceStautsSumResponse queryInstanceSumInfo(AppInstanceStatusQueryRequest param) {
         AmdbAppInstanceStautsSumResponse response = new AmdbAppInstanceStautsSumResponse();
         try {
-            response.setOnlineNodesCount(getOnlineInstanceCount(param.getAppName()));
-            response.setSpecificStatusNodesCount(getSpecificStatusInstanceCount(param.getAppName(), param.getProbeStatus()));
-            response.setVersionList(getAllProbeVersionsByAppName(param.getAppName()));
+            response.setOnlineNodesCount(getOnlineInstanceCount(param));
+            response.setSpecificStatusNodesCount(getSpecificStatusInstanceCount(param));
+            response.setVersionList(getAllProbeVersionsByAppName(param));
         } catch (Exception e) {
             log.error("查询应用实例探针状态汇总信息时发生异常,异常堆栈", e);
         }
@@ -172,29 +177,47 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
     }
 
     @Override
-    public Integer getOnlineInstanceCount(String appName) {
+    public Integer getOnlineInstanceCount(AppInstanceStatusQueryRequest param) {
         Example example = new Example(TAmdbAppInstanceStatusDO.class);
         Criteria criteria = example.createCriteria();
-        criteria.andEqualTo("appName", appName);
-        return appInstanceStatusMapper.selectCountByExample(example);
-    }
-
-    @Override
-    public Integer getSpecificStatusInstanceCount(String appName, String probeStatus) {
-        Example example = new Example(TAmdbAppInstanceStatusDO.class);
-        Criteria criteria = example.createCriteria();
-        criteria.andEqualTo("appName", appName);
-
-        if (StringUtils.isNotBlank(probeStatus)) {
-            criteria.andEqualTo("probeStatus", probeStatus);
+        criteria.andEqualTo("appName", param.getAppName());
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
         }
         return appInstanceStatusMapper.selectCountByExample(example);
     }
 
     @Override
-    public List<String> getAllProbeVersionsByAppName(String appName) {
+    public Integer getSpecificStatusInstanceCount(AppInstanceStatusQueryRequest param) {
+        Example example = new Example(TAmdbAppInstanceStatusDO.class);
+        Criteria criteria = example.createCriteria();
+        criteria.andEqualTo("appName", param.getAppName());
+
+        if (StringUtils.isNotBlank(param.getProbeStatus())) {
+            criteria.andEqualTo("probeStatus", param.getProbeStatus());
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
+        }
+        return appInstanceStatusMapper.selectCountByExample(example);
+    }
+
+    @Override
+    public List<String> getAllProbeVersionsByAppName(AppInstanceStatusQueryRequest param) {
         TAmdbAppInstanceStatusDO appInstanceStatusDO = new TAmdbAppInstanceStatusDO();
-        appInstanceStatusDO.setAppName(appName);
+        appInstanceStatusDO.setAppName(param.getAppName());
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            appInstanceStatusDO.setUserAppKey(param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            appInstanceStatusDO.setEnvCode(param.getEnvCode());
+        }
         return appInstanceStatusMapper.selectDistinctVersionByParam(appInstanceStatusDO);
     }
 
@@ -257,6 +280,12 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
         String appName = param.getAppName();
         if (StringUtils.isNotBlank(appName)) {
             criteria.andEqualTo("appName", appName);
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
         }
         return criteria;
     }

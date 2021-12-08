@@ -17,22 +17,20 @@ package io.shulie.amdb.entity;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Date;
+import javax.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
-
-import javax.persistence.Column;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import java.io.Serializable;
-import java.util.Date;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 @EqualsAndHashCode
 @ApiModel("")
 @Table(name = "`t_amdb_app_instance_status`")
-public class TAmdbAppInstanceStatusDO implements Serializable {
+public class TAmdbAppInstanceStatusDO extends BaseDatabaseDO {
     /**
      * 实例id
      */
@@ -77,18 +75,53 @@ public class TAmdbAppInstanceStatusDO implements Serializable {
     private String hostname;
 
     /**
-     * Agent语言
+     * Agent 语言
      */
     @Column(name = "`agent_language`")
-    @ApiModelProperty("Agent语言")
+    @ApiModelProperty("Agent 语言")
     private String agentLanguage;
 
     /**
-     * Agent版本号
+     * Agent 版本号
      */
     @Column(name = "`agent_version`")
-    @ApiModelProperty("agent版本号")
+    @ApiModelProperty("Agent 版本号")
     private String agentVersion;
+
+    /**
+     * agent 状态
+     */
+    @Column(name = "`agent_status`")
+    @ApiModelProperty("agent 状态")
+    private String agentStatus;
+
+    /**
+     * jdk版本号
+     */
+    @Column(name = "`jdk`")
+    @ApiModelProperty("jdk版本号")
+    private String jdk;
+
+    /**
+     * jdk版本号
+     */
+    @Column(name = "`jvm_args`")
+    @ApiModelProperty("jdk版本号")
+    private String jvmArgs;
+
+    /**
+     * agent异常日志
+     */
+    @Column(name = "`agent_error_msg`")
+    @ApiModelProperty("agent异常日志")
+    private String agentErrorMsg;
+
+    /**
+     * agnet异常code
+     */
+    @Column(name = "`agent_error_code`")
+    @ApiModelProperty("agnet异常code")
+    private String agentErrorCode;
 
     /**
      * 探针版本
@@ -101,15 +134,8 @@ public class TAmdbAppInstanceStatusDO implements Serializable {
      * 探针状态(0-已安装,1-未安装,2-安装中,3-卸载中,4-安装失败,5-卸载失败,99-未知状态)
      */
     @Column(name = "`probe_status`")
-    @ApiModelProperty("探针状态")
+    @ApiModelProperty("探针状态(0-已安装,1-未安装,2-安装中,3-卸载中,4-安装失败,5-卸载失败,99-未知状态)")
     private String probeStatus;
-
-    /**
-     * agent状态(0-已安装,1-未安装,2-安装中,3-卸载中,4-安装失败,5-卸载失败,99-未知状态)
-     */
-    @Column(name = "`agent_status`")
-    @ApiModelProperty("探针状态")
-    private String agentStatus;
 
     /**
      * 错误码
@@ -126,20 +152,6 @@ public class TAmdbAppInstanceStatusDO implements Serializable {
     private String errorMsg;
 
     /**
-     * agent 应用jvm启动参数，是一个list的json字符串
-     */
-    @Column(name = "`jvm_args`")
-    @ApiModelProperty("agent 应用jvm启动参数，是一个list的json字符串")
-    private String jvmArgs;
-
-    /**
-     * 应用服务器的jdk版本
-     */
-    @Column(name = "`jdk`")
-    @ApiModelProperty("应用服务器的jdk版本")
-    private String jdk;
-
-    /**
      * 创建时间
      */
     @Column(name = "`gmt_create`")
@@ -152,20 +164,6 @@ public class TAmdbAppInstanceStatusDO implements Serializable {
     @Column(name = "`gmt_modify`")
     @ApiModelProperty("更新时间")
     private Date gmtModify;
-
-    /**
-     * 探针错误码
-     */
-    @Column(name = "`agent_error_code`")
-    @ApiModelProperty("agent错误码")
-    private String agentErrorCode;
-
-    /**
-     * 探针错误信息
-     */
-    @Column(name = "`agent_error_msg`")
-    @ApiModelProperty("agent错误信息")
-    private String agentErrorMsg;
 
     private static final long serialVersionUID = 1L;
 
@@ -180,16 +178,23 @@ public class TAmdbAppInstanceStatusDO implements Serializable {
         sb.append(", agentId=").append(agentId);
         sb.append(", ip=").append(ip);
         sb.append(", pid=").append(pid);
-        sb.append(", agentVersion=").append(agentVersion);
-        sb.append(", gmtCreate=").append(gmtCreate);
-        sb.append(", gmtModify=").append(gmtModify);
+        sb.append(", hostname=").append(hostname);
         sb.append(", agentLanguage=").append(agentLanguage);
+        sb.append(", agentVersion=").append(agentVersion);
+        sb.append(", agentStatus=").append(agentStatus);
+        sb.append(", jdk=").append(jdk);
+        sb.append(", jvmArgs=").append(jvmArgs);
+        sb.append(", agentErrorMsg=").append(agentErrorMsg);
+        sb.append(", agentErrorCode=").append(agentErrorCode);
         sb.append(", probeVersion=").append(probeVersion);
         sb.append(", probeStatus=").append(probeStatus);
         sb.append(", errorCode=").append(errorCode);
         sb.append(", errorMsg=").append(errorMsg);
-        sb.append(", agentErrorCode=").append(agentErrorCode);
-        sb.append(", agentErrorMsg=").append(agentErrorMsg);
+        sb.append(", gmtCreate=").append(gmtCreate);
+        sb.append(", gmtModify=").append(gmtModify);
+        sb.append(", envCode=").append(getEnvCode());
+        sb.append(", userId=").append(getUserId());
+        sb.append(", userAppKey=").append(getUserAppKey());
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

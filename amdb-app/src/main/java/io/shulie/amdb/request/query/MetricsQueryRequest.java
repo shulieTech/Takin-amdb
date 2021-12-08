@@ -15,6 +15,7 @@
 
 package io.shulie.amdb.request.query;
 
+import io.shulie.amdb.common.request.AbstractAmdbBaseRequest;
 import lombok.Data;
 
 import java.util.LinkedHashMap;
@@ -22,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class MetricsQueryRequest {
+public class MetricsQueryRequest extends AbstractAmdbBaseRequest {
     /**
      * 表名
      */

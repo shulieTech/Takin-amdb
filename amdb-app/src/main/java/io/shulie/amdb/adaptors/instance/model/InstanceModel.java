@@ -17,7 +17,11 @@ package io.shulie.amdb.adaptors.instance.model;
 
 
 import io.shulie.amdb.adaptors.AdaptorModel;
+import io.shulie.amdb.scheduled.TenantConfigScheduled;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
+
+import static io.shulie.amdb.common.request.AbstractAmdbBaseRequest.DEFAULT_USER_ID;
 
 /**
  * agent实例模型
@@ -25,11 +29,11 @@ import lombok.Data;
  * @author vincent
  */
 @Data
-public class InstanceModel implements AdaptorModel {
+public class InstanceModel implements AdaptorModel, Cacheable {
 
     //agent编号
     private String agentId;
-    //客户ID
+    //租户ID
     private String userId;
     //地址
     private String address;
@@ -75,5 +79,39 @@ public class InstanceModel implements AdaptorModel {
     private String agentFileConfigs;
     //状态判断
     private String simulatorFileConfigsCheck;
+    // 租户标识
+    private String tenantAppKey;
+    // 环境标识
+    private String envCode;
+
+    private String appName;
+
+    private String cacheKey;
+
+    /**
+     * 租户隔离 默认值
+     */
+    public void buildDefaultValue(String appName) {
+        if (StringUtils.isEmpty(this.appName)) {
+            this.appName = appName;
+        }
+        if (StringUtils.isEmpty(userId)) {
+            userId = DEFAULT_USER_ID;
+        }
+        if (StringUtils.isEmpty(tenantAppKey)) {
+            tenantAppKey = TenantConfigScheduled.getTenantConfigByAppName(appName).get("tenantAppKey");
+        }
+        if (StringUtils.isEmpty(envCode)) {
+            envCode = TenantConfigScheduled.getTenantConfigByAppName(appName).get("envCode");
+        }
+
+    }
+
+    @Override
+    public String cacheKey() {
+        return cacheKey != null ?
+                cacheKey :
+                (cacheKey = appName + "#" + address + "#" + pid + "#" + tenantAppKey + "#" + envCode);
+    }
 }
 

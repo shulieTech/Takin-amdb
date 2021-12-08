@@ -33,4 +33,18 @@ public abstract class AbstractAmdbBaseRequest {
      * 用户名称
      */
     String userName = "SYSTEM";
+    /**
+     * 租户标识
+     */
+    private String tenantAppKey;
+    /**
+     * 环境标识
+     */
+    private String envCode;
+
+    public static final String DEFAULT_TENANT_KEY = "default";
+
+    public static final String DEFAULT_ENV_CODE = "test";
+
+    public static final String DEFAULT_USER_ID = "-1";
 }

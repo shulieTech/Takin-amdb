@@ -99,6 +99,12 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
             default:
                 break;
         }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            buffer.append(" and tenantAppKey='").append(param.getTenantAppKey()).append("'");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            buffer.append(" and envCode='").append(param.getEnvCode()).append("'");
+        }
         buffer.append(" TZ('Asia/Shanghai')");
         log.info("查询sql:{}", buffer);
         List<TraceMetrics> resultList = new ArrayList<>();
@@ -551,6 +557,12 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
                 } else if (clusterTest == 1) {
                     tagMap.put("clusterTest", "true");
                 }
+                if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+                    tagMap.put("tenantAppKey", request.getTenantAppKey());
+                }
+                if (StringUtils.isNotBlank(request.getEnvCode())) {
+                    tagMap.put("envCode", request.getEnvCode());
+                }
             } else if (E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS.equals(measurement)) {
                 tagMap.put("parsedAppName", request.getAppName());
                 tagMap.put("parsedServiceName", request.getServiceName());
@@ -562,6 +574,12 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
                 }
                 //e2e的断言指标表里clusterTest使用1/0区分的
                 tagMap.put("clusterTest", clusterTest + "");
+                if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+                    tagMap.put("tenantAppKey", request.getTenantAppKey());
+                }
+                if (StringUtils.isNotBlank(request.getEnvCode())) {
+                    tagMap.put("envCode", request.getEnvCode());
+                }
             }
             tagMapList.add(tagMap);
         }
@@ -628,6 +646,12 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
             tagMap.put("service", request.getServiceName());
             tagMap.put("method", request.getMethodName());
             tagMap.put("rpcType", request.getRpcType());
+            if (StringUtils.isNotBlank(request.getTenantAppKey())) {
+                tagMap.put("tenantAppKey", request.getTenantAppKey());
+            }
+            if (StringUtils.isNotBlank(request.getEnvCode())) {
+                tagMap.put("envCode", request.getEnvCode());
+            }
             tagMapList.add(tagMap);
         }
         queryRequest.setTagMapList(tagMapList);
