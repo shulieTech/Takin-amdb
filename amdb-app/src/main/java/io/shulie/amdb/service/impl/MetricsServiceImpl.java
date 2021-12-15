@@ -612,7 +612,7 @@ public class MetricsServiceImpl implements MetricsService {
         return modelList;
     }
 
-    private long getTracePeriod(long startMilli, long endMilli, String eagleId) {
+    private long getTracePeriod(long startMilli, long endMilli, String eagleId) throws ParseException {
         String firstTimeSql =
                 "SELECT" +
                         " time, totalTps" +
@@ -636,11 +636,12 @@ public class MetricsServiceImpl implements MetricsService {
 
         List<QueryResult.Result> influxResult1 = influxDbManager.query(firstTimeSql);
         List<QueryResult.Series> list1 = influxResult1.get(0).getSeries();
-        long firstTime = Long.parseLong(list1.get(0).getValues().get(0).get(1).toString());
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-ddTHH:mm:ssZ");
+        long firstTime = format.parse(list1.get(0).getValues().get(0).get(0).toString()).getTime();
 
         List<QueryResult.Result> influxResult2 = influxDbManager.query(lastTimeSql);
         List<QueryResult.Series> list2 = influxResult2.get(0).getSeries();
-        long lastTime = Long.parseLong(list2.get(0).getValues().get(0).get(1).toString());
+        long lastTime = format.parse(list2.get(0).getValues().get(0).get(0).toString()).getTime();
 
         return (lastTime - firstTime) / 1000 / 1000;
     }
