@@ -30,6 +30,7 @@ import io.shulie.amdb.response.metrics.MetricsResponse;
 import io.shulie.amdb.service.MetricsService;
 import io.shulie.amdb.utils.InfluxDBManager;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.influxdb.dto.QueryResult;
@@ -673,18 +674,22 @@ public class MetricsServiceImpl implements MetricsService {
         try {
             List<QueryResult.Result> influxResult1 = influxDbManager.query(allTotalTpsAndRtCountQuerySql);
             List<QueryResult.Series> list1 = influxResult1.get(0).getSeries();
-            double allSuccessCount = Double.parseDouble(list1.get(0).getValues().get(0).get(1).toString());
-            double allTotalCount = Double.parseDouble(list1.get(0).getValues().get(0).get(2).toString());
-            double allTotalTps = Double.parseDouble(list1.get(0).getValues().get(0).get(3).toString());
-            double allMaxRt = Double.parseDouble(list1.get(0).getValues().get(0).get(4).toString());
-            double allTotalRt = Double.parseDouble(list1.get(0).getValues().get(0).get(5).toString());
-            rsultMap.put("allSuccessCount", allSuccessCount);
-            rsultMap.put("allTotalCount", allTotalCount);
-            rsultMap.put("allTotalTps", allTotalTps);
-            rsultMap.put("allMaxRt", allMaxRt);
-            rsultMap.put("allTotalRt", allTotalRt);
-            long realSeconds = getTracePeriod(startMilli, endMilli, eagleId);
-            rsultMap.put("realSeconds", realSeconds);
+            if (CollectionUtils.isNotEmpty(list1)) {
+                long allSuccessCount = Long.parseLong(list1.get(0).getValues().get(0).get(1).toString().split("\\.")[0]);
+                long allTotalCount = Long.parseLong(list1.get(0).getValues().get(0).get(2).toString().split("\\.")[0]);
+                long allTotalTps = Long.parseLong(list1.get(0).getValues().get(0).get(3).toString().split("\\.")[0]);
+                long allMaxRt = Long.parseLong(list1.get(0).getValues().get(0).get(4).toString().split("\\.")[0]);
+                long allTotalRt = Long.parseLong(list1.get(0).getValues().get(0).get(5).toString().split("\\.")[0]);
+                rsultMap.put("allSuccessCount", allSuccessCount);
+                rsultMap.put("allTotalCount", allTotalCount);
+                rsultMap.put("allTotalTps", allTotalTps);
+                rsultMap.put("allMaxRt", allMaxRt);
+                rsultMap.put("allTotalRt", allTotalRt);
+                long realSeconds = getTracePeriod(startMilli, endMilli, eagleId);
+                rsultMap.put("realSeconds", realSeconds);
+            } else {
+                throw new IllegalArgumentException("query influxdb result is empty.");
+            }
         } catch (Exception e) {
             rsultMap.put("allSuccessCount", 0L);
             rsultMap.put("allTotalCount", 0L);
