@@ -42,8 +42,6 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -614,7 +612,7 @@ public class MetricsServiceImpl implements MetricsService {
         return modelList;
     }
 
-    private long getTracePeriod(long startMilli, long endMilli,String eagleId) {
+    private long getTracePeriod(long startMilli, long endMilli, String eagleId) {
         String firstTimeSql =
                 "SELECT" +
                         " time, totalTps" +
@@ -644,55 +642,55 @@ public class MetricsServiceImpl implements MetricsService {
         List<QueryResult.Series> list2 = influxResult2.get(0).getSeries();
         long lastTime = Long.parseLong(list2.get(0).getValues().get(0).get(1).toString());
 
-        return (lastTime-firstTime)/1000/1000;
+        return (lastTime - firstTime) / 1000 / 1000;
     }
 
-    public Map<String, Long> metricFromInfluxdb(MetricsFromInfluxdbRequest request){
+    public Map<String, Object> metricFromInfluxdb(MetricsFromInfluxdbRequest request) {
         long startMilli = request.getStartMilli();
         long endMilli = request.getEndMilli();
         Boolean metricsType = request.getMetricsType();
         String eagleId = request.getEagleId();
         String allTotalTpsAndRtCountQuerySql =
                 "SELECT" +
-                " SUM(successCount) as allSuccessCount," +
-                " SUM(totalCount) as allTotalCount," +
-                " SUM(totalTps) as allTotalTps," +
-                " MAX(maxRt) as allMaxRt," +
-                " SUM(totalRt) as allTotalRt" +
-                " FROM trace_metrics" +
-                " where" +
-                " edgeId = '" + eagleId + "'" +
-                " and time >= " + formatTimestamp(startMilli) +
-                " and time <= " + formatTimestamp(endMilli);
+                        " SUM(successCount) as allSuccessCount," +
+                        " SUM(totalCount) as allTotalCount," +
+                        " SUM(totalTps) as allTotalTps," +
+                        " MAX(maxRt) as allMaxRt," +
+                        " SUM(totalRt) as allTotalRt" +
+                        " FROM trace_metrics" +
+                        " where" +
+                        " edgeId = '" + eagleId + "'" +
+                        " and time >= " + formatTimestamp(startMilli) +
+                        " and time <= " + formatTimestamp(endMilli);
 
         // 如果不是 混合流量 则需要增加条件
         if (null != metricsType) {
             allTotalTpsAndRtCountQuerySql += " AND clusterTest = '" + metricsType + "'";
         }
         log.info("查询sql03:{}", allTotalTpsAndRtCountQuerySql.replace("\n", " "));
-        Map<String,Long> rsultMap = new HashMap<>();
+        Map<String, Object> rsultMap = new HashMap<>();
         try {
             List<QueryResult.Result> influxResult1 = influxDbManager.query(allTotalTpsAndRtCountQuerySql);
             List<QueryResult.Series> list1 = influxResult1.get(0).getSeries();
-            long allSuccessCount = Long.parseLong(list1.get(0).getValues().get(0).get(1).toString());
-            long allTotalCount = Long.parseLong(list1.get(0).getValues().get(0).get(2).toString());
-            long allTotalTps = Long.parseLong(list1.get(0).getValues().get(0).get(3).toString());
-            long allMaxRt = Long.parseLong(list1.get(0).getValues().get(0).get(4).toString());
-            long allTotalRt = Long.parseLong(list1.get(0).getValues().get(0).get(5).toString());
-            rsultMap.put("allSuccessCount",allSuccessCount);
-            rsultMap.put("allTotalCount",allTotalCount);
-            rsultMap.put("allTotalTps",allTotalTps);
-            rsultMap.put("allMaxRt",allMaxRt);
-            rsultMap.put("allTotalRt",allTotalRt);
-            long realSeconds = getTracePeriod(startMilli,endMilli,eagleId);
-            rsultMap.put("realSeconds",realSeconds);
-        }catch (Exception e){
-            rsultMap.put("allSuccessCount",0L);
-            rsultMap.put("allTotalCount",0L);
-            rsultMap.put("allTotalTps",0L);
-            rsultMap.put("allMaxRt",0L);
-            rsultMap.put("allTotalRt",0L);
-            rsultMap.put("realSeconds",0L);
+            double allSuccessCount = Double.parseDouble(list1.get(0).getValues().get(0).get(1).toString());
+            double allTotalCount = Double.parseDouble(list1.get(0).getValues().get(0).get(2).toString());
+            double allTotalTps = Double.parseDouble(list1.get(0).getValues().get(0).get(3).toString());
+            double allMaxRt = Double.parseDouble(list1.get(0).getValues().get(0).get(4).toString());
+            double allTotalRt = Double.parseDouble(list1.get(0).getValues().get(0).get(5).toString());
+            rsultMap.put("allSuccessCount", allSuccessCount);
+            rsultMap.put("allTotalCount", allTotalCount);
+            rsultMap.put("allTotalTps", allTotalTps);
+            rsultMap.put("allMaxRt", allMaxRt);
+            rsultMap.put("allTotalRt", allTotalRt);
+            long realSeconds = getTracePeriod(startMilli, endMilli, eagleId);
+            rsultMap.put("realSeconds", realSeconds);
+        } catch (Exception e) {
+            rsultMap.put("allSuccessCount", 0L);
+            rsultMap.put("allTotalCount", 0L);
+            rsultMap.put("allTotalTps", 0L);
+            rsultMap.put("allMaxRt", 0L);
+            rsultMap.put("allTotalRt", 0L);
+            rsultMap.put("realSeconds", 0L);
         }
         return rsultMap;
     }
