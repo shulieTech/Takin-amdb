@@ -636,7 +636,7 @@ public class MetricsServiceImpl implements MetricsService {
 
         List<QueryResult.Result> influxResult1 = influxDbManager.query(firstTimeSql);
         List<QueryResult.Series> list1 = influxResult1.get(0).getSeries();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-ddTHH:mm:ssZ");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         long firstTime = format.parse(list1.get(0).getValues().get(0).get(0).toString()).getTime();
 
         List<QueryResult.Result> influxResult2 = influxDbManager.query(lastTimeSql);
