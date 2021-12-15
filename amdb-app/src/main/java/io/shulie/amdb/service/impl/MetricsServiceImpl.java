@@ -620,7 +620,7 @@ public class MetricsServiceImpl implements MetricsService {
                         " where" +
                         " time >= " + formatTimestamp(startMilli) +
                         " and time <= " + formatTimestamp(endMilli) +
-                        " edgeId = '" + eagleId + "'" +
+                        " and edgeId = '" + eagleId + "'" +
                         " order by time asc" +
                         " limit 1";
         String lastTimeSql =
@@ -630,7 +630,7 @@ public class MetricsServiceImpl implements MetricsService {
                         " where" +
                         " time >= " + formatTimestamp(startMilli) +
                         " and time <= " + formatTimestamp(endMilli) +
-                        " edgeId = '" + eagleId + "'" +
+                        " and edgeId = '" + eagleId + "'" +
                         " order by time desc" +
                         " limit 1";
 
