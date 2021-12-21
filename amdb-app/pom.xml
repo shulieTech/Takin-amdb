@@ -61,6 +61,10 @@
                     <artifactId>hibernate-validator</artifactId>
                     <groupId>org.hibernate.validator</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>log4j-api</artifactId>
+                    <groupId>org.apache.logging.log4j</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -193,6 +197,12 @@
             <groupId>io.shulie.surge.data</groupId>
             <artifactId>surge-deploy-pradar-link</artifactId>
             <version>1.0.2.3</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>log-protocol</artifactId>
+                    <groupId>io.shulie.pradar</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.shulie.pradar</groupId>
@@ -221,6 +231,11 @@
             <artifactId>powermock-module-junit4</artifactId>
             <version>2.0.9</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>2.15.0-rc2</version>
         </dependency>
     </dependencies>
 
