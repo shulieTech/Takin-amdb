@@ -22,7 +22,6 @@ import io.shulie.amdb.request.query.E2EBaseRequest;
 import io.shulie.amdb.request.query.E2ENodeMetricsRequest;
 import io.shulie.amdb.request.query.MetricsQueryRequest;
 import io.shulie.amdb.request.query.TraceMetricsRequest;
-import io.shulie.amdb.response.e2e.E2EBaseResponse;
 import io.shulie.amdb.response.e2e.E2ENodeErrorInfosResponse;
 import io.shulie.amdb.response.e2e.E2ENodeMetricsResponse;
 import io.shulie.amdb.response.e2e.E2EStatisticsResponse;
@@ -33,7 +32,6 @@ import io.shulie.amdb.utils.InfluxDBManager;
 import io.shulie.amdb.utils.StringUtil;
 import io.shulie.surge.data.common.utils.Pair;
 import io.shulie.surge.data.deploy.pradar.parser.utils.Md5Utils;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -44,6 +42,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -326,123 +325,138 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
                 E2eConstants.MEARSUREMENT_TRACE_METRICS, null,
                 startTime, endTime, querySource);
         // 巡检流量
-        Map<String, MetricsResponse> responseStatisticsListOfE2E = traceMetrics.getFirst();
+        Map<String, MetricsResponse> clusterTraceMetrics = traceMetrics.getFirst();
         // 业务流量
-        Map<String, MetricsResponse> responseStatisticsListOfBusiness = traceMetrics.getSecond();
+        Map<String, MetricsResponse> businessTraceMetrics = traceMetrics.getSecond();
 
         // 查询业务流量和巡检流量对应的断言失败指标（断言）
-        Pair<Map<String, MetricsResponse>, Map<String, MetricsResponse>> traceE2eAssertMetrics = getErrorMetricsResponses(requestList,
+        Pair<Map<String, MetricsResponse>, Map<String, MetricsResponse>> assertMetrics = getErrorMetricsResponses(requestList,
                 E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS, "exceptionType",
                 startTime, endTime, querySource);
         // 巡检流量(断言)
-        Map<String, MetricsResponse> responseListOfE2E = traceE2eAssertMetrics.getFirst();
+        Map<String, MetricsResponse> clusterAssertMetrics = assertMetrics.getFirst();
         // 业务流量(断言)
-        Map<String, MetricsResponse> responseListOfBusiness = traceE2eAssertMetrics.getSecond();
+        Map<String, MetricsResponse> businessAssertMetrics = assertMetrics.getSecond();
 
-        //如果传了edgeId,按照edgeId计算key,否则是历史数据查询,无edgeId
-        Set<String> requestKeySet = requestList.stream().map(
-                        request -> StringUtils.isNotBlank(request.getEdgeId()) ? request.getAppName() + "|" + request.getServiceName() + "|" + request.getMethodName() + "|"
-                                + request.getRpcType() + "|" + request.getEdgeId() + "|-1" : request.getAppName() + "|" + request.getServiceName() + "|" + request.getMethodName() + "|"
-                                + request.getRpcType() + "|-1")
-                .collect(Collectors.toSet());
         Set<String> keySet = new HashSet<>();
-        keySet.addAll(responseListOfE2E.keySet());
-        keySet.addAll(responseListOfBusiness.keySet());
-        keySet.addAll(requestKeySet);
+        keySet.addAll(clusterTraceMetrics.keySet());
+        keySet.addAll(businessTraceMetrics.keySet());
+        keySet.addAll(clusterAssertMetrics.keySet());
+        keySet.addAll(businessAssertMetrics.keySet());
 
-        // 构造返回对象
-        Map<String, E2EBaseResponse> e2eBaseResponseMap = getResponseListByMetricsResultKetSet(keySet,
-                E2ENodeErrorInfosResponse.class);
         // 合并计算结果
         Map<String, E2ENodeErrorInfosResponse> responseMap = new HashMap<>();
         for (String key : keySet) {
             String[] params = key.split("\\|");
-            //查询的是老数据,无edgeId
+            int length = params.length;
+
             String nodeId = null;
-            Boolean isLatest = true;
-            if (params.length == 5) {
-                isLatest = false;
+            Boolean hasEdgeId = true;
+            if ((params[length - 1].equals(E2eConstants.MEARSUREMENT_TRACE_METRICS) && params.length == 8) || (params[length - 1].equals(E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS) && params.length == 9)) {
+                hasEdgeId = false;
                 nodeId = getOldNodeId(params[0], params[1], params[2], params[3]);
                 //使用edgeId查询,查询新数据
-            } else if (params.length == 6) {
-                //数组最后一位是压测标识,不能使用
+            } else if ((params[length - 1].equals(E2eConstants.MEARSUREMENT_TRACE_METRICS) && params.length == 9) || (params[length - 1].equals(E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS) && params.length == 10)) {
                 nodeId = params[4];
             }
+
             // 这里重新封装响应对象，因为key里包括【异常类型】字段，去掉之后对相同nodeId的数据进行合并
             E2ENodeErrorInfosResponse response = responseMap.get(nodeId);
             if (response == null) {
-                response = (E2ENodeErrorInfosResponse) e2eBaseResponseMap.get(key);
+                response = new E2ENodeErrorInfosResponse();
+                response.setAppName(params[0]);
+                response.setServiceName(params[1]);
+                response.setMethodName(params[2]);
+                response.setRpcType(params[3]);
+                if (hasEdgeId) {
+                    response.setEdgeId(nodeId);
+                } else {
+                    response.setEdgeId("");
+                }
                 responseMap.put(nodeId, response);
             }
+
             // 聚合指标
-            MetricsModel metricsStatisticsModel = MetricsModel.getMetricsModel(responseStatisticsListOfE2E.get(key.substring(0, key.lastIndexOf("|"))),
-                    responseStatisticsListOfBusiness.get(key.substring(0, key.lastIndexOf("|"))));
-            // 聚合指标（断言）
-            MetricsModel metricsModel = MetricsModel.getMetricsModel(responseListOfE2E.get(key),
-                    responseListOfBusiness.get(key));
-            String exceptionType;
-            if (isLatest) {
-                exceptionType = params[5];
-            } else {
-                exceptionType = params[4];
-            }
-            // 总的错误次数、成功次数、总请求次数，和是否断言错误没有关系
-            response.setE2eRequestCount(response.getE2eRequestCount() + metricsStatisticsModel.getE2eTotalCount());
-            response.setBusinessRequestCount(response.getBusinessRequestCount() + metricsStatisticsModel.getBusinessTotalCount());
-            response.setRequestCount(response.getRequestCount() + metricsStatisticsModel.getTotalCount());
-            if (!"-1".equals(exceptionType)) {
-                E2ENodeErrorInfosResponse.ErrorInfo errorInfo = new E2ENodeErrorInfosResponse.ErrorInfo();
-                errorInfo.setE2eErrorCount(metricsModel.getE2eErrorCount());
-                errorInfo.setBusinessErrorCount(metricsModel.getBusinessErrorCount());
-                errorInfo.setErrorCount(metricsModel.getTotalErrorCount());
-                errorInfo.setErrorType(exceptionType);
+            MetricsModel traceMetricsModel = MetricsModel.getMetricsModel(clusterTraceMetrics.get(key),
+                    businessTraceMetrics.get(key));
+            response.setE2eRequestCount(response.getE2eRequestCount() + traceMetricsModel.getE2eTotalCount());
+            response.setBusinessRequestCount(response.getBusinessRequestCount() + traceMetricsModel.getBusinessTotalCount());
+            response.setRequestCount(response.getRequestCount() + traceMetricsModel.getTotalCount());
+
+            if (params[length - 1].equals(E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS)) {
+                // 聚合指标（断言）
+                MetricsModel assertMetricsModel = MetricsModel.getMetricsModel(clusterAssertMetrics.get(key),
+                        businessAssertMetrics.get(key));
+                String exceptionType = params[length - 2];
+
+                E2ENodeErrorInfosResponse.ErrorInfo errorInfo = null;
+                if (CollectionUtils.isEmpty(response.getErrorInfoList())) {
+                    errorInfo = new E2ENodeErrorInfosResponse.ErrorInfo();
+                    errorInfo.setE2eErrorCount(assertMetricsModel.getE2eErrorCount());
+                    errorInfo.setBusinessErrorCount(assertMetricsModel.getBusinessErrorCount());
+                    errorInfo.setErrorCount(assertMetricsModel.getTotalErrorCount());
+                    errorInfo.setErrorType(exceptionType);
+                } else {
+                    AtomicReference<Boolean> isMerged = new AtomicReference<>(false);
+                    //如果不为空,则遍历已有的errorInfo,并合并相同错误类型的
+                    response.getErrorInfoList().forEach(v -> {
+                        if (exceptionType.equals(v.getErrorType())) {
+                            v.setE2eErrorCount(v.getE2eErrorCount() + assertMetricsModel.getE2eErrorCount());
+                            v.setBusinessErrorCount(v.getBusinessErrorCount() + assertMetricsModel.getBusinessErrorCount());
+                            v.setErrorCount(v.getErrorCount() + assertMetricsModel.getTotalErrorCount());
+                            isMerged.set(true);
+                        }
+                    });
+                    if (!isMerged.get()) {
+                        errorInfo = new E2ENodeErrorInfosResponse.ErrorInfo();
+                        errorInfo.setE2eErrorCount(assertMetricsModel.getE2eErrorCount());
+                        errorInfo.setBusinessErrorCount(assertMetricsModel.getBusinessErrorCount());
+                        errorInfo.setErrorCount(assertMetricsModel.getTotalErrorCount());
+                        errorInfo.setErrorType(exceptionType);
+                    }
+                }
+
                 //根据异常类型查最近一次的traceId
                 List<QueryResult.Result> tmpResult = null;
-                if (nodeId != null) {
-                    StringBuilder stringBuilder = new StringBuilder();
-                    if (nodeId.contains(",")) {
-                        stringBuilder.append("(");
-                        for (String single : nodeId.split(",")) {
-                            stringBuilder.append("nodeId='" + single + "'").append(" or ");
+                if (Objects.nonNull(errorInfo)) {
+                    if (hasEdgeId) {
+                        StringBuilder stringBuilder = new StringBuilder();
+                        if (nodeId.contains(",")) {
+                            stringBuilder.append("(");
+                            for (String single : nodeId.split(",")) {
+                                stringBuilder.append("nodeId='" + single + "'").append(" or ");
+                            }
+                            stringBuilder.delete(stringBuilder.lastIndexOf(" or "), stringBuilder.length());
+                            stringBuilder.append(")");
+                        } else {
+                            stringBuilder.append("nodeId = '" + nodeId + "'");
                         }
-                        stringBuilder.delete(stringBuilder.lastIndexOf(" or "), stringBuilder.length());
-                        stringBuilder.append(")");
+
+                        tmpResult = influxDbManager.query("select traceId from " + E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS + " where time >= " + startTime + "000000 and time < " + endTime + "000000 and exceptionType='" + exceptionType + "' and " + stringBuilder + " order by time desc limit 1");
                     } else {
-                        stringBuilder.append("nodeId = '" + nodeId + "'");
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append("parsedAppName = '" + params[0] + "'");
+                        stringBuilder.append(" and parsedServiceName = '" + params[1] + "'");
+                        stringBuilder.append(" and parsedMethod = '" + params[2] + "'");
+                        stringBuilder.append(" and rpcType = '" + params[3] + "' ");
+                        tmpResult = influxDbManager.query("select traceId from " + E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS + " where time >= " + startTime + "000000 and time < " + endTime + "000000 and exceptionType='" + exceptionType + "' and " + stringBuilder + " order by time desc limit 1");
                     }
 
-                    tmpResult = influxDbManager.query("select traceId from " + E2eConstants.MEARSUREMENT_TRACE_E2E_ASSERT_METRICS + " where time >= " + startTime + "000000 and time < " + endTime + "000000 and exceptionType='" + exceptionType + "' and " + stringBuilder + " order by time desc limit 1");
-                }
-                if (CollectionUtils.isNotEmpty(tmpResult)) {
-                    List<QueryResult.Series> tmpList = tmpResult.get(0).getSeries();
-                    if (CollectionUtils.isNotEmpty(tmpList)) {
-                        errorInfo.setTraceId(StringUtil.parseStr(tmpList.get(0).getValues().get(0).get(1)));
+                    if (CollectionUtils.isNotEmpty(tmpResult)) {
+                        List<QueryResult.Series> tmpList = tmpResult.get(0).getSeries();
+                        if (CollectionUtils.isNotEmpty(tmpList)) {
+                            errorInfo.setTraceId(StringUtil.parseStr(tmpList.get(0).getValues().get(0).get(1)));
+                        }
+                    } else {
+                        errorInfo.setTraceId("");
                     }
-                } else {
-                    errorInfo.setTraceId("");
+                    response.getErrorInfoList().add(errorInfo);
                 }
-                response.getErrorInfoList().add(errorInfo);
             }
         }
         return Response.success(responseMap.values().stream().collect(Collectors.toList()));
     }
 
-    @SneakyThrows
-    private Map<String, E2EBaseResponse> getResponseListByMetricsResultKetSet(Set<String> keySet,
-                                                                              Class<? extends E2EBaseResponse> cls) {
-        Map<String, E2EBaseResponse> responseMap = new HashMap<>();
-        for (String key : keySet) {
-            E2EBaseResponse response = cls.newInstance();
-            String[] params = key.split("\\|");
-            response.setAppName(params[0]);
-            response.setServiceName(params[1]);
-            response.setMethodName(params[2]);
-            response.setRpcType(params[3]);
-            response.setEdgeId(params[4]);
-            responseMap.put(key, response);
-        }
-        return responseMap;
-    }
 
     /**
      * 生成nodeId
@@ -478,45 +492,26 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
             List<E2ENodeMetricsRequest> requestList, String measurement,
             String group, long startTime, long endTime, String querySource) {
         // 巡检指标查询
-        MetricsQueryRequest e2eQueryRequest = buildE2eQueryRequest(requestList, measurement, group, startTime,
+        MetricsQueryRequest e2eQueryRequest = buildErrorInfoQueryRequest(requestList, measurement, group, startTime,
                 endTime, 1, querySource);
         Map<String, MetricsResponse> e2eMetricsResponseMap = metricsService.getMetrics(e2eQueryRequest);
-
         e2eMetricsResponseMap = formatKey(e2eMetricsResponseMap, key -> {
-            String[] keys = key.split("\\|");
-            if (keys.length >= 6) {
-                key = keys[0] + "|" + keys[1] + "|" + keys[2] + "|" + keys[3] + "|" + keys[4];
-                // 分组列要保留
-                if (StringUtils.isNotBlank(e2eQueryRequest.getGroups())) {
-                    key = key + "|" + keys[keys.length - 1];
-                }
-            } else if (keys.length >= 5) {
-                key = keys[0] + "|" + keys[1] + "|" + keys[2] + "|" + keys[3];
-            }
+            key = key + "|" + measurement;
             return key;
         });
 
         // 业务指标查询
-        MetricsQueryRequest businessQueryRequest = buildE2eQueryRequest(requestList, measurement, group, startTime,
+        MetricsQueryRequest businessQueryRequest = buildErrorInfoQueryRequest(requestList, measurement, group, startTime,
                 endTime, 0, querySource);
         Map<String, MetricsResponse> businessMetricsResponseMap = metricsService.getMetrics(businessQueryRequest);
         businessMetricsResponseMap = formatKey(businessMetricsResponseMap, key -> {
-            String[] keys = key.split("\\|");
-            if (keys.length >= 6) {
-                key = keys[0] + "|" + keys[1] + "|" + keys[2] + "|" + keys[3] + "|" + keys[4];
-                // 分组列要保留,取最后一列
-                if (StringUtils.isNotBlank(businessQueryRequest.getGroups())) {
-                    key = key + "|" + keys[keys.length - 1];
-                }
-            } else if (keys.length >= 5) {
-                key = keys[0] + "|" + keys[1] + "|" + keys[2] + "|" + keys[3];
-            }
+            key = key + "|" + measurement;
             return key;
         });
         return new Pair<>(e2eMetricsResponseMap, businessMetricsResponseMap);
     }
 
-    private MetricsQueryRequest buildE2eQueryRequest(List<E2ENodeMetricsRequest> requestList, String measurement, String group, long startTime, long endTime, int clusterTest, String querySource) {
+    private MetricsQueryRequest buildErrorInfoQueryRequest(List<E2ENodeMetricsRequest> requestList, String measurement, String group, long startTime, long endTime, int clusterTest, String querySource) {
         MetricsQueryRequest queryRequest = new MetricsQueryRequest();
         queryRequest.setMeasurementName(measurement);
 
