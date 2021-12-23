@@ -504,26 +504,26 @@ class MetricsModel {
     /**
      * 合并巡检和业务查询结果
      *
-     * @param responseOfE2E
-     * @param responseOfBusiness
+     * @param clusterResponse
+     * @param bussinessResponse
      * @return
      */
-    public static MetricsModel getMetricsModel(MetricsResponse responseOfE2E, MetricsResponse responseOfBusiness) {
+    public static MetricsModel getMetricsModel(MetricsResponse clusterResponse, MetricsResponse bussinessResponse) {
         MetricsModel metricsModel = new MetricsModel();
-        if (responseOfE2E != null && CollectionUtils.isNotEmpty(responseOfE2E.getValue())) {
-            metricsModel.setE2eTotalCount(((Double) responseOfE2E.getValue().get(0).get("totalCount")));
-            metricsModel.setE2eSuccessCount(((Double) responseOfE2E.getValue().get(0).get("successCount")));
-            metricsModel.setE2eErrorCount(((Double) responseOfE2E.getValue().get(0).get("errorCount")));
-            metricsModel.setE2eTotalRt((Double) responseOfE2E.getValue().get(0).get("totalRt"));
+        if (clusterResponse != null && CollectionUtils.isNotEmpty(clusterResponse.getValue())) {
+            metricsModel.setE2eTotalCount(((Double) clusterResponse.getValue().get(0).get("totalCount")));
+            metricsModel.setE2eSuccessCount(((Double) clusterResponse.getValue().get(0).get("successCount")));
+            metricsModel.setE2eErrorCount(((Double) clusterResponse.getValue().get(0).get("errorCount")));
+            metricsModel.setE2eTotalRt((Double) clusterResponse.getValue().get(0).get("totalRt"));
         }
-        if (responseOfBusiness != null && CollectionUtils.isNotEmpty(responseOfBusiness.getValue())) {
-            metricsModel.setBusinessTotalCount(((Double) responseOfBusiness.getValue().get(0).get("totalCount"))
+        if (bussinessResponse != null && CollectionUtils.isNotEmpty(bussinessResponse.getValue())) {
+            metricsModel.setBusinessTotalCount(((Double) bussinessResponse.getValue().get(0).get("totalCount"))
             );
-            metricsModel.setBusinessSuccessCount(((Double) responseOfBusiness.getValue().get(0).get("successCount"))
+            metricsModel.setBusinessSuccessCount(((Double) bussinessResponse.getValue().get(0).get("successCount"))
             );
-            metricsModel.setBusinessErrorCount(((Double) responseOfBusiness.getValue().get(0).get("errorCount"))
+            metricsModel.setBusinessErrorCount(((Double) bussinessResponse.getValue().get(0).get("errorCount"))
             );
-            metricsModel.setBusinessTotalRt((Double) responseOfBusiness.getValue().get(0).get("totalRt"));
+            metricsModel.setBusinessTotalRt((Double) bussinessResponse.getValue().get(0).get("totalRt"));
         }
         metricsModel.totalCount = metricsModel.e2eTotalCount + metricsModel.businessTotalCount;
         metricsModel.totalRt = metricsModel.e2eTotalRt + metricsModel.businessTotalRt;

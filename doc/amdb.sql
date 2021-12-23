@@ -32,7 +32,7 @@ CREATE TABLE `t_amdb_agent_config` (
                                        `env_code` varchar(64) DEFAULT 'test' COMMENT '环境标识',
                                        `user_id` varchar(64) DEFAULT '-1' COMMENT '用户标识',
                                        PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=864501 DEFAULT CHARSET=utf8mb4 COMMENT='agent动态配置表';
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COMMENT='agent动态配置表';
 
 -- ----------------------------
 -- Table structure for t_amdb_agent_info
@@ -52,7 +52,7 @@ CREATE TABLE `t_amdb_agent_info` (
                                      `user_id` varchar(64) DEFAULT '-1' COMMENT '用户标识',
                                      PRIMARY KEY (`id`),
                                      KEY `idx_userAppKey_envCode_appName_agentTimestamp` (`user_app_key`,`env_code`,`app_name`,`agent_timestamp`)
-) ENGINE=InnoDB AUTO_INCREMENT=5393121 DEFAULT CHARSET=utf8mb4 COMMENT='agent错误日志表';
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COMMENT='agent错误日志表';
 
 -- ----------------------------
 -- Table structure for t_amdb_app
@@ -86,7 +86,7 @@ CREATE TABLE `t_amdb_app` (
                               `user_id` varchar(64) COLLATE utf8mb4_bin DEFAULT '-1' COMMENT '用户标识',
                               PRIMARY KEY (`id`),
                               UNIQUE KEY `unique_indx` (`user_app_key`,`env_code`,`app_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=537 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Table structure for t_amdb_app_instance
@@ -176,7 +176,7 @@ CREATE TABLE `t_amdb_app_instance_status` (
                                               `user_id` varchar(64) DEFAULT '-1' COMMENT '用户标识',
                                               PRIMARY KEY (`id`),
                                               UNIQUE KEY `unique_indx` (`user_app_key`,`env_code`,`app_name`,`agent_id`,`ip`,`pid`)
-) ENGINE=InnoDB AUTO_INCREMENT=32730 DEFAULT CHARSET=utf8mb4 COMMENT='应用实例探针状态表';
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COMMENT='应用实例探针状态表';
 
 -- ----------------------------
 -- Table structure for t_amdb_app_relation
@@ -292,7 +292,7 @@ CREATE TABLE `t_amdb_app_shadowbiztable` (
                                              PRIMARY KEY (`id`),
                                              UNIQUE KEY `unique_indx` (`user_app_key`,`env_code`,`unique_key`),
                                              KEY `datasource_index` (`app_name`,`data_source`,`table_user`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=109544 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Table structure for t_amdb_app_shadowdatabase
@@ -320,7 +320,7 @@ CREATE TABLE `t_amdb_app_shadowdatabase` (
                                              PRIMARY KEY (`id`),
                                              UNIQUE KEY `unique_indx` (`user_app_key`,`env_code`,`unique_key`),
                                              KEY `appname_index` (`app_name`,`data_source`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=41079 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Table structure for t_amdb_config
@@ -528,7 +528,7 @@ CREATE TABLE `t_amdb_pradar_e2e_config` (
                                             `user_id` varchar(64) COLLATE utf8mb4_bin DEFAULT '-1' COMMENT '用户标识',
                                             PRIMARY KEY (`id`),
                                             UNIQUE KEY `unique_indx` (`user_app_key`,`env_code`,`node_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=139 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Table structure for t_amdb_pradar_link_config
@@ -549,7 +549,7 @@ CREATE TABLE `t_amdb_pradar_link_config` (
                                              `user_id` varchar(64) COLLATE utf8mb4_bin DEFAULT '-1' COMMENT '用户标识',
                                              PRIMARY KEY (`id`),
                                              UNIQUE KEY `unique_indx` (`user_app_key`,`env_code`,`link_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=202 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Table structure for t_amdb_pradar_link_edge
@@ -578,7 +578,7 @@ CREATE TABLE `t_amdb_pradar_link_edge` (
                                            `user_id` varchar(64) COLLATE utf8mb4_bin DEFAULT '-1' COMMENT '用户标识',
                                            PRIMARY KEY (`id`),
                                            UNIQUE KEY `unique_indx` (`user_app_key`,`env_code`,`link_id`,`edge_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8219882 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Table structure for t_amdb_pradar_link_entrance
@@ -607,7 +607,7 @@ CREATE TABLE `t_amdb_pradar_link_entrance` (
                                                UNIQUE KEY `unique_indx` (`user_app_key`,`env_code`,`entrance_id`),
                                                KEY `idx_appName` (`app_name`) USING BTREE,
                                                KEY `idx_userAppKey_envCode_appName` (`user_app_key`,`env_code`,`app_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=275454480 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Table structure for t_amdb_pradar_link_node
@@ -628,7 +628,7 @@ CREATE TABLE `t_amdb_pradar_link_node` (
                                            `user_id` varchar(64) COLLATE utf8mb4_bin DEFAULT '-1' COMMENT '用户标识',
                                            PRIMARY KEY (`id`),
                                            UNIQUE KEY `unique_indx` (`user_app_key`,`env_code`,`link_id`,`app_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4807602 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Table structure for t_amdb_pradar_rule
