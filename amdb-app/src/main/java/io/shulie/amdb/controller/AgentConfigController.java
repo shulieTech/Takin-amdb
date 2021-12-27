@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -49,7 +50,7 @@ public class AgentConfigController {
      * @return
      */
     @RequestMapping(value = "/queryConfig", method = RequestMethod.POST)
-    public Response<List<AgentConfigDTO>> queryConfig(AgentConfigQueryRequest param) {
+    public Response<List<AgentConfigDTO>> queryConfig(@RequestParam AgentConfigQueryRequest param) {
         try {
             PageInfo<AgentConfigDTO> agentConfigDTOPageInfo = agentConfigService.selectByParams(param);
             return Response.success(agentConfigDTOPageInfo);
@@ -66,7 +67,7 @@ public class AgentConfigController {
      * @return
      */
     @RequestMapping(value = "/count", method = RequestMethod.POST)
-    public Response<AgentStatInfoDTO> count(AgentConfigQueryRequest param) {
+    public Response<AgentStatInfoDTO> count(@RequestParam AgentConfigQueryRequest param) {
         try {
             if (param == null || param.getConfigKey() == null) {
                 return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "configKey");
