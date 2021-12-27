@@ -130,6 +130,8 @@ public class LinkController {
     public Response<LinkTopologyDTO> getLinkTopology(TopologyQueryParam param) {
         log.info("查询拓扑图 param:{}", JSON.toJSONString(param));
         try {
+            //移除临时拓扑设置的threadLocal,防止线程复用导致的参数污染问题
+            LinkProcessor.threadLocal.remove();
             Response<LinkTopologyDTO> result = linkService.getLinkTopology(param);
             return result;
         } catch (Exception e) {
