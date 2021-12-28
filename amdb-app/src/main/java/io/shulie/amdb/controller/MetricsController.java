@@ -99,7 +99,7 @@ public class MetricsController {
         if (StringUtils.isBlank(request.getEagleId()) || request.getStartMilli() == 0 || request.getEndMilli() == 0) {
             return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
         }
-        Map<String, Object> resultList = metricsService.metricFromInfluxdb(request);
+        List<Map<String, Object>> resultList = metricsService.metricFromInfluxdb(request);
         Response response = Response.success(resultList);
         response.setTotal(resultList.size());
         return response;

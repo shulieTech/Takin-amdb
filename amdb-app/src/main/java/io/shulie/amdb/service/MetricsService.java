@@ -35,6 +35,6 @@ public interface MetricsService {
 
     Map<String, Object> metricsFromChickHouse(MetricsFromInfluxdbQueryRequest request);
 
-    Map<String, Object> metricFromInfluxdb(MetricsFromInfluxdbRequest request);
+    List<Map<String, Object>> metricFromInfluxdb(MetricsFromInfluxdbRequest request);
 
 }
