@@ -644,7 +644,7 @@ public class MetricsServiceImpl implements MetricsService {
         List<QueryResult.Series> list2 = influxResult2.get(0).getSeries();
         long lastTime = format.parse(list2.get(0).getValues().get(0).get(0).toString()).getTime();
 
-        return (lastTime - firstTime) / 1000 / 1000;
+        return (lastTime - firstTime) / 1000;
     }
 
     public List<Map<String, Object>> metricFromInfluxdb(MetricsFromInfluxdbRequest request) {
