@@ -96,7 +96,7 @@ public class MetricsController {
 
     @RequestMapping(value = "/metricFromInfluxdb", method = RequestMethod.POST)
     public Response metricFromInfluxdb(@RequestBody MetricsFromInfluxdbRequest request) {
-        if (StringUtils.isBlank(request.getEagleId()) || request.getStartMilli() == 0 || request.getEndMilli() == 0) {
+        if ((StringUtils.isBlank(request.getEagleId()) && CollectionUtils.isEmpty(request.getEagleIds())) || request.getStartMilli() == 0 || request.getEndMilli() == 0) {
             return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
         }
         List<Map<String, Object>> resultList = metricsService.metricFromInfluxdb(request);
