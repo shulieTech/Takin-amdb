@@ -649,6 +649,7 @@ public class MetricsServiceImpl implements MetricsService {
 
     public List<Map<String, Object>> metricFromInfluxdb(MetricsFromInfluxdbRequest request) {
         List result = new ArrayList<Map<String, Object>>();
+        Set<String> edgeIdSetFromInfluxdb = new HashSet<String>();
         long startMilli = request.getStartMilli();
         long endMilli = request.getEndMilli();
         Boolean metricsType = request.getMetricsType();
@@ -692,6 +693,7 @@ public class MetricsServiceImpl implements MetricsService {
                 series.forEach(serie -> {
                     Map<String, Object> resultMap = new HashMap<>();
                     String edgeId = serie.getTags().get("edgeId");
+                    edgeIdSetFromInfluxdb.add(edgeId);
                     resultMap.put("edgeId", edgeId);
                     resultMap.put("allSuccessCount", Long.parseLong(serie.getValues().get(0).get(1).toString().split("\\.")[0]));
                     resultMap.put("allTotalCount", Long.parseLong(serie.getValues().get(0).get(2).toString().split("\\.")[0]));
@@ -706,6 +708,21 @@ public class MetricsServiceImpl implements MetricsService {
                     }
                     resultMap.put("realSeconds", realSeconds);
                     result.add(resultMap);
+                });
+
+                //数据补全
+                eagleIds.forEach(tmpEagleId -> {
+                    if (!edgeIdSetFromInfluxdb.contains(tmpEagleId)) {
+                        Map<String, Object> resultMap = new HashMap<>();
+                        resultMap.put("edgeId", tmpEagleId);
+                        resultMap.put("allSuccessCount", 0L);
+                        resultMap.put("allTotalCount", 0L);
+                        resultMap.put("allTotalTps", 0L);
+                        resultMap.put("allMaxRt", 0L);
+                        resultMap.put("allTotalRt", 0L);
+                        resultMap.put("realSeconds", 0L);
+                        result.add(resultMap);
+                    }
                 });
 
             } else {
