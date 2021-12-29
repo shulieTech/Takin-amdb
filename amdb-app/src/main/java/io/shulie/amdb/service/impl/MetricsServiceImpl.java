@@ -587,10 +587,10 @@ public class MetricsServiceImpl implements MetricsService {
         if (clusterTest != -1) {
             where1.append(" and clusterTest = '" + (0 == clusterTest ? "0" : "1") + "'");
         }
-        String selectsql1 = "select sum(toInt8(samplingInterval)) as allTotalCount,\n" +
+        String selectsql1 = "select sum(toInt32(samplingInterval)) as allTotalCount,\n" +
                 "MAX(cost) as allMaxRt,\n" +
                 "sum(cost) as allTotalRt,\n" +
-                "(sum(toInt8(samplingInterval))/" + timeGap + ") as allTotalTps\n" +
+                "(sum(toInt32(samplingInterval))/" + timeGap + ") as allTotalTps\n" +
                 "from t_trace_all \n" + where1;
         Map<String, Object> modelList = traceDao.queryForMap(selectsql1);
         if (modelList.get("allTotalCount") == null) {
@@ -603,7 +603,7 @@ public class MetricsServiceImpl implements MetricsService {
             modelList.put("allSuccessCount", 0);
         }
         modelList.put("realSeconds", timeGap);
-        String selectsql2 = "select sum(toInt8(samplingInterval)) as allSuccessCount\n" +
+        String selectsql2 = "select sum(toInt32(samplingInterval)) as allSuccessCount\n" +
                 "from t_trace_all \n" + where1 + " and resultCode in('00','200') ";
         Map<String, Object> successCount = traceDao.queryForMap(selectsql2);
         modelList.putAll(successCount);
