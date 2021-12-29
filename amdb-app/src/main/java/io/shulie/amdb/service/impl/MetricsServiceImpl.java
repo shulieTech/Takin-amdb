@@ -589,7 +589,7 @@ public class MetricsServiceImpl implements MetricsService {
         }
         String selectsql1 = "select sum(toInt32(samplingInterval)) as allTotalCount,\n" +
                 "MAX(cost) as allMaxRt,\n" +
-                "sum(cost) as allTotalRt,\n" +
+                "sum(cost*toInt32(samplingInterval)) as allTotalRt,\n" +
                 "(sum(toInt32(samplingInterval))/" + timeGap + ") as allTotalTps\n" +
                 "from t_trace_all \n" + where1;
         Map<String, Object> modelList = traceDao.queryForMap(selectsql1);
