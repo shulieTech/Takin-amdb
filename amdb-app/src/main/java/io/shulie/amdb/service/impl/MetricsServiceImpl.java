@@ -596,11 +596,14 @@ public class MetricsServiceImpl implements MetricsService {
         if (modelList.get("allTotalCount") == null) {
             modelList.put("allTotalCount", 0);
         }
+        if (modelList.get("allMaxRt") == null) {
+            modelList.put("allMaxRt", 0);
+        }
+        if (modelList.get("allTotalRt") == null) {
+            modelList.put("allTotalRt", 0);
+        }
         if (modelList.get("allTotalTps") == null) {
             modelList.put("allTotalTps", 0);
-        }
-        if (modelList.get("allSuccessCount") == null) {
-            modelList.put("allSuccessCount", 0);
         }
         modelList.put("realSeconds", timeGap);
         String selectsql2 = "select sum(toInt32(samplingInterval)) as allSuccessCount\n" +
