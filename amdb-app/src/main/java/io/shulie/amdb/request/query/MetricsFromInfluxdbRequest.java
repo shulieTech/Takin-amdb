@@ -16,11 +16,8 @@
 package io.shulie.amdb.request.query;
 
 import lombok.Data;
-import org.apache.commons.lang3.StringUtils;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.List;
 
 @Data
 public class MetricsFromInfluxdbRequest {
@@ -29,5 +26,5 @@ public class MetricsFromInfluxdbRequest {
     long realSeconds = 0L;      //秒数
     Boolean metricsType = null; //流量类型
     String eagleId = "";        //边ID
-
+    List<String> eagleIds;        //边ID集合
 }

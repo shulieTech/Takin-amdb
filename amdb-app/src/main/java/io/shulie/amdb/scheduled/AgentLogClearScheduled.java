@@ -52,7 +52,7 @@ public class AgentLogClearScheduled {
                 return;
             }
             long cleanTime = time - reserveDays * 24L * 60 * 60 * 1000;
-            String sql = "delete from amdb.t_amdb_agent_info where agent_timestamp < " + cleanTime;
+            String sql = "delete from amdb_tenant.t_amdb_agent_info where agent_timestamp < " + cleanTime;
             jdbcTemplate.execute(sql);
             log.info("已清理{}天前agentlog,清理sql:{}", reserveDays, sql);
         } catch (Exception e) {

@@ -16,6 +16,7 @@
 package io.shulie.amdb.common.request.agent;
 
 import io.shulie.amdb.common.request.PagingRequest;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -26,10 +27,11 @@ import java.io.Serializable;
  * @date 2021/8/18
  */
 @Data
+@ApiModel
 public class AgentConfigQueryRequest extends PagingRequest implements Serializable {
 
-    @ApiModelProperty("")
-    private String  configKey;
+    @ApiModelProperty("配置英文key")
+    private String configKey;
 
     @ApiModelProperty("应用名称")
     private String appName;

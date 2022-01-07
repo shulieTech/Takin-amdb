@@ -44,7 +44,7 @@ public class TraceMetrics implements Serializable {
     //private String serverAppName;
     private String service;
     private String sqlStatement;
-    private String sqlStatementMd5;
+    //private String sqlStatementMd5;
     private int successCount;
     private int total;
     private int totalCount;

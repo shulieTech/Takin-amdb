@@ -30,6 +30,7 @@ import io.shulie.amdb.response.metrics.MetricsResponse;
 import io.shulie.amdb.service.MetricsService;
 import io.shulie.amdb.utils.InfluxDBManager;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.influxdb.dto.QueryResult;
@@ -42,8 +43,6 @@ import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -588,23 +587,26 @@ public class MetricsServiceImpl implements MetricsService {
         if (clusterTest != -1) {
             where1.append(" and clusterTest = '" + (0 == clusterTest ? "0" : "1") + "'");
         }
-        String selectsql1 = "select sum(toInt8(samplingInterval)) as allTotalCount,\n" +
+        String selectsql1 = "select sum(toInt32(samplingInterval)) as allTotalCount,\n" +
                 "MAX(cost) as allMaxRt,\n" +
-                "sum(cost) as allTotalRt,\n" +
-                "(sum(toInt8(samplingInterval))/" + timeGap + ") as allTotalTps\n" +
+                "sum(cost*toInt32(samplingInterval)) as allTotalRt,\n" +
+                "(sum(toInt32(samplingInterval))/" + timeGap + ") as allTotalTps\n" +
                 "from t_trace_all \n" + where1;
         Map<String, Object> modelList = traceDao.queryForMap(selectsql1);
         if (modelList.get("allTotalCount") == null) {
             modelList.put("allTotalCount", 0);
         }
+        if (modelList.get("allMaxRt") == null) {
+            modelList.put("allMaxRt", 0);
+        }
+        if (modelList.get("allTotalRt") == null) {
+            modelList.put("allTotalRt", 0);
+        }
         if (modelList.get("allTotalTps") == null) {
             modelList.put("allTotalTps", 0);
         }
-        if (modelList.get("allSuccessCount") == null) {
-            modelList.put("allSuccessCount", 0);
-        }
         modelList.put("realSeconds", timeGap);
-        String selectsql2 = "select sum(toInt8(samplingInterval)) as allSuccessCount\n" +
+        String selectsql2 = "select sum(toInt32(samplingInterval)) as allSuccessCount\n" +
                 "from t_trace_all \n" + where1 + " and resultCode in('00','200') ";
         Map<String, Object> successCount = traceDao.queryForMap(selectsql2);
         modelList.putAll(successCount);
@@ -614,7 +616,7 @@ public class MetricsServiceImpl implements MetricsService {
         return modelList;
     }
 
-    private long getTracePeriod(long startMilli, long endMilli,String eagleId) {
+    private long getTracePeriod(long startMilli, long endMilli, String eagleId) throws ParseException {
         String firstTimeSql =
                 "SELECT" +
                         " time, totalTps" +
@@ -622,7 +624,7 @@ public class MetricsServiceImpl implements MetricsService {
                         " where" +
                         " time >= " + formatTimestamp(startMilli) +
                         " and time <= " + formatTimestamp(endMilli) +
-                        " edgeId = '" + eagleId + "'" +
+                        " and edgeId = '" + eagleId + "'" +
                         " order by time asc" +
                         " limit 1";
         String lastTimeSql =
@@ -632,68 +634,116 @@ public class MetricsServiceImpl implements MetricsService {
                         " where" +
                         " time >= " + formatTimestamp(startMilli) +
                         " and time <= " + formatTimestamp(endMilli) +
-                        " edgeId = '" + eagleId + "'" +
+                        " and edgeId = '" + eagleId + "'" +
                         " order by time desc" +
                         " limit 1";
 
         List<QueryResult.Result> influxResult1 = influxDbManager.query(firstTimeSql);
         List<QueryResult.Series> list1 = influxResult1.get(0).getSeries();
-        long firstTime = Long.parseLong(list1.get(0).getValues().get(0).get(1).toString());
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+        long firstTime = format.parse(list1.get(0).getValues().get(0).get(0).toString()).getTime();
 
         List<QueryResult.Result> influxResult2 = influxDbManager.query(lastTimeSql);
         List<QueryResult.Series> list2 = influxResult2.get(0).getSeries();
-        long lastTime = Long.parseLong(list2.get(0).getValues().get(0).get(1).toString());
+        long lastTime = format.parse(list2.get(0).getValues().get(0).get(0).toString()).getTime();
 
-        return (lastTime-firstTime)/1000/1000;
+        return (lastTime - firstTime) / 1000;
     }
 
-    public Map<String, Long> metricFromInfluxdb(MetricsFromInfluxdbRequest request){
+    public List<Map<String, Object>> metricFromInfluxdb(MetricsFromInfluxdbRequest request) {
+        List result = new ArrayList<Map<String, Object>>();
+        Set<String> edgeIdSetFromInfluxdb = new HashSet<String>();
         long startMilli = request.getStartMilli();
         long endMilli = request.getEndMilli();
         Boolean metricsType = request.getMetricsType();
         String eagleId = request.getEagleId();
-        String allTotalTpsAndRtCountQuerySql =
-                "SELECT" +
-                " SUM(successCount) as allSuccessCount," +
-                " SUM(totalCount) as allTotalCount," +
-                " SUM(totalTps) as allTotalTps," +
-                " MAX(maxRt) as allMaxRt," +
-                " SUM(totalRt) as allTotalRt" +
-                " FROM trace_metrics" +
-                " where" +
-                " edgeId = '" + eagleId + "'" +
-                " and time >= " + formatTimestamp(startMilli) +
-                " and time <= " + formatTimestamp(endMilli);
+        List<String> eagleIds = request.getEagleIds();
 
+        StringBuilder allTotalTpsAndRtCountQuerySql = new StringBuilder(
+                "SELECT" +
+                        " SUM(successCount) as allSuccessCount," +
+                        " SUM(totalCount) as allTotalCount," +
+                        " SUM(totalTps) as allTotalTps," +
+                        " MAX(maxRt) as allMaxRt," +
+                        " SUM(totalRt) as allTotalRt" +
+                        " FROM trace_metrics" +
+                        " where" +
+                        " time >= " + formatTimestamp(startMilli) +
+                        " AND time <= " + formatTimestamp(endMilli));
         // 如果不是 混合流量 则需要增加条件
         if (null != metricsType) {
-            allTotalTpsAndRtCountQuerySql += " AND clusterTest = '" + metricsType + "'";
+            allTotalTpsAndRtCountQuerySql.append(" AND clusterTest = '" + metricsType + "'");
         }
-        log.info("查询sql03:{}", allTotalTpsAndRtCountQuerySql.replace("\n", " "));
-        Map<String,Long> rsultMap = new HashMap<>();
+        if (CollectionUtils.isEmpty(eagleIds)) {
+            allTotalTpsAndRtCountQuerySql.append(" AND edgeId = '" + eagleId + "'");
+        } else {
+            StringBuilder inEagleId = new StringBuilder();
+            inEagleId.append(" AND (");
+            eagleIds.forEach(tmpEagleId -> {
+                inEagleId.append("edgeId = '" + tmpEagleId + "' OR ");
+            });
+            inEagleId.delete(inEagleId.lastIndexOf("OR"), inEagleId.lastIndexOf("OR") + 3);
+            inEagleId.append(")");
+            allTotalTpsAndRtCountQuerySql.append(inEagleId);
+            allTotalTpsAndRtCountQuerySql.append(" group by edgeId");
+        }
+
+        log.info("查询sql03:{}", allTotalTpsAndRtCountQuerySql.toString().replace("\n", " "));
         try {
-            List<QueryResult.Result> influxResult1 = influxDbManager.query(allTotalTpsAndRtCountQuerySql);
-            List<QueryResult.Series> list1 = influxResult1.get(0).getSeries();
-            long allSuccessCount = Long.parseLong(list1.get(0).getValues().get(0).get(1).toString());
-            long allTotalCount = Long.parseLong(list1.get(0).getValues().get(0).get(2).toString());
-            long allTotalTps = Long.parseLong(list1.get(0).getValues().get(0).get(3).toString());
-            long allMaxRt = Long.parseLong(list1.get(0).getValues().get(0).get(4).toString());
-            long allTotalRt = Long.parseLong(list1.get(0).getValues().get(0).get(5).toString());
-            rsultMap.put("allSuccessCount",allSuccessCount);
-            rsultMap.put("allTotalCount",allTotalCount);
-            rsultMap.put("allTotalTps",allTotalTps);
-            rsultMap.put("allMaxRt",allMaxRt);
-            rsultMap.put("allTotalRt",allTotalRt);
-            long realSeconds = getTracePeriod(startMilli,endMilli,eagleId);
-            rsultMap.put("realSeconds",realSeconds);
-        }catch (Exception e){
-            rsultMap.put("allSuccessCount",0L);
-            rsultMap.put("allTotalCount",0L);
-            rsultMap.put("allTotalTps",0L);
-            rsultMap.put("allMaxRt",0L);
-            rsultMap.put("allTotalRt",0L);
-            rsultMap.put("realSeconds",0L);
+            List<QueryResult.Result> influxResult1 = influxDbManager.query(allTotalTpsAndRtCountQuerySql.toString());
+            List<QueryResult.Series> series = influxResult1.get(0).getSeries();
+            if (CollectionUtils.isNotEmpty(series)) {
+                series.forEach(serie -> {
+                    Map<String, Object> resultMap = new HashMap<>();
+                    String edgeId = serie.getTags().get("edgeId");
+                    edgeIdSetFromInfluxdb.add(edgeId);
+                    resultMap.put("edgeId", edgeId);
+                    resultMap.put("allSuccessCount", Long.parseLong(serie.getValues().get(0).get(1).toString().split("\\.")[0]));
+                    resultMap.put("allTotalCount", Long.parseLong(serie.getValues().get(0).get(2).toString().split("\\.")[0]));
+                    resultMap.put("allTotalTps", Long.parseLong(serie.getValues().get(0).get(3).toString().split("\\.")[0]));
+                    resultMap.put("allMaxRt", Long.parseLong(serie.getValues().get(0).get(4).toString().split("\\.")[0]));
+                    resultMap.put("allTotalRt", Long.parseLong(serie.getValues().get(0).get(5).toString().split("\\.")[0]));
+                    long realSeconds = 0;
+                    try {
+                        realSeconds = getTracePeriod(startMilli, endMilli, edgeId);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                    resultMap.put("realSeconds", realSeconds);
+                    result.add(resultMap);
+                });
+
+                //数据补全
+                eagleIds.forEach(tmpEagleId -> {
+                    if (!edgeIdSetFromInfluxdb.contains(tmpEagleId)) {
+                        Map<String, Object> resultMap = new HashMap<>();
+                        resultMap.put("edgeId", tmpEagleId);
+                        resultMap.put("allSuccessCount", 0L);
+                        resultMap.put("allTotalCount", 0L);
+                        resultMap.put("allTotalTps", 0L);
+                        resultMap.put("allMaxRt", 0L);
+                        resultMap.put("allTotalRt", 0L);
+                        resultMap.put("realSeconds", 0L);
+                        result.add(resultMap);
+                    }
+                });
+
+            } else {
+                throw new IllegalArgumentException("query influxdb result is empty.");
+            }
+        } catch (Exception e) {
+            eagleIds.forEach(tmpEagleId -> {
+                Map<String, Object> resultMap = new HashMap<>();
+                resultMap.put("edgeId", tmpEagleId);
+                resultMap.put("allSuccessCount", 0L);
+                resultMap.put("allTotalCount", 0L);
+                resultMap.put("allTotalTps", 0L);
+                resultMap.put("allMaxRt", 0L);
+                resultMap.put("allTotalRt", 0L);
+                resultMap.put("realSeconds", 0L);
+                result.add(resultMap);
+            });
         }
-        return rsultMap;
+        return result;
     }
 }
