@@ -85,6 +85,7 @@ public enum AmdbExceptionEnums {
      * 应用自定义探针配置查询异常 AMDB_0700_UXXXX
      */
     TRODATA_QUERY("AMDB_0700_U0000", "应用自定义探针配置查询异常"),
+    APISLIST_QUERY("AMDB_0700_U0001", "入口规则查询异常"),
 
     /**
      * 申通服务指标查询鉴权不通过 AMDB_0800_UXXXX

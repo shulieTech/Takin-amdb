@@ -87,6 +87,7 @@ config:
     host: pradar.host.troweb
     port: 10008
     url: /takin-web/api/tenant/app/all
+    apiUrl: /takin-web/api/v1/api/pull
     defaultTenantAppKey: default
 
 app:

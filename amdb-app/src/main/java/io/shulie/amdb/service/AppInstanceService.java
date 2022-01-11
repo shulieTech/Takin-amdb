@@ -17,12 +17,12 @@ package io.shulie.amdb.service;
 
 import com.github.pagehelper.PageInfo;
 import io.shulie.amdb.common.Response;
-import io.shulie.amdb.entity.TAmdbAppInstanceDO;
+import io.shulie.amdb.common.dto.agent.AgentInfoDTO;
 import io.shulie.amdb.common.request.agent.AmdbAgentInfoQueryRequest;
+import io.shulie.amdb.entity.TAmdbAppInstanceDO;
 import io.shulie.amdb.request.query.TAmdbAppInstanceBatchAppQueryRequest;
 import io.shulie.amdb.request.query.TAmdbAppInstanceErrorInfoByQueryRequest;
 import io.shulie.amdb.request.query.TAmdbAppInstanceQueryRequest;
-import io.shulie.amdb.common.dto.agent.AgentInfoDTO;
 import io.shulie.amdb.response.instance.AmdbAppInstanceResponse;
 import io.shulie.amdb.response.instance.InstanceErrorInfoResponse;
 
@@ -69,8 +69,16 @@ public interface AppInstanceService {
 
     /**
      * 查询agent上报的信息
+     *
      * @param request
      * @return
      */
     PageInfo<AgentInfoDTO> queryAgentInfo(AmdbAgentInfoQueryRequest request);
+
+    /**
+     * 查询所有在线应用列表
+     *
+     * @return
+     */
+    List<TAmdbAppInstanceDO> selectOnlineAppList();
 }
