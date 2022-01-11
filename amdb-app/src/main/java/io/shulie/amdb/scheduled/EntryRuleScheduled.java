@@ -56,8 +56,11 @@ public class EntryRuleScheduled {
     @Value("${config.tenantConfig.port}")
     private String port;
 
-    @Value("${config.tenantConfig.apiUrl}")
-    private String apiUrl;
+    @Value("${config.entryRule.url}")
+    private String url;
+
+    @Value("${config.entryRule.queryThreads}")
+    private int queryThreads;
 
     public static Map<String, List<String>> apisList = new HashMap<>();
 
@@ -71,7 +74,7 @@ public class EntryRuleScheduled {
             //1.首先获取全量在线的应用
             List<TAmdbAppInstanceDO> appInstanceList = appInstanceService.selectOnlineAppList();
             //2.设置一个50(暂定20)个线程的线程池
-            ExecutorService executorService = Executors.newFixedThreadPool(20, Executors.defaultThreadFactory());
+            ExecutorService executorService = Executors.newFixedThreadPool(queryThreads, Executors.defaultThreadFactory());
             //3.提交任务到线程池,查询每个应用的入口规则
             appInstanceList.forEach(appInstance -> {
                 String appName = appInstance.getAppName();
@@ -91,7 +94,7 @@ public class EntryRuleScheduled {
 
                         Map<String, Object> res = null;
                         try {
-                            res = JSONObject.parseObject(HttpUtil.doGet(host, Integer.valueOf(port), apiUrl, requestHeaders, params), Map.class);
+                            res = JSONObject.parseObject(HttpUtil.doGet(host, Integer.valueOf(port), url, requestHeaders, params), Map.class);
                         } catch (Throwable e) {
                             log.error("query apiList catch exception :{},{}", e, e.getStackTrace());
                         }
