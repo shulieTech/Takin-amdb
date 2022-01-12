@@ -540,7 +540,7 @@ public class MetricsServiceImpl implements MetricsService {
             sb.append("'" + tempEntranceId + "'");
         }
         if (StringUtils.isBlank(sb.toString())) {
-            sb.append("empty");
+            sb.append("'empty'");
         }
         return sb.toString();
     }
