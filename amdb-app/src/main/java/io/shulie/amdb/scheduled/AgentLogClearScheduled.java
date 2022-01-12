@@ -40,8 +40,8 @@ public class AgentLogClearScheduled {
     /**
      * 每隔5小时清理指定时间段之前的数据
      */
-    //@Scheduled(cron = "0 0 */5 * * *")
-    @Scheduled(cron = "*/5 * * * * *")
+    @Scheduled(cron = "0 0 */5 * * *")
+    //@Scheduled(cron = "*/5 * * * * *")
     public void cleanInfo() {
         log.info("定时清除Agent错误日志数据");
         try {
