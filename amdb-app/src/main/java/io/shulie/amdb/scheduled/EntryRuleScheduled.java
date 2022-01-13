@@ -16,6 +16,8 @@
 package io.shulie.amdb.scheduled;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Maps;
 import io.shulie.amdb.entity.TAmdbAppInstanceDO;
 import io.shulie.amdb.service.AppInstanceService;
@@ -24,17 +26,16 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.assertj.core.util.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author sunshiyu
@@ -62,7 +63,9 @@ public class EntryRuleScheduled {
     @Value("${config.entryRule.queryThreads}")
     private int queryThreads;
 
-    public static Map<String, List<String>> apisList = new HashMap<>();
+    //10分钟没有更新,自动过期,代表对应应用下线
+    public static Cache<String, List<String>> apisCache = CacheBuilder.newBuilder().maximumSize(10000).expireAfterWrite(10, TimeUnit.MINUTES).build();
+
 
     /**
      * 每隔2分钟查询控制台获取全部在线应用的入口规则
@@ -102,8 +105,15 @@ public class EntryRuleScheduled {
                             Map<String, Object> data = (Map<String, Object>) res.get("data");
                             List<String> dataList = (List<String>) (data.get(appName));
                             if (CollectionUtils.isNotEmpty(dataList)) {
+                                //去重入口规则
+                                Set<String> apiSet = new HashSet<>(dataList);
+                                dataList.clear();
+
+                                //转换为list结构
+                                List result = Lists.newArrayList();
+                                result.addAll(apiSet);
                                 //每次查询都会更新对应应用的入口规则,如果没查到,则没有
-                                apisList.put(key, dataList);
+                                apisCache.put(key, result);
                             }
                         }
                     }

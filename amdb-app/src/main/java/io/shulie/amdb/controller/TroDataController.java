@@ -54,7 +54,7 @@ public class TroDataController {
     @RequestMapping(value = "/queryApisList", method = RequestMethod.GET)
     public Response<Map<String, List<String>>> queryApisList() {
         try {
-            return Response.success(EntryRuleScheduled.apisList);
+            return Response.success(EntryRuleScheduled.apisCache.asMap());
         } catch (Exception e) {
             log.error("查询入口规则异常{},异常堆栈:{}", e, e.getStackTrace());
             return Response.fail(AmdbExceptionEnums.APISLIST_QUERY);
