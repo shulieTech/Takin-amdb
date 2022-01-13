@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,18 +67,23 @@ public class EntryRuleScheduled {
     //10分钟没有更新,自动过期,代表对应应用下线
     public static Cache<String, List<String>> apisCache = CacheBuilder.newBuilder().maximumSize(10000).expireAfterWrite(10, TimeUnit.MINUTES).build();
 
+    private ExecutorService executorService;
+
+    @PostConstruct
+    public void init() {
+        //设置一个50(暂定20)个线程的线程池
+        executorService = Executors.newFixedThreadPool(queryThreads, Executors.defaultThreadFactory());
+    }
 
     /**
      * 每隔2分钟查询控制台获取全部在线应用的入口规则(启动之后立马执行一次)
      */
     @Scheduled(initialDelay = 0, fixedRate = 120000)
-    //@Scheduled(cron = "*/2 * * * * *")
     private void queryApiList() {
         try {
             //1.首先获取全量在线的应用
             List<TAmdbAppInstanceDO> appInstanceList = appInstanceService.selectOnlineAppList();
-            //2.设置一个50(暂定20)个线程的线程池
-            ExecutorService executorService = Executors.newFixedThreadPool(queryThreads, Executors.defaultThreadFactory());
+
             //3.提交任务到线程池,查询每个应用的入口规则
             appInstanceList.forEach(appInstance -> {
                 String appName = appInstance.getAppName();
