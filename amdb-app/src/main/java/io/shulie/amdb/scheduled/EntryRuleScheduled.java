@@ -68,9 +68,9 @@ public class EntryRuleScheduled {
 
 
     /**
-     * 每隔2分钟查询控制台获取全部在线应用的入口规则
+     * 每隔2分钟查询控制台获取全部在线应用的入口规则(启动之后立马执行一次)
      */
-    @Scheduled(cron = "0 */2 * * * *")
+    @Scheduled(initialDelay = 0, fixedRate = 120000)
     //@Scheduled(cron = "*/2 * * * * *")
     private void queryApiList() {
         try {
