@@ -362,10 +362,13 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         amdbAppInstanceDO.setFlag(FlagUtil.setFlag(amdbAppInstanceDO.getFlag(), 1, false));
         appInstanceService.update(amdbAppInstanceDO);
 
+        //如果探针版本是1.0的老版本,进行删除,新版本探针通过监听status节点的变化来做状态同步即可,否则在IP和PID重启后不变的情况下,会出现状态同步异常 by 人寿测试环境
+        //对于老版本,其probe_status字段始终为空,可用此条件判断是否老探针创建的数据
         AppInstanceStatusQueryRequest request = new AppInstanceStatusQueryRequest();
         request.setAppName(selectParam.getAppName());
         request.setIp(selectParam.getIp());
         request.setPid(selectParam.getPid());
+        request.setProbeStatus("");
         appInstanceStatusService.deleteByParams(request);
     }
 
