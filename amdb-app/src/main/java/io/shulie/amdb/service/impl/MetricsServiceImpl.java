@@ -295,18 +295,24 @@ public class MetricsServiceImpl implements MetricsService {
                 log.info("查询sql02:{}", sql.replace("\n", " "));
                 List<QueryResult.Result> influxResult1 = influxDbManager.query(sql);
                 List<QueryResult.Series> list1 = influxResult1.get(0).getSeries();
-                float requestCount = Float.parseFloat(list1.get(0).getValues().get(0).get(1).toString());
-                float tps = Float.parseFloat(list1.get(0).getValues().get(0).get(2).toString());
-                float successRatio = Float.parseFloat(list1.get(0).getValues().get(0).get(3).toString());
-                float responseConsuming = Float.parseFloat(list1.get(0).getValues().get(0).get(4).toString());
-                response.setRequestCount(requestCount);                 //总请求次数
-                response.setTps(tps);                                   //tps
-                response.setResponseConsuming(responseConsuming);       //耗时
-                response.setSuccessRatio(successRatio);                 //成功率
-                response.setStartTime(startTime);
-                response.setEndTime(realEndTime);
-                response.setTimeGap(diffInMillis);
-                resultList2.add(response);
+                float requestCount = 0f;
+                float tps = 0f;
+                float successRatio = 0f;
+                float responseConsuming = 0f;
+                if (CollectionUtils.isNotEmpty(list1)) {
+                    requestCount = Float.parseFloat(list1.get(0).getValues().get(0).get(1).toString());
+                    tps = Float.parseFloat(list1.get(0).getValues().get(0).get(2).toString());
+                    successRatio = Float.parseFloat(list1.get(0).getValues().get(0).get(3).toString());
+                    responseConsuming = Float.parseFloat(list1.get(0).getValues().get(0).get(4).toString());
+                    response.setRequestCount(requestCount);                 //总请求次数
+                    response.setTps(tps);                                   //tps
+                    response.setResponseConsuming(responseConsuming);       //耗时
+                    response.setSuccessRatio(successRatio);                 //成功率
+                    response.setStartTime(startTime);
+                    response.setEndTime(realEndTime);
+                    response.setTimeGap(diffInMillis);
+                    resultList2.add(response);
+                }
             }
         }
         int responseSize = resultList2.size();
