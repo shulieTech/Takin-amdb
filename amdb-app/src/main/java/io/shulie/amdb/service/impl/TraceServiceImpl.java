@@ -443,7 +443,7 @@ public class TraceServiceImpl implements TraceService {
                 List<String> entryList = Arrays.asList(param.getEntranceList().split(","));
                 //如果为单独查询一个入口时,可能是两种情况,调试脚本查询指定业务活动数据/压测报告查看一个业务活动压测的流量明细
                 String[] entranceInfo = entryList.get(0).split("#");
-                if (StringUtils.isNotBlank(entranceInfo[1])) {
+                if (entranceInfo.length == 4 && StringUtils.isNotBlank(entranceInfo[1])) {
                     //如果是入口规则,采取精确匹配,否则采用模糊匹配
                     if (entranceInfo[1].contains("{")) {
                         stringBuilder.append("parsedServiceName= '" + entranceInfo[1] + "'");
