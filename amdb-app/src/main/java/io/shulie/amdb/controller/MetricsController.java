@@ -15,6 +15,7 @@
 
 package io.shulie.amdb.controller;
 
+import com.google.common.collect.Lists;
 import io.shulie.amdb.adaptors.common.Pair;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
@@ -66,7 +67,12 @@ public class MetricsController {
         if (StringUtils.isBlank(request.getAppName()) || StringUtils.isBlank(request.getStartTime()) || StringUtils.isBlank(request.getEndTime())) {
             return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
         }
-        Pair<List<MetricsDetailResponse>, Integer> resultPair = metricsService.metricsDetailes(request);
+        Pair<List<MetricsDetailResponse>, Integer> resultPair;
+        try {
+            resultPair = metricsService.metricsDetailes(request);
+        } catch (Exception e) {
+            return new Response(Lists.newArrayList());
+        }
         Response response = Response.success(resultPair.getKey());
         response.setTotal(resultPair.getValue());
         return response;
