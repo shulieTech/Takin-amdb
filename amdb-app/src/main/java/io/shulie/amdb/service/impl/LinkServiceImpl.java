@@ -781,8 +781,8 @@ public class LinkServiceImpl implements LinkService {
 
         Map<String, String> request = new HashMap<>();
         request.put("linkId", linkId);
-        request.put("serviceName", serviceName);
-        request.put("methodName", methodName);
+        request.put("service", serviceName);
+        request.put("method", methodName);
         request.put("appName", appName);
         request.put("rpcType", rpcType);
         request.put("traceId", traceId);
