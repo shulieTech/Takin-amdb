@@ -21,7 +21,9 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.agent.AgentInfoDTO;
+import io.shulie.amdb.common.dto.instance.AppInfo;
 import io.shulie.amdb.common.request.agent.AmdbAgentInfoQueryRequest;
+import io.shulie.amdb.common.request.app.AppInfoQueryRequest;
 import io.shulie.amdb.entity.TAmdbAgentInfoDO;
 import io.shulie.amdb.entity.TAmdbAppInstanceDO;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
@@ -294,6 +296,26 @@ public class AppInstanceServiceImpl implements AppInstanceService {
             log.error("查询在线应用列表发生异常:{},异常堆栈:{}", e, e.getStackTrace());
         }
         return new ArrayList<>();
+    }
+
+    /**
+     * 查询应用信息
+     *
+     * @return
+     */
+    @Override
+    public Response<List<AppInfo>> queryAppInfo(AppInfoQueryRequest request) {
+        Map<String, Object> map = new HashMap<>();
+        //Boolean非空
+        map.put("appStatus", request.getAppStatus());
+        map.put("userAppKey", request.getTenantAppKey());
+        map.put("envCode", request.getEnvCode());
+        if (StringUtils.isNotBlank(request.getAppName())) {
+            map.put("appName", request.getAppName());
+        }
+        PageHelper.startPage(request.getCurrentPage(), request.getPageSize());
+        List<AppInfo> appInfos = appInstanceMapper.selectSummaryAppInfo(map);
+        return Response.success(PagingUtils.result(appInfos, appInfos));
     }
 
     private AgentInfoDTO agentId(TAmdbAgentInfoDO agentInfoDO) {

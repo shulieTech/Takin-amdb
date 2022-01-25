@@ -45,6 +45,7 @@ public enum AmdbExceptionEnums {
     APP_INSTANCE_STATUS_SELECT("AMDB_0203_U00000", "应用状态查询异常"),
     APP_SHADOW_DATABASE_SELECT("AMDB_0204_U00000", "应用影子库表查询异常"),
     APP_SHADOW_BIZ_TABLE_SELECT("AMDB_0204_U00001", "应用业务表查询异常"),
+    APP_INFO_SELECT("AMDB_0205_U00000", "应用信息查询异常"),
 
 
     /**

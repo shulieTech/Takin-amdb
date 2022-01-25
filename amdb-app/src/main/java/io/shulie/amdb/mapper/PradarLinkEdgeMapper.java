@@ -32,7 +32,7 @@ public interface PradarLinkEdgeMapper extends Mapper<TAmdbPradarLinkEdgeDO>, MyS
 
     @Select("select count(1) as ct,link_id as linkId,from_app_id as fromAppId,to_app_id as toAppId,rpc_type as rpcType,log_type as logType," +
             "service,method,app_name as appName,server_app_name as serverAppName,middleware_name as middlewareName from t_amdb_pradar_link_edge \n" +
-            "where link_id not like '%_bak'\n"+
+            "where link_id not like '%_bak'\n" +
             "group by \n" +
             "link_id,from_app_id,to_app_id,rpc_type,log_type,service,method,app_name,server_app_name,middleware_name \n" +
             "having ct >1")
@@ -70,9 +70,20 @@ public interface PradarLinkEdgeMapper extends Mapper<TAmdbPradarLinkEdgeDO>, MyS
     @Delete("delete from t_amdb_pradar_link_edge where link_id like '%_bak'")
     Integer deleteExpiredEdge();
 
+    /**
+     * todo 去重/如果是操作数据库或者redis这种的需要过滤
+     *
+     * @return
+     */
     @Select("select CONCAT(app_name,'#',service,'#',method) as service,link_id as linkId from t_amdb_pradar_link_edge")
     List<TAmdbPradarLinkEdgeDO> getAllEdge1();
 
+
+    /**
+     * 同样
+     *
+     * @return
+     */
     @Select("select distinct CONCAT(edge.app_name,'#',edge.service,'#',edge.method) as service,\n" +
             "CONCAT(config.app_name,'#',config.service,'#',config.method) as extend\n" +
             "from t_amdb_pradar_link_edge edge,t_amdb_pradar_link_config config \n" +
@@ -80,6 +91,6 @@ public interface PradarLinkEdgeMapper extends Mapper<TAmdbPradarLinkEdgeDO>, MyS
     List<TAmdbPradarLinkEdgeDO> getAllEdge2();
 
     @Select("select link_id from t_amdb_pradar_link_config where app_name = #{appName} and service = #{service} and `method` = #{method} limit 1")
-    String getLinkId(String appName,String service,String method);
+    String getLinkId(String appName, String service, String method);
 
 }

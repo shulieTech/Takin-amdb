@@ -425,4 +425,29 @@
         </if>
         gmt_modify = now()
     </sql>
+
+
+    <resultMap id="appInfoMap" type="io.shulie.amdb.common.dto.instance.AppInfo">
+        <result column="app_name" jdbcType="VARCHAR" property="appName" />
+        <result column="exception_count" jdbcType="BIGINT" property="exceptionCount" />
+        <result column="online_instance_count" jdbcType="BIGINT" property="onlineInstanceCount" />
+        <result column="access_time" jdbcType="VARCHAR" property="accessTime" />
+    </resultMap>
+
+    <select id="selectSummaryAppInfo" parameterType="java.util.Map" resultMap="appInfoMap">
+        select * from (select a.*,a.online_instance_count-b.normal_count as exception_count,c.access_time from (select app_name,count(1) as online_instance_count from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag in ('1','3') group by user_app_key,env_code,app_name) a ,(select app_name,count(1) as normal_count from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag  = '3' group by user_app_key,env_code,app_name) b ,(select app_name,min(gmt_create) as access_time from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag in ('1','3') group by user_app_key,env_code,app_name) c where a.app_name = b.app_name and b.app_name = c.app_name) t
+        <where>
+            <if test="appName != null">
+                app_name = #{appName, jdbcType=VARCHAR}
+            </if>
+            <if test="appStatus == true">
+                and exception_count = 0
+            </if>
+            <if test="appStatus == false">
+                and exception_count != 0
+            </if>
+        </where>
+        order by access_time desc
+    </select>
+
 </mapper>

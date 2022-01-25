@@ -348,6 +348,7 @@ public class MetricsServiceImpl implements MetricsService {
                 if (this.cache1.getIfPresent(edge.getLinkId()) == null) {
                     this.cache1.put(edge.getLinkId(), new ArrayList<>());
                 }
+                //可能存在重复的service
                 this.cache1.getIfPresent(edge.getLinkId()).add(edge.getService());
             }
             List<TAmdbPradarLinkEdgeDO> allList2 = pradarLinkEdgeMapper.getAllEdge2();
