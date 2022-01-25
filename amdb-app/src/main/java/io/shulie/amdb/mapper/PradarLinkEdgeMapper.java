@@ -71,23 +71,18 @@ public interface PradarLinkEdgeMapper extends Mapper<TAmdbPradarLinkEdgeDO>, MyS
     Integer deleteExpiredEdge();
 
     /**
-     * todo 去重/如果是操作数据库或者redis这种的需要过滤
-     *
      * @return
      */
-    @Select("select CONCAT(app_name,'#',service,'#',method) as service,link_id as linkId from t_amdb_pradar_link_edge")
+    @Select("select distinct CONCAT(app_name,'#',service,'#',method) as service,link_id as linkId from t_amdb_pradar_link_edge where app_name != 'UNKNOWN' and log_type != '2'")
     List<TAmdbPradarLinkEdgeDO> getAllEdge1();
 
 
     /**
-     * 同样
-     *
      * @return
      */
     @Select("select distinct CONCAT(edge.app_name,'#',edge.service,'#',edge.method) as service,\n" +
             "CONCAT(config.app_name,'#',config.service,'#',config.method) as extend\n" +
-            "from t_amdb_pradar_link_edge edge,t_amdb_pradar_link_config config \n" +
-            "where config.link_id = edge.link_id ")
+            "from (select * from t_amdb_pradar_link_edge  where app_name != 'UNKNOWN' and log_type != '2') edge,t_amdb_pradar_link_config config where config.link_id = edge.link_id ")
     List<TAmdbPradarLinkEdgeDO> getAllEdge2();
 
     @Select("select link_id from t_amdb_pradar_link_config where app_name = #{appName} and service = #{service} and `method` = #{method} limit 1")
