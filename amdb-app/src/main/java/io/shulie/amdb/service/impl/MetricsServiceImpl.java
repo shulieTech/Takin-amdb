@@ -335,7 +335,7 @@ public class MetricsServiceImpl implements MetricsService {
     }
 
     private synchronized void initCache() {
-        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> refreshCache(), 0, 5, TimeUnit.MINUTES);
+        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> refreshCache(), 0, 1, TimeUnit.MINUTES);
     }
 
     private void refreshCache() {
