@@ -15,6 +15,7 @@
 
 package io.shulie.amdb.mapper;
 
+import io.shulie.amdb.common.dto.instance.AppInfo;
 import io.shulie.amdb.entity.AppDO;
 import io.shulie.amdb.entity.TAmdbAppInstanceDO;
 import org.apache.ibatis.annotations.*;
@@ -22,6 +23,7 @@ import tk.mybatis.mapper.common.Mapper;
 import tk.mybatis.mapper.common.MySqlMapper;
 
 import java.util.List;
+import java.util.Map;
 
 public interface AppInstanceMapper extends Mapper<TAmdbAppInstanceDO>, MySqlMapper<TAmdbAppInstanceDO> {
     int insert(TAmdbAppInstanceDO record);
@@ -51,4 +53,11 @@ public interface AppInstanceMapper extends Mapper<TAmdbAppInstanceDO>, MySqlMapp
     )
     @Results(value = {@Result(column = "flag", property = "flag"), @Result(column = "app_id", property = "appId")})
     List<TAmdbAppInstanceDO> selectFlagByAppId(@Param("appDos") List<AppDO> amdbApps);
+
+    @Select("select user_app_key,env_code,app_name from t_amdb_app_instance where flag in ('1','3') group by user_app_key,env_code,app_name")
+    @Results(value = {@Result(column = "user_app_key", property = "userAppKey"), @Result(column = "env_code", property = "envCode"), @Result(column = "app_name", property = "appName")})
+    List<TAmdbAppInstanceDO> selectOnlineAppList();
+
+    List<AppInfo> selectSummaryAppInfo(Map<String, Object> request);
+
 }

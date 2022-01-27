@@ -41,7 +41,7 @@ public class AgentLogClearScheduled {
      * 每隔5小时清理指定时间段之前的数据
      */
     @Scheduled(cron = "0 0 */5 * * *")
-//    @Scheduled(cron = "*/5 * * * * *")
+    //@Scheduled(cron = "*/5 * * * * *")
     public void cleanInfo() {
         log.info("定时清除Agent错误日志数据");
         try {
@@ -52,7 +52,7 @@ public class AgentLogClearScheduled {
                 return;
             }
             long cleanTime = time - reserveDays * 24L * 60 * 60 * 1000;
-            String sql = "delete from amdb.t_amdb_agent_info where agent_timestamp < " + cleanTime;
+            String sql = "delete from t_amdb_agent_info where agent_timestamp < " + cleanTime;
             jdbcTemplate.execute(sql);
             log.info("已清理{}天前agentlog,清理sql:{}", reserveDays, sql);
         } catch (Exception e) {

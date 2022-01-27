@@ -88,6 +88,9 @@ config:
     port: 10008
     url: /takin-web/api/tenant/app/all
     defaultTenantAppKey: default
+  entryRule:
+    url: /takin-web/api/v1/api/pull
+    queryThreads: 20
 
 app:
   version: @project.version@

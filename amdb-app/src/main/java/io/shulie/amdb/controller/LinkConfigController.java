@@ -63,7 +63,7 @@ public class LinkConfigController {
      */
     @RequestMapping(value = "/openLinkConfig", method = RequestMethod.POST)
     Response<String> openLinkConfig(@RequestBody CalculateParam calculateParam) {
-        logger.info("链路梳理配置 参数：{}", JSON.toJSONString(calculateParam));
+        logger.info("链路梳理配置参数：{}", JSON.toJSONString(calculateParam));
         if (StringUtil.isBlank(calculateParam.getAppName()) || StringUtil.isBlank(calculateParam.getRpcType()) || StringUtil.isBlank(calculateParam.getMethod()) || StringUtil.isBlank(calculateParam.getServiceName())) {
             return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
         }

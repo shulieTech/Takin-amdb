@@ -74,7 +74,7 @@ public class TenantConfigScheduled implements ApplicationContextAware {
         Set<String> uniqueAppList = new HashSet<>();
         Map<String, Object> res = null;
         try {
-            res = JSONObject.parseObject(HttpUtil.doGet(host, Integer.valueOf(port), tenantConfigUrl), Map.class);
+            res = JSONObject.parseObject(HttpUtil.doGet(host, Integer.valueOf(port), tenantConfigUrl, null, null), Map.class);
             if (Objects.nonNull(res) && Objects.nonNull(res.get("data"))) {
                 Object data = res.get("data");
                 List<Map<String, Object>> tenantConfigList = (List<Map<String, Object>>) data;

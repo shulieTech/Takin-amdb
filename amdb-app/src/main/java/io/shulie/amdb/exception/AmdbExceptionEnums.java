@@ -45,6 +45,7 @@ public enum AmdbExceptionEnums {
     APP_INSTANCE_STATUS_SELECT("AMDB_0203_U00000", "应用状态查询异常"),
     APP_SHADOW_DATABASE_SELECT("AMDB_0204_U00000", "应用影子库表查询异常"),
     APP_SHADOW_BIZ_TABLE_SELECT("AMDB_0204_U00001", "应用业务表查询异常"),
+    APP_INFO_SELECT("AMDB_0205_U00000", "应用信息查询异常"),
 
 
     /**
@@ -85,6 +86,7 @@ public enum AmdbExceptionEnums {
      * 应用自定义探针配置查询异常 AMDB_0700_UXXXX
      */
     TRODATA_QUERY("AMDB_0700_U0000", "应用自定义探针配置查询异常"),
+    APISLIST_QUERY("AMDB_0700_U0001", "入口规则查询异常"),
 
     /**
      * 申通服务指标查询鉴权不通过 AMDB_0800_UXXXX

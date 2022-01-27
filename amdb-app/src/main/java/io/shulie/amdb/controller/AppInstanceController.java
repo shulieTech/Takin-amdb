@@ -17,7 +17,9 @@ package io.shulie.amdb.controller;
 
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.agent.AgentInfoDTO;
+import io.shulie.amdb.common.dto.instance.AppInfo;
 import io.shulie.amdb.common.request.agent.AmdbAgentInfoQueryRequest;
+import io.shulie.amdb.common.request.app.AppInfoQueryRequest;
 import io.shulie.amdb.entity.TAmdbAppInstanceDO;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.request.query.TAmdbAppInstanceBatchAppQueryRequest;
@@ -169,8 +171,27 @@ public class AppInstanceController {
         try {
             return Response.success(appInstanceService.queryAgentInfo(request));
         } catch (Exception e) {
-            log.error("查appInstanceStatus询agent日志失败", e);
+            log.error("查询agent日志失败", e);
             return Response.fail(AmdbExceptionEnums.APP_INSTANCE_STATUS_SELECT);
+        }
+    }
+
+    /**
+     * 查询应用信息
+     *
+     * @return
+     */
+    @RequestMapping(value = "/queryAppInfo", method = RequestMethod.POST)
+    public Response<List<AppInfo>> queryAppInfo(@RequestBody AppInfoQueryRequest request) {
+        log.info("查询应用信息：{}", request);
+        if (request.getPageSize() == Integer.MAX_VALUE || StringUtils.isBlank(request.getTenantAppKey()) || StringUtils.isBlank(request.getEnvCode())) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
+        }
+        try {
+            return appInstanceService.queryAppInfo(request);
+        } catch (Exception e) {
+            log.error("查询应用信息失败", e);
+            return Response.fail(AmdbExceptionEnums.APP_INFO_SELECT);
         }
     }
 }
