@@ -307,7 +307,9 @@ public class AppInstanceServiceImpl implements AppInstanceService {
     public Response<List<AppInfo>> queryAppInfo(AppInfoQueryRequest request) {
         Map<String, Object> map = new HashMap<>();
         //Boolean非空
-        map.put("appStatus", request.getAppStatus());
+        if (Objects.nonNull(request.getAppStatus())) {
+            map.put("appStatus", request.getAppStatus());
+        }
         map.put("userAppKey", request.getTenantAppKey());
         map.put("envCode", request.getEnvCode());
         if (StringUtils.isNotBlank(request.getAppName())) {
