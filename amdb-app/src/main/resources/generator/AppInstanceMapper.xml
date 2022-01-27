@@ -435,13 +435,13 @@
     </resultMap>
 
     <select id="selectSummaryAppInfo" parameterType="java.util.Map" resultMap="appInfoMap">
-        select * from (select a.*,a.online_instance_count-b.normal_count as exception_count,c.access_time from (select app_name,count(1) as online_instance_count from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag in ('1','3') group by user_app_key,env_code,app_name) a ,(select app_name,count(1) as normal_count from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag  = '3' group by user_app_key,env_code,app_name) b ,(select app_name,min(gmt_create) as access_time from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag in ('1','3') group by user_app_key,env_code,app_name) c where a.app_name = b.app_name and b.app_name = c.app_name) t
+        select * from (select a.*,b.exception_count,c.access_time from (select app_name,count(1) as online_instance_count from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag in ('1','3') group by user_app_key,env_code,app_name) a left join (select app_name,count(1) as exception_count from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag  = '1' group by user_app_key,env_code,app_name) b on a.app_name = b.app_name left join (select app_name,min(gmt_create) as access_time from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag in ('1','3') group by user_app_key,env_code,app_name) c on a.app_name = c.app_name) t
         <where>
             <if test="appName != null">
                 app_name = #{appName, jdbcType=VARCHAR}
             </if>
             <if test="appStatus == true">
-                and exception_count = 0
+                and (exception_count = 0 or exception_count is null)
             </if>
             <if test="appStatus == false">
                 and exception_count != 0
