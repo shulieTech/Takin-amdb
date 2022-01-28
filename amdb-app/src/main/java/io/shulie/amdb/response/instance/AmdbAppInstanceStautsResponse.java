@@ -16,40 +16,56 @@
 package io.shulie.amdb.response.instance;
 
 import io.shulie.amdb.entity.TAmdbAppInstanceStatusDO;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.io.Serializable;
 
 @Data
+@ApiModel("探针信息")
 public class AmdbAppInstanceStautsResponse implements Serializable {
     // 应用名称
+    @ApiModelProperty("应用名称")
     String appName;
     // 用来判断实例的唯一性
+    @ApiModelProperty("agentId")
     String agentId;
     // agent 版本
+    @ApiModelProperty("agent版本")
     String agentVersion;
     //agent状态
+    @ApiModelProperty("agent状态")
     private String agentStatus;
     // 更新时间
+    @ApiModelProperty("agent更新时间")
     String agentUpdateTime;
     // 进程号 id
+    @ApiModelProperty("进程号")
     String progressId;
     // ip 地址
+    @ApiModelProperty("IP地址")
     String ipAddress;
     // agent 支持的语言
+    @ApiModelProperty("agent支持语言")
     String agentLanguage;
     // hostname
+    @ApiModelProperty("主机名")
     String hostname;
     // 探针Version
+    @ApiModelProperty("探针版本")
     String probeVersion;
-    // 探针beStatus
+    // 探针Status
+    @ApiModelProperty("针状态(0-已安装,1-未安装,2-安装中,3-卸载中,4-安装失败,5-卸载失败,99-未知状态)")
     String probeStatus;
     /**
      * 错误信息
      */
+    @ApiModelProperty("错误信息")
     private String errorMsg;
     // 探针错误信息
+    @ApiModelProperty("探针错误信息")
     private String agentErrorMsg;
 
     public AmdbAppInstanceStautsResponse() {
