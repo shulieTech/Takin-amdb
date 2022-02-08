@@ -53,7 +53,7 @@ public class MetricsController {
 
     //指标数据查询
     @RequestMapping(value = "/queryMetrics", method = RequestMethod.POST)
-    public Response queryIpList(@RequestBody MetricsQueryRequest request) {
+    public Response queryMetrics(@RequestBody MetricsQueryRequest request) {
         if (StringUtils.isBlank(request.getMeasurementName()) || CollectionUtils.isEmpty(request.getTagMapList())
                 || request.getFieldMap() == null || request.getFieldMap().size() == 0
                 || request.getStartTime() == 0 || request.getEndTime() == 0) {
