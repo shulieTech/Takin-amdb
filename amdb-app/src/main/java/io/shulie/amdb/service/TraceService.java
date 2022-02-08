@@ -38,4 +38,7 @@ public interface TraceService {
     List<Map<String, Object>> queryInterfaceParam(TraceStackQueryParam param);
 
     Response<List<TTrackClickhouseModel>> getAllTraceList(EntryTraceQueryParam param);
+
+    List<RpcBased> getCustomTraceDetail(TraceStackQueryParam param);
+
 }

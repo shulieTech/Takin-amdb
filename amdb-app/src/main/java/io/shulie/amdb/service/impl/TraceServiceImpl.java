@@ -58,6 +58,10 @@ public class TraceServiceImpl implements TraceService {
             + "middlewareName,serviceName,methodName,remoteIp,port,resultCode,request,response,clusterTest,callbackMsg,"
             + "attributes,localAttributes,async,version,hostIp,agentId,parsedServiceName ";
 
+    // 压测明细字段
+    private static final String PRESSURE_TRACE_SELECT_FILED
+            = " appName,traceId,startTime,cost,serviceName,methodName,remoteIp,port,resultCode,request,response,callbackMsg ";
+
     @Autowired
     @Qualifier("traceDaoImpl")
     ITraceDao traceDao;
@@ -152,21 +156,20 @@ public class TraceServiceImpl implements TraceService {
         // 分页
         String limit = getLimitInfo(param);
         // 流量引擎日志
-        String sql = null;
+        StringBuilder sql = new StringBuilder();
         // 如果查询响应失败和断言失败,则对重复数据进行去重
         if ("0".equals(param.getResultType()) || "2".equals(param.getResultType())) {
-            sql = "select distinct" + TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(
-                    andFilterList, " and ");
+            sql.append("select " + PRESSURE_TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(
+                    andFilterList, " and "));
+            sql.append(" group by " + PRESSURE_TRACE_SELECT_FILED);
         } else {
-            sql = "select " + TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(
-                    andFilterList, " and ");
+            sql.append("select " + PRESSURE_TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(
+                    andFilterList, " and "));
         }
-        if (CollectionUtils.isNotEmpty(orFilterList)) {
-            sql += " and (" + StringUtils.join(orFilterList, " or ") + ")";
-        }
+
         //1027 三变让改成接口耗时降序排序
-        sql += " order by cost desc " + limit;
-        List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql, TTrackClickhouseModel.class);
+        sql.append(" order by cost desc " + limit);
+        List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
 //        Map<String, TTrackClickhouseModel> traceId2EngineTraceMap = modelList.stream().collect(
 //                Collectors.toMap(TTrackClickhouseModel::getTraceId, model -> model, (k1, k2) -> k1));
         // 入口日志查询
@@ -748,6 +751,28 @@ public class TraceServiceImpl implements TraceService {
     }
 
     @Override
+    public List<RpcBased> getCustomTraceDetail(TraceStackQueryParam param) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where 1=1 ");
+        if (StringUtil.isNotBlank(param.getStartTime()) && StringUtil.isNotBlank(param.getEndTime())) {
+            sql.append(" and startDate between '" + param.getStartTime() + "' and '" + param.getEndTime() + "' ");
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+        }
+        sql.append(" and traceId in (select traceId from t_trace_all where startDate between '" + param.getStartTime() + "' and '" + param.getEndTime() + "' and parsedAppName = '" + param.getAppName() + "' and parsedServiceName = '" + param.getServiceName() + "' and parsedMethod = '" + param.getMethodName() + "' and logType = '" + param.getLogType() + "' and entranceId = '" + param.getEntranceId() + "') limit " + traceQueryLimit);
+        List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
+        if (CollectionUtils.isEmpty(modelList)) {
+            return Lists.newArrayList();
+        }
+
+        return modelList.stream().map(model -> model.getRpcBased()).collect(Collectors.toList());
+    }
+
+    @Override
     public List<RpcBased> getTraceDetail(TraceStackQueryParam param) {
         StringBuilder sql = new StringBuilder();
         sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where 1=1 ");
@@ -796,8 +821,8 @@ public class TraceServiceImpl implements TraceService {
 
     private void calculateCost(TTrackClickhouseModel clientModel, List<TTrackClickhouseModel> modelList) {
         TTrackClickhouseModel serverModel = modelList.stream().filter(
-                        m -> m.getLogType() == 3 && m.getRpcId().startsWith(clientModel.getRpcId()) && m.getServiceName()
-                                .equals(clientModel.getServiceName()) && m.getMethodName().equals(clientModel.getMethodName()))
+                m -> m.getLogType() == 3 && m.getRpcId().startsWith(clientModel.getRpcId()) && m.getServiceName()
+                        .equals(clientModel.getServiceName()) && m.getMethodName().equals(clientModel.getMethodName()))
                 .findFirst().orElse(null);
         if (serverModel != null) {
             // 非MQ的中间件，如果客户端耗时小于服务端耗时，则客户端耗时=客户端耗时+服务端耗时
