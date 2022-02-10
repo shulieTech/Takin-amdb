@@ -15,15 +15,19 @@
 
 package io.shulie.amdb.common.dto.link.topology;
 
-import io.shulie.amdb.common.dto.link.detail.LinkDetailDTO;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
 
 @Data
+@ApiModel("链路拓扑图")
 public class LinkTopologyDTO {
+    @ApiModelProperty("拓扑图点")
     List<LinkNodeDTO> nodes;
+    @ApiModelProperty("拓扑图边")
     List<LinkEdgeDTO> edges;
-//    List<LinkDetailDTO> detailDTO;
+    //    List<LinkDetailDTO> detailDTO;
     String latestUpdateTime;
 }

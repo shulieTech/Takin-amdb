@@ -15,14 +15,23 @@
 
 package io.shulie.amdb.common.dto.link.topology;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
+@ApiModel("链路拓扑图点")
 public class LinkNodeDTO {
+    @ApiModelProperty("节点唯一标识")
     String nodeId;
+    @ApiModelProperty("节点名称")
     String nodeName;
+    @ApiModelProperty("是否入口节点")
     boolean root;
+    @ApiModelProperty("节点类型")
     String nodeType;
+    @ApiModelProperty("节点类型分组(大类)")
     String nodeTypeGroup;
+    @ApiModelProperty("扩展信息")
     Object extendInfo;
 }

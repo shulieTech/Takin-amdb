@@ -15,29 +15,38 @@
 
 package io.shulie.amdb.common.dto.link.topology;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
+@ApiModel("链路拓扑图点")
 public class LinkEdgeDTO {
+    @ApiModelProperty("上游节点唯一标识")
     String sourceId;
+    @ApiModelProperty("下游节点唯一标识")
     String targetId;
+    @ApiModelProperty("边唯一标识")
     String eagleId;
+    @ApiModelProperty("边调用类型")
     String eagleType;
+    @ApiModelProperty("边调用类型分组(大类)")
     String eagleTypeGroup;
+    @ApiModelProperty("上游应用名称")
     String serverAppName;
     //Object extendInfo;
-    //服务
+    @ApiModelProperty("服务名")
     String service;
-    //方法
+    @ApiModelProperty("方法")
     String method;
-    //扩展信息
+    @ApiModelProperty("扩展信息")
     String extend;
-    //应用名称
+    @ApiModelProperty("应用名称")
     String appName;
-    //RPC类型
+    @ApiModelProperty("RPC类型")
     String rpcType;
-    //日志类型
+    @ApiModelProperty("日志类型")
     String logType;
-    //中间件名称
+    @ApiModelProperty("中间件名称")
     String middlewareName;
 }
