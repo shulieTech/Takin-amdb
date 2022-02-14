@@ -22,12 +22,13 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-@ApiModel("链路拓扑图")
+@ApiModel("LinkTopologyDTO")
 public class LinkTopologyDTO {
     @ApiModelProperty("拓扑图点")
     List<LinkNodeDTO> nodes;
     @ApiModelProperty("拓扑图边")
     List<LinkEdgeDTO> edges;
     //    List<LinkDetailDTO> detailDTO;
+    @ApiModelProperty("上次更新时间")
     String latestUpdateTime;
 }

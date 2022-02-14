@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
-@ApiModel("链路拓扑图点")
+@ApiModel("LinkEdgeDTO")
 public class LinkEdgeDTO {
     @ApiModelProperty("上游节点唯一标识")
     String sourceId;
