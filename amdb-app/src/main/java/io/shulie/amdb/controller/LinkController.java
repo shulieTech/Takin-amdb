@@ -132,6 +132,11 @@ public class LinkController {
         try {
             //移除临时拓扑设置的threadLocal,防止线程复用导致的参数污染问题
             LinkProcessor.threadLocal.remove();
+            //如果linkId为空,appName、service、method、rpcType必传
+            //如果appName、service、method、rpcType都为空,linkId必传
+            if ((StringUtils.isBlank(param.getLinkId()) && (StringUtils.isBlank(param.getAppName()) || StringUtils.isBlank(param.getServiceName()) || StringUtils.isBlank(param.getMethod()) || StringUtils.isBlank(param.getRpcType()))) || (StringUtils.isBlank(param.getAppName()) && StringUtils.isBlank(param.getServiceName()) && StringUtils.isBlank(param.getMethod()) && StringUtils.isBlank(param.getRpcType()) && StringUtils.isBlank(param.getLinkId()))) {
+                return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
+            }
             Response<LinkTopologyDTO> result = linkService.getLinkTopology(param);
             return result;
         } catch (Exception e) {
@@ -151,6 +156,11 @@ public class LinkController {
         log.info("查询拓扑图 param:{}", JSON.toJSONString(param));
         try {
             LinkProcessor.threadLocal.set("tempLinkTopology");
+            //如果linkId为空,appName、service、method、rpcType必传
+            //如果appName、service、method、rpcType都为空,linkId必传
+            if ((StringUtils.isBlank(param.getLinkId()) && (StringUtils.isBlank(param.getAppName()) || StringUtils.isBlank(param.getServiceName()) || StringUtils.isBlank(param.getMethod()) || StringUtils.isBlank(param.getRpcType()))) || (StringUtils.isBlank(param.getAppName()) && StringUtils.isBlank(param.getServiceName()) && StringUtils.isBlank(param.getMethod()) && StringUtils.isBlank(param.getRpcType()) && StringUtils.isBlank(param.getLinkId()))) {
+                return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
+            }
             Response<LinkTopologyDTO> response = linkService.getLinkTopology(param);
             return response;
         } catch (Exception e) {
