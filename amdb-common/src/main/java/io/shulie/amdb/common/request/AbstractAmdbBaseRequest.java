@@ -15,32 +15,29 @@
 
 package io.shulie.amdb.common.request;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 @Data
+@ApiModel("AbstractAmdbBaseRequest")
 public abstract class AbstractAmdbBaseRequest {
     /**
      * 租户标识
      */
-    String tenant = "DEFAULT";
-
-    /**
-     * 用户ID
-     */
-    String userId = "SYSTEM";
-
-    /**
-     * 用户名称
-     */
-    String userName = "SYSTEM";
-    /**
-     * 租户标识
-     */
+    @ApiModelProperty("租户标识")
     private String tenantAppKey;
     /**
      * 环境标识
      */
+    @ApiModelProperty("环境标识")
     private String envCode;
+
+    /**
+     * 用户ID
+     */
+    @ApiModelProperty("用户ID")
+    private String userId;
 
     public static final String DEFAULT_TENANT_KEY = "default";
 

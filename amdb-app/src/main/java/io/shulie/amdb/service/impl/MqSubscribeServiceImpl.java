@@ -24,7 +24,6 @@ import io.shulie.amdb.request.submit.MqSubscribeUpdateSubmitRequest;
 import io.shulie.amdb.response.subscribe.MqSubscribeResponse;
 import io.shulie.amdb.service.MqSubscribeService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
@@ -42,7 +41,7 @@ public class MqSubscribeServiceImpl implements MqSubscribeService {
     @Override
     public Response addMqSubscribe(MqSubscribeAddSubmitRequest addSubmitRequest) {
         String subscribeTarget = addSubmitRequest.getSubscribeTarget();
-        String tenant = addSubmitRequest.getTenant();
+        String tenant = addSubmitRequest.getTenantAppKey();
         TAmdbMqSubscribeDO subscribeDO = getSubscribeDO(subscribeTarget, tenant);
         if (subscribeDO != null) {
             Date now = new Date();
@@ -54,9 +53,7 @@ public class MqSubscribeServiceImpl implements MqSubscribeService {
             subscribeDO.setFields(addSubmitRequest.getFields());
             subscribeDO.setParams(addSubmitRequest.getParams());
             subscribeDO.setCreator(addSubmitRequest.getUserId());
-            subscribeDO.setCreatorName(addSubmitRequest.getUserName());
             subscribeDO.setModifier(addSubmitRequest.getUserId());
-            subscribeDO.setModifierName(addSubmitRequest.getUserName());
             subscribeDO.setGmtCreate(now);
             subscribeDO.setGmtModify(now);
             tAmdbMqSubscribeMapper.insert(subscribeDO);
@@ -68,12 +65,11 @@ public class MqSubscribeServiceImpl implements MqSubscribeService {
 
     @Override
     public Response updateMqSubscribe(MqSubscribeUpdateSubmitRequest updateSubmitRequest) {
-        TAmdbMqSubscribeDO subscribeDO = getSubscribeDO(updateSubmitRequest.getSubscribeTarget(), updateSubmitRequest.getTenant());
+        TAmdbMqSubscribeDO subscribeDO = getSubscribeDO(updateSubmitRequest.getSubscribeTarget(), updateSubmitRequest.getTenantAppKey());
         if (subscribeDO != null) {
             subscribeDO.setFields(updateSubmitRequest.getFields());
             subscribeDO.setParams(updateSubmitRequest.getParams());
             subscribeDO.setModifier(updateSubmitRequest.getUserId());
-            subscribeDO.setModifierName(updateSubmitRequest.getUserName());
             subscribeDO.setGmtModify(new Date());
             tAmdbMqSubscribeMapper.updateByPrimaryKeySelective(subscribeDO);
             return Response.emptySuccess();
@@ -83,7 +79,7 @@ public class MqSubscribeServiceImpl implements MqSubscribeService {
 
     @Override
     public Response removeMqSubscribe(MqSubscribeDeleteRequest deleteRequest) {
-        TAmdbMqSubscribeDO subscribeDO = getSubscribeDO(deleteRequest.getSubscribeTarget(), deleteRequest.getTenant());
+        TAmdbMqSubscribeDO subscribeDO = getSubscribeDO(deleteRequest.getSubscribeTarget(), deleteRequest.getTenantAppKey());
         if (subscribeDO != null) {
             tAmdbMqSubscribeMapper.deleteByPrimaryKey(subscribeDO);
             return Response.emptySuccess();

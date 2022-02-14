@@ -40,16 +40,13 @@ public class AppRelationServiceImpl implements AppRelationService {
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("fromAppName", relationSubmitRequest.getFromAppName());
         criteria.andEqualTo("toAppName", relationSubmitRequest.getToAppName());
-        criteria.andEqualTo("tenant", relationSubmitRequest.getTenant());
         int count = appRelationMapper.selectCountByExample(example);
         try {
             if (count == 0) {
                 AppRelationDO appRelationDO = new AppRelationDO();
                 appRelationDO.setFromAppName(relationSubmitRequest.getFromAppName());
                 appRelationDO.setToAppName(relationSubmitRequest.getToAppName());
-                appRelationDO.setTenant(relationSubmitRequest.getTenant());
                 appRelationDO.setCreator(relationSubmitRequest.getUserId());
-                appRelationDO.setCreatorName(relationSubmitRequest.getUserName());
                 appRelationMapper.insert(appRelationDO);
             }
         } catch (Exception e) {

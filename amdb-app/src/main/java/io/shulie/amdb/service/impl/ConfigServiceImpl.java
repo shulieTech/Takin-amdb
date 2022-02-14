@@ -37,30 +37,24 @@ public class ConfigServiceImpl implements ConfigService {
     public Response updateOrInsertConfig(ConfigAddOrUpdateSubmitRequest submitRequest) {
         String atrName = submitRequest.getAtrName();
         String atrValue = submitRequest.getAtrValue();
-        String tenant = submitRequest.getTenant();
         // 判断配置是否已存在
         Example example = new Example(TAmdbConfigDO.class);
         Example.Criteria criteria = example.createCriteria();
         criteria.andEqualTo("atrName", atrName);
-        criteria.andEqualTo("tenant", tenant);
         TAmdbConfigDO configDO = tAmdbConfigMapper.selectOneByExample(example);
         Date now = new Date();
         if (configDO == null) {
             configDO = new TAmdbConfigDO();
             configDO.setAtrName(atrName);
             configDO.setAtrValue(atrValue);
-            configDO.setTenant(tenant);
             configDO.setCreator(submitRequest.getUserId());
-            configDO.setCreatorName(submitRequest.getUserName());
             configDO.setModifier(submitRequest.getUserId());
-            configDO.setModifierName(submitRequest.getUserName());
             configDO.setGmtCreate(now);
             configDO.setGmtModify(now);
             tAmdbConfigMapper.insert(configDO);
         } else {
             configDO.setAtrValue(atrValue);
             configDO.setModifier(submitRequest.getUserId());
-            configDO.setModifierName(submitRequest.getUserName());
             configDO.setGmtModify(now);
             tAmdbConfigMapper.updateByPrimaryKeySelective(configDO);
         }
@@ -69,7 +63,7 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     public String getConfigValue(ConfigQueryRequest queryRequest) {
-        return getConfigValue(queryRequest.getTenant(), queryRequest.getAtrName());
+        return getConfigValue(queryRequest.getTenantAppKey(), queryRequest.getAtrName());
     }
 
     @Override
