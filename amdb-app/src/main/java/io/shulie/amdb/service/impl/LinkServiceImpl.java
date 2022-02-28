@@ -397,7 +397,7 @@ public class LinkServiceImpl implements LinkService {
         if (StringUtils.isNotBlank(param.getAppName())) {
             String appName = param.getAppName();
             if (appName.contains(",")) {
-                criteria.andIn("appName", Arrays.asList(appName.split(",")));
+                criteria.andIn("appName", Arrays.asList(appName.split(",")).stream().distinct().collect(Collectors.toList()));
             } else {
                 criteria.andEqualTo("appName", param.getAppName());
             }
@@ -416,7 +416,7 @@ public class LinkServiceImpl implements LinkService {
             String serviceNameFilter = "";
             //如果为批量查询时不允许采用模糊匹配,否则会导致慢sql把mysql cpu打满-顺丰
             if (serviceNameAry.length > 1) {
-                criteria.andIn("serviceName", Arrays.asList(serviceNameAry));
+                criteria.andIn("serviceName", Arrays.asList(serviceNameAry).stream().distinct().collect(Collectors.toList()));
             } else {
                 serviceNameFilter += "service_name like '%" + serviceNameAry[0] + "%'";
                 criteria.andCondition("(" + serviceNameFilter + ")");
@@ -488,7 +488,7 @@ public class LinkServiceImpl implements LinkService {
         if (StringUtils.isNotBlank(param.getAppName())) {
             String appName = param.getAppName();
             if (appName.contains(",")) {
-                criteria.andIn("appName", Arrays.asList(appName.split(",")));
+                criteria.andIn("appName", Arrays.asList(appName.split(",")).stream().distinct().collect(Collectors.toList()));
             } else {
                 criteria.andEqualTo("appName", param.getAppName());
             }
@@ -507,7 +507,7 @@ public class LinkServiceImpl implements LinkService {
             String serviceNameFilter = "";
             //如果为批量查询时不允许采用模糊匹配,否则会导致慢sql把mysql cpu打满-顺丰
             if (serviceNameAry.length > 1) {
-                criteria.andIn("serviceName", Arrays.asList(serviceNameAry));
+                criteria.andIn("serviceName", Arrays.asList(serviceNameAry).stream().distinct().collect(Collectors.toList()));
             } else {
                 serviceNameFilter += "service_name like '%" + serviceNameAry[0] + "%'";
                 criteria.andCondition("(" + serviceNameFilter + ")");
@@ -529,7 +529,7 @@ public class LinkServiceImpl implements LinkService {
         if (StringUtils.isNotBlank(param.getUpAppName())) {
             String upAppName = param.getUpAppName();
             if (upAppName.contains(",")) {
-                criteria.andIn("upAppName", Arrays.asList(upAppName.split(",")));
+                criteria.andIn("upAppName", Arrays.asList(upAppName.split(",")).stream().distinct().collect(Collectors.toList()));
             } else {
                 criteria.andEqualTo("upAppName", param.getUpAppName());
             }
