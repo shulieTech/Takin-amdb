@@ -132,16 +132,20 @@ public class InfluxDbQueryServiceImpl implements InfluxDbQueryService {
         List<String> orFilterList = new ArrayList<>();
         tagMap.forEach((k, v) -> {
             if (v instanceof List) {
-                //rpc服务的method含有形参,亦是用逗号分割,暂时过滤其他字段的or查询,只支持edgeId
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("(");
+                if (((List<?>) v).size() <= 1) {
+                    inFilterList.add(k + "='" + ((List<?>) v).get(0) + "'");
+                } else {
+                    //rpc服务的method含有形参,亦是用逗号分割,暂时过滤其他字段的or查询,只支持edgeId
+                    StringBuilder stringBuilder = new StringBuilder();
+                    stringBuilder.append("(");
 
-                for (Object single : (ArrayList) v) {
-                    stringBuilder.append(k + "='" + single + "'").append(" or ");
+                    for (Object single : (ArrayList) v) {
+                        stringBuilder.append(k + "='" + single + "'").append(" or ");
+                    }
+                    stringBuilder.delete(stringBuilder.lastIndexOf(" or "), stringBuilder.length());
+                    stringBuilder.append(")");
+                    orFilterList.add(stringBuilder.toString());
                 }
-                stringBuilder.delete(stringBuilder.lastIndexOf(" or "), stringBuilder.length());
-                stringBuilder.append(")");
-                orFilterList.add(stringBuilder.toString());
             } else {
                 inFilterList.add(k + "='" + v + "'");
             }
