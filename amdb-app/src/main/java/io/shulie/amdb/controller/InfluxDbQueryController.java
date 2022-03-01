@@ -76,6 +76,10 @@ public class InfluxDbQueryController {
         if (MapUtils.isEmpty(request.getWhereFilter()) && request.getLimitRows() == 0) {
             return AmdbExceptionEnums.INFLUXDB_QUERY_PARAM_CHECK_LACK_LIMIT_ROWS;
         }
+        //单次查询返回超过10000条数据
+        if (request.getLimitRows() > 10000) {
+            return AmdbExceptionEnums.INFLUXDB_QUERY_EXCEED_MAX_LIMIT;
+        }
         //排序非法
         if (request.getOrderByStrategy() != null && request.getOrderByStrategy() != 0 && request.getOrderByStrategy() != 1) {
             return AmdbExceptionEnums.INFLUXDB_QUERY_PARAM_CHECK_NOT_SUPPORTED_ORDERBY;

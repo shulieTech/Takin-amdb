@@ -109,6 +109,7 @@ public enum AmdbExceptionEnums {
     INFLUXDB_QUERY_PARAM_CHECK_LACK_AGGREGATE_FIELDS_ALIAS("AMDB_0800_U00008", "聚合字段缺少别名"),
     INFLUXDB_QUERY_PARAM_CHECK_LACK_LIMIT_ROWS("AMDB_0800_U00009", "没有where条件时分页参数必传"),
     INFLUXDB_QUERY_SQL_EXECUTE_FAILED("AMDB_0800_U00010", "influxdb执行sql异常: %s"),
+    INFLUXDB_QUERY_EXCEED_MAX_LIMIT("AMDB_0800_U00011", "单次查询最多返回10000条数据"),
     ;
 
     private final String code;
