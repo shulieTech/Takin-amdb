@@ -750,7 +750,7 @@ public class TraceServiceImpl implements TraceService {
     @Override
     public Response<String> getAppNameByUrl(EntryTraceQueryParam param) {
         StringBuilder sql = new StringBuilder();
-        sql.append("select appName from t_trace_all where 1=1 ");
+        sql.append("select appName from t_trace_all where 1=1 and logType != 5");
         if (param.getStartTime() != null && param.getStartTime() > 0) {
             sql.append("and startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime()), "yyyy-MM-dd HH:mm:ss") + "' ");
         }
