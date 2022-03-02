@@ -38,6 +38,7 @@ import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -209,6 +210,9 @@ public class AppInstanceStatusServiceImpl implements AppInstanceStatusService {
         }
         if (StringUtils.isNotBlank(param.getPid())) {
             criteria.andEqualTo("pid", param.getPid());
+        }
+        if (Objects.nonNull(param.getProbeStatus())) {
+            criteria.andEqualTo("probeStatus", param.getProbeStatus());
         }
         appInstanceStatusMapper.deleteByExample(example);
     }
