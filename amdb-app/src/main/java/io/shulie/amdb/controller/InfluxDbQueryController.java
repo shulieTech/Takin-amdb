@@ -85,9 +85,9 @@ public class InfluxDbQueryController {
             return AmdbExceptionEnums.INFLUXDB_QUERY_PARAM_CHECK_NOT_SUPPORTED_ORDERBY;
         }
         //group by 非法
-        if (CollectionUtils.isEmpty(request.getGroupByTags()) && MapUtils.isNotEmpty(request.getAggregateStrategy())) {
-            return AmdbExceptionEnums.INFLUXDB_QUERY_PARAM_CHECK_LACK_GROUPBY_TAGS;
-        }
+//        if (CollectionUtils.isEmpty(request.getGroupByTags()) && MapUtils.isNotEmpty(request.getAggregateStrategy())) {
+//            return AmdbExceptionEnums.INFLUXDB_QUERY_PARAM_CHECK_LACK_GROUPBY_TAGS;
+//        }
         //group by 非法
         if (MapUtils.isEmpty(request.getAggregateStrategy()) && CollectionUtils.isNotEmpty(request.getGroupByTags())) {
             return AmdbExceptionEnums.INFLUXDB_QUERY_PARAM_CHECK_LACK_AGGREGATE_STRATEGY;
