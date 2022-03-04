@@ -50,7 +50,7 @@ public class InfluxDbQueryServiceImpl implements InfluxDbQueryService {
                         List columns = result.getColumns();
                         List values = result.getValues();
                         Map<String, String> tags = result.getTags();
-                        resultList = getQueryData(columns, values, tags);
+                        resultList.add(getQueryData(columns, values, tags));
                     }
                 }
             } catch (Exception e) {
@@ -63,10 +63,9 @@ public class InfluxDbQueryServiceImpl implements InfluxDbQueryService {
     }
 
     /***整理列名、行数据***/
-    private List<Map<String, Object>> getQueryData(List<String> columns, List<List<Object>> values, Map<String, String> tags) {
-        List<Map<String, Object>> lists = new ArrayList<>();
+    private Map<String, Object> getQueryData(List<String> columns, List<List<Object>> values, Map<String, String> tags) {
+        HashMap<String, Object> resultMap = Maps.newHashMap();
         for (List<Object> list : values) {
-            HashMap<String, Object> resultMap = Maps.newHashMap();
             if (MapUtils.isNotEmpty(tags)) {
                 resultMap.putAll(tags);
             }
@@ -75,9 +74,9 @@ public class InfluxDbQueryServiceImpl implements InfluxDbQueryService {
                 Object value = list.get(i);//相应字段值
                 resultMap.put(propertyName, value);
             }
-            lists.add(resultMap);
+
         }
-        return lists;
+        return resultMap;
     }
 
     private String buildQuerySql(InfluxDbQueryRequest request) {
