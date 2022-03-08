@@ -113,6 +113,10 @@ public class LinkController {
             if (StringUtils.isBlank(param.getQueryTye())) {
                 return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "query_type");
             }
+            //如果分页参数没传或者过大(大于5000),则设置分页大小为5000
+            if (param.getPageSize() == null || (param.getPageSize() != null && param.getPageSize() > 5000)) {
+                param.setPageSize(5000);
+            }
             return linkService.getExitList(param);
         } catch (Exception e) {
             log.error("查询出口列表失败", e);
