@@ -146,9 +146,22 @@ public class AppServiceImpl implements AppService {
         for (AmdbAppResponse response : responses) {
             Long appId = response.getAppId();
             List<TAmdbAppInstanceDO> instanceDOS = tAmdbAppInstanceDOS.stream()
-                    .filter(v -> appId.equals(v.getAppId()))
-                    .collect(Collectors.toList());
-
+                    .filter(v -> {
+                        if (!appId.equals(v.getAppId())) {
+                            return false;
+                        }
+                        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+                            if (!param.getTenantAppKey().equals(v.getUserAppKey())) {
+                                return false;
+                            }
+                        }
+                        if (StringUtils.isNotBlank(param.getEnvCode())) {
+                            if (!param.getEnvCode().equals(v.getEnvCode())) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }).collect(Collectors.toList());
             int totalCount = instanceDOS.size();
             int onlineCount = (int) instanceDOS.stream().filter(instance -> (instance.getFlag() & 1) == 1).count();
             long exceptionCount = instanceDOS.stream().filter(instance -> (instance.getFlag() & 2) != 2 && (instance.getFlag() & 1) == 1).count();
