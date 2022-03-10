@@ -461,6 +461,31 @@ public class TraceServiceImpl implements TraceService {
             }
         }
 
+        if (CollectionUtils.isNotEmpty(param.getTraceIdList())) {
+            andFilterList.add("traceId in ('" + StringUtils.join(param.getTraceIdList(), "','") + "')");
+        }
+
+        if (param.getMinCost() >= 0) {
+            if (param.getMinCost() > 0 && param.getMaxCost() == 0) {
+                andFilterList.add("cost >= " + param.getMinCost());
+            } else if (param.getMaxCost() > 0 && param.getMaxCost() >= param.getMinCost()) {
+                andFilterList.add("cost between " + param.getMinCost() + " and " + param.getMaxCost());
+            }
+        }
+
+        if (StringUtils.isNotBlank(param.getResultType())) {
+            if ("1".equals(param.getResultType())) {
+                andFilterList.add("(resultCode='00' or resultCode='200')");
+            }
+            if ("0".equals(param.getResultType())) {
+                andFilterList.add("(resultCode<>'00' and resultCode<>'200')");
+            }
+        }
+
+        if (StringUtils.isNotBlank(param.getServiceName())) {
+            andFilterList.add("parsedServiceName like '%" + param.getServiceName() + "%'");
+        }
+
         andFilterList.add("taskId='" + param.getTaskId() + "'");
         if (StringUtils.isNotBlank(param.getResultType())) {
             if ("2".equals(param.getResultType())) {
