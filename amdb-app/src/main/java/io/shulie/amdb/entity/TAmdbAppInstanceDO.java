@@ -17,16 +17,19 @@ package io.shulie.amdb.entity;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import java.util.Date;
-import javax.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.Column;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import java.util.Date;
+
 @Getter
 @Setter
 @EqualsAndHashCode
-@ApiModel("")
+@ApiModel("TAmdbAppInstanceDO")
 @Table(name = "`t_amdb_app_instance`")
 public class TAmdbAppInstanceDO extends BaseDatabaseDO {
     /**
@@ -101,7 +104,7 @@ public class TAmdbAppInstanceDO extends BaseDatabaseDO {
 
     /**
      * 二进制标记位 从右到左数
-     *
+     * <p>
      * 第一位  0 -> agent不在线  1 -> 在线
      * 第二位  0 -> agent异常    1 -> agent正常
      */

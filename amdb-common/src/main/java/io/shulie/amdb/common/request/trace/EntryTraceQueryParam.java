@@ -28,7 +28,7 @@ import java.util.Set;
 public class EntryTraceQueryParam extends AbstractAmdbBaseRequest {
     @ApiModelProperty("是否压测流量")
     String clusterTest;
-    @ApiModelProperty("结果类型(1代表失败请求,0代表成功请求)")
+    @ApiModelProperty("结果类型(1代表成功请求,0代表失败请求)")
     String resultType;
     @ApiModelProperty("调用类型")
     String rpcType;

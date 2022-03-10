@@ -45,13 +45,13 @@ public interface AppInstanceMapper extends Mapper<TAmdbAppInstanceDO>, MySqlMapp
     int insertSelective(TAmdbAppInstanceDO record);
 
     @Select({"<script>",
-            "SELECT app_id,flag FROM t_amdb_app_instance WHERE app_id IN",
+            "SELECT app_id,flag,user_app_key,env_code FROM t_amdb_app_instance WHERE app_id IN",
             "<foreach item='appDo' index='index' collection='appDos' open='(' separator=',' close=')'>",
             "#{appDo.id}",
             "</foreach>",
             "</script>"}
     )
-    @Results(value = {@Result(column = "flag", property = "flag"), @Result(column = "app_id", property = "appId")})
+    @Results(value = {@Result(column = "flag", property = "flag"), @Result(column = "app_id", property = "appId"), @Result(column = "user_app_key", property = "userAppKey"), @Result(column = "env_code", property = "envCode")})
     List<TAmdbAppInstanceDO> selectFlagByAppId(@Param("appDos") List<AppDO> amdbApps);
 
     @Select("select user_app_key,env_code,app_name from t_amdb_app_instance where flag in ('1','3') group by user_app_key,env_code,app_name")
