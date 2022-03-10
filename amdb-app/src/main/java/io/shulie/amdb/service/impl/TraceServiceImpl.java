@@ -247,6 +247,7 @@ public class TraceServiceImpl implements TraceService {
                 entryTraceInfoDTO.setCost(traceModel.getCost());
                 entryTraceInfoDTO.setResponse(traceModel.getResponse());
                 entryTraceInfoDTO.setAssertResult(traceModel.getCallbackMsg());
+                entryTraceInfoDTO.setLocalAttributes(traceModel.getLocalAttributes());
             } else if (engineTraceModel != null) {
                 entryTraceInfoDTO.setServiceName(engineTraceModel.getServiceName());
                 entryTraceInfoDTO.setMethodName(engineTraceModel.getMethodName());

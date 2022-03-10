@@ -31,4 +31,5 @@ public class EntryTraceInfoDTO {
     String response;
     String request;
     String assertResult;
+    String localAttributes;
 }
