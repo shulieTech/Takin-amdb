@@ -103,7 +103,7 @@ public class TraceServiceImpl implements TraceService {
 
         // 流量引擎日志查询----流量引擎日志查询的时候加上appName和startDate，保证查询效率
         Map<String, TTrackClickhouseModel> traceId2EngineTraceMap = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(traceModelList)) {
+        if (CollectionUtils.isNotEmpty(traceModelList) && !"dau".equals(param.getQuerySource())) {
             String engineSql = "select " + TRACE_SELECT_FILED
                     + " from t_trace_all where traceId in ('"
                     + StringUtils.join(traceId2TraceMap.keySet(), "','")

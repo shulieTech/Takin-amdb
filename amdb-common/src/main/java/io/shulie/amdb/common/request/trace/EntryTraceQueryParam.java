@@ -58,7 +58,7 @@ public class EntryTraceQueryParam extends AbstractAmdbBaseRequest {
     long minCost;
     @ApiModelProperty("最大耗时最大最小耗时都传0时默认查询所有")
     long maxCost;
-    @ApiModelProperty("调用来源(tro/e2e)")
+    @ApiModelProperty("调用来源(tro/e2e/dau)")
     String querySource;
     @ApiModelProperty("租户下应用列表")
     List<String> appNames;
