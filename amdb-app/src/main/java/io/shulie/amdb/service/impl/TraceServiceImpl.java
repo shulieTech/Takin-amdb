@@ -388,6 +388,7 @@ public class TraceServiceImpl implements TraceService {
 
         if ("dau".equals(param.getQuerySource())) {
             andFilterList.add("middlewareName='tomcat'");
+            andFilterList.add("localAttributes like '%envCode%'");
         }
 
         //如果是e2e请求,判断cost条件是否生效
