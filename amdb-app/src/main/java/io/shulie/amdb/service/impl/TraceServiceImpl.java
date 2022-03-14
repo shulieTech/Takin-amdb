@@ -98,12 +98,36 @@ public class TraceServiceImpl implements TraceService {
             return result;
         }
 
+        if ("dau".equals(param.getQuerySource())) {
+            List<EntryTraceInfoDTO> entryTraceInfoDtos = new ArrayList<>();
+            for (TTrackClickhouseModel traceModel : traceModelList) {
+                EntryTraceInfoDTO entryTraceInfoDTO = new EntryTraceInfoDTO();
+                entryTraceInfoDTO.setServiceName(traceModel.getParsedServiceName());
+                entryTraceInfoDTO.setMethodName(traceModel.getMethodName());
+                entryTraceInfoDTO.setAppName(traceModel.getAppName());
+                entryTraceInfoDTO.setRemoteIp(traceModel.getRemoteIp());
+                entryTraceInfoDTO.setPort(traceModel.getPort());
+                entryTraceInfoDTO.setStartTime(traceModel.getStartTime());
+                entryTraceInfoDTO.setRequest(traceModel.getRequest());
+                entryTraceInfoDTO.setResultCode(traceModel.getResultCode());
+                entryTraceInfoDTO.setCost(traceModel.getCost());
+                entryTraceInfoDTO.setResponse(traceModel.getResponse());
+                entryTraceInfoDTO.setAssertResult(traceModel.getCallbackMsg());
+                entryTraceInfoDTO.setLocalAttributes(traceModel.getLocalAttributes());
+                entryTraceInfoDTO.setTraceId(traceModel.getTraceId());
+                entryTraceInfoDtos.add(entryTraceInfoDTO);
+            }
+            Response<List<EntryTraceInfoDTO>> result = Response.success(entryTraceInfoDtos);
+            setResponseCount(andFilterList, orFilterList, result);
+            return result;
+        }
+
         Map<String, TTrackClickhouseModel> traceId2TraceMap = traceModelList.stream().collect(
                 Collectors.toMap(TTrackClickhouseModel::getTraceId, model -> model, (k1, k2) -> k1));
 
         // 流量引擎日志查询----流量引擎日志查询的时候加上appName和startDate，保证查询效率
         Map<String, TTrackClickhouseModel> traceId2EngineTraceMap = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(traceModelList)) {
+        if (CollectionUtils.isNotEmpty(traceModelList) && !"dau".equals(param.getQuerySource())) {
             String engineSql = "select " + TRACE_SELECT_FILED
                     + " from t_trace_all where traceId in ('"
                     + StringUtils.join(traceId2TraceMap.keySet(), "','")
@@ -247,6 +271,7 @@ public class TraceServiceImpl implements TraceService {
                 entryTraceInfoDTO.setCost(traceModel.getCost());
                 entryTraceInfoDTO.setResponse(traceModel.getResponse());
                 entryTraceInfoDTO.setAssertResult(traceModel.getCallbackMsg());
+                entryTraceInfoDTO.setLocalAttributes(traceModel.getLocalAttributes());
             } else if (engineTraceModel != null) {
                 entryTraceInfoDTO.setServiceName(engineTraceModel.getServiceName());
                 entryTraceInfoDTO.setMethodName(engineTraceModel.getMethodName());
@@ -359,6 +384,11 @@ public class TraceServiceImpl implements TraceService {
 
         if (StringUtils.isNotBlank(param.getMethodName())) {
             andFilterList.add("parsedMethod='" + param.getMethodName() + "'");
+        }
+
+        if ("dau".equals(param.getQuerySource())) {
+            andFilterList.add("middlewareName='tomcat'");
+            andFilterList.add("localAttributes like '%envCode%'");
         }
 
         //如果是e2e请求,判断cost条件是否生效
