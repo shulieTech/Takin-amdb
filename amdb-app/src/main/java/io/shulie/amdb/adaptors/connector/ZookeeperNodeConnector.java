@@ -104,7 +104,11 @@ public class ZookeeperNodeConnector implements Connector {
                             String body = Bytes.toString(zkClient.getData(path));
                             Object object = JSON.parseObject(body, paramsClazz);
                             dataContext.setModel(object);
-                            processor.process(dataContext);
+                            Object result = processor.process(dataContext);
+                            if (result != null) {
+                                //执行异常节点删除
+                                zkClient.deleteQuietly(result.toString());
+                            }
                         } catch (KeeperException.NoNodeException e) {
                             logger.warn("节点下线:{}", path);
                             //执行删除表中历史节点数据操作,必须在shutdownnow方法之前

@@ -112,6 +112,7 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
             String newInstanceKey = appName + "#" + instanceModel.getAddress() + "#" + instanceModel.getPid();
             INSTANCEID_CACHE.put(dataContext.getPath(), newInstanceKey);
         } else {
+            //2022-03-14 昂驹说如果检测到空节点,要执行删除节点逻辑
             // 说明节点被删除，执行实例下线
             if (oldInstanceKey != null) {
                 instanceOffline(oldInstanceKey);
@@ -120,6 +121,7 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
                 String agentId = path[1];
                 removeConfig(appName, agentId);
             }
+            return dataContext.getPath();
         }
         return null;
     }

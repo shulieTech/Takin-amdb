@@ -99,6 +99,26 @@ public class AppInstanceServiceImpl implements AppInstanceService {
     }
 
     @Override
+    public List<String> queryExceptionList(TAmdbAppInstanceQueryRequest param) {
+        int page = param.getCurrentPage();
+        int pageSize = param.getPageSize();
+        StringBuilder sb = new StringBuilder(" 1=1 ");
+        if (StringUtils.isNotBlank(param.getAppName())) {
+            sb.append("and app_name='" + param.getAppName() + "' ");
+        }
+
+        if (param.getAgentStatus() != null) {
+            sb.append("and flag =" + param.getAgentStatus() + " ");
+        } else {
+            //默认查询异常
+            sb.append("and flag = 1 ");
+        }
+        PageHelper.startPage(page, pageSize);
+        List<String> amdbApps = appInstanceMapper.selectExceptionList(sb.toString());
+        return amdbApps;
+    }
+
+    @Override
     public PageInfo<AmdbAppInstanceResponse> selectByParams(TAmdbAppInstanceQueryRequest param) {
         int page = param.getCurrentPage();
         int pageSize = param.getPageSize();

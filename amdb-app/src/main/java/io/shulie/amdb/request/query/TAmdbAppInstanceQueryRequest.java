@@ -29,6 +29,13 @@ public class TAmdbAppInstanceQueryRequest extends PagingRequest {
     @ApiModelProperty("应用名称")
     private String appName;
 
+
+    /**
+     * 探针状态
+     */
+    @ApiModelProperty("探针状态")
+    private Integer agentStatus;
+
     /**
      * IP地址
      */

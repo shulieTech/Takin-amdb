@@ -78,6 +78,19 @@ public class AppInstanceController {
         }
     }
 
+    @RequestMapping(value = "/queryExceptionList", method = RequestMethod.GET)
+    public Response queryExceptionList(TAmdbAppInstanceQueryRequest param) {
+        try {
+            if (param.getCurrentPage() == null || param.getPageSize() == null) {
+                return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM, "pageSize or currentPage");
+            }
+            return Response.success(appInstanceService.queryExceptionList(param));
+        } catch (Exception e) {
+            log.error("查询异常应用节点失败", e);
+            return Response.fail(AmdbExceptionEnums.APP_INSTANCE_SELECT);
+        }
+    }
+
     @RequestMapping(value = "/selectByParams", method = RequestMethod.GET)
     public Response selectByParams(TAmdbAppInstanceQueryRequest param) {
         try {

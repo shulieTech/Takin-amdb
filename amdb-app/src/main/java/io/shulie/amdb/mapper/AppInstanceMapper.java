@@ -34,6 +34,9 @@ public interface AppInstanceMapper extends Mapper<TAmdbAppInstanceDO>, MySqlMapp
 
     List<TAmdbAppInstanceDO> selectByFilter(@Param("filter") String filter);
 
+    @Select(" select CONCAT('/config/log/pradar/client/',app_name,'/',agent_id) from t_amdb_app_instance where #{filter}")
+    List<String> selectExceptionList(@Param("filter") String filter);
+
     @Update("update t_amdb_app_instance set flag=(flag^1) where (flag&1)=1")
     void initOnlineStatus();
 
