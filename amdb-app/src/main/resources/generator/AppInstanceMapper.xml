@@ -116,6 +116,19 @@
             ${filter}
         </where>
     </select>
+    <select id="selectExceptionList" parameterType="java.lang.String" resultType="java.lang.String">
+        select
+            CONCAT('/config/log/pradar/client/',app_name,'/',agent_id)
+        from t_amdb_app_instance
+        <where>
+            <if test="appName != null">
+                and app_name=#{appName,jdbcType=VARCHAR}
+            </if>
+            <if test="flag != null">
+                and flag=#{flag,jdbcType=INTEGER}
+            </if>
+        </where>
+    </select>
     <insert id="insert" parameterType="io.shulie.amdb.entity.TAmdbAppInstanceDO">
         insert into t_amdb_app_instance (id, app_name, app_id,
                                          agent_id, ip, pid, agent_version, agent_language,

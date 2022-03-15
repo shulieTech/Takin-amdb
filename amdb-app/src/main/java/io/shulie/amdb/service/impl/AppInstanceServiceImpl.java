@@ -103,18 +103,18 @@ public class AppInstanceServiceImpl implements AppInstanceService {
         int page = param.getCurrentPage();
         int pageSize = param.getPageSize();
         StringBuilder sb = new StringBuilder(" 1=1 ");
-        if (StringUtils.isNotBlank(param.getAppName())) {
-            sb.append("and app_name='" + param.getAppName() + "' ");
-        }
 
+        TAmdbAppInstanceDO request = new TAmdbAppInstanceDO();
+        if (StringUtils.isNotBlank(param.getAppName())) {
+            request.setAppName(param.getAppName());
+        }
         if (param.getAgentStatus() != null) {
-            sb.append("and flag =" + param.getAgentStatus() + " ");
+            request.setFlag(param.getAgentStatus());
         } else {
-            //默认查询异常
-            sb.append("and flag = 1 ");
+            request.setFlag(1);
         }
         PageHelper.startPage(page, pageSize);
-        List<String> amdbApps = appInstanceMapper.selectExceptionList(sb.toString());
+        List<String> amdbApps = appInstanceMapper.selectExceptionList(request);
         return amdbApps;
     }
 
