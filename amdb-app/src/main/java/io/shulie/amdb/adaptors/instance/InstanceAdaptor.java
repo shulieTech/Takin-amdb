@@ -103,13 +103,14 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         }
         String path[] = dataContext.getPath().replaceAll(INSTANCE_PATH, "").split("/");
         String appName = path[0];
+        String agentId = path[1];
         InstanceModel instanceModel = (InstanceModel) dataContext.getModel();
         String oldInstanceKey = INSTANCEID_CACHE.get(dataContext.getPath());
         if (instanceModel != null) {
             updateAppAndInstance(appName, instanceModel, oldInstanceKey);
             //配置DO更新
             updateAgentConfig(appName, instanceModel);
-            String newInstanceKey = appName + "#" + instanceModel.getAddress() + "#" + instanceModel.getPid();
+            String newInstanceKey = appName + "#" + instanceModel.getAddress() + "#" + instanceModel.getPid() + "#" + agentId;
             INSTANCEID_CACHE.put(dataContext.getPath(), newInstanceKey);
         } else {
             //2022-03-14 昂驹说如果检测到空节点,要执行删除节点逻辑
@@ -117,8 +118,6 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
             if (oldInstanceKey != null) {
                 instanceOffline(oldInstanceKey);
                 //instanceIdCache.remove(dataContext.getPath());
-
-                String agentId = path[1];
                 removeConfig(appName, agentId);
             }
             return dataContext.getPath();
@@ -333,6 +332,7 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         selectParam.setAppName(instanceInfo[0]);
         selectParam.setIp(instanceInfo[1]);
         selectParam.setPid(instanceInfo[2]);
+        selectParam.setAgentId(instanceInfo[3]);
         TAmdbAppInstanceDO amdbAppInstanceDO = appInstanceService.selectOneByParam(selectParam);
         if (amdbAppInstanceDO == null) {
             return;

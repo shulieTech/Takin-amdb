@@ -15,6 +15,7 @@
 
 package io.shulie.amdb.controller;
 
+import com.google.common.collect.Lists;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.agent.AgentInfoDTO;
 import io.shulie.amdb.common.request.agent.AmdbAgentInfoQueryRequest;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -140,6 +142,21 @@ public class AppInstanceController {
         } catch (Exception e) {
             log.error("查询应用实例失败", e);
             return Response.fail(AmdbExceptionEnums.APP_INSTANCE_INFO_SELECT);
+        }
+    }
+
+    @RequestMapping(value = "/selectOnlineAppList", method = RequestMethod.GET)
+    public Response selectOnlineAppList() {
+        try {
+            List<TAmdbAppInstanceDO> appInstanceList = appInstanceService.selectOnlineAppList();
+            if (appInstanceList.isEmpty()) {
+                return Response.success(Lists.newArrayList());
+            } else {
+                return Response.success(appInstanceList.stream().map(TAmdbAppInstanceDO::getAppName).collect(Collectors.toList()));
+            }
+        } catch (Exception e) {
+            log.error("查询在线应用列表失败", e);
+            return Response.fail(AmdbExceptionEnums.APP_ONLINE_INSTANCE_SELECT);
         }
     }
 

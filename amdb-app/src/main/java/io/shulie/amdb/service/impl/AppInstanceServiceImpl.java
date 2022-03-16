@@ -300,6 +300,16 @@ public class AppInstanceServiceImpl implements AppInstanceService {
         return PagingUtils.result(agentInfoDOS, amdbAppResponseParams);
     }
 
+    @Override
+    public List<TAmdbAppInstanceDO> selectOnlineAppList() {
+        try {
+            return appInstanceMapper.selectOnlineAppList();
+        } catch (Exception e) {
+            log.error("查询在线应用列表发生异常:{},异常堆栈:{}", e, e.getStackTrace());
+        }
+        return new ArrayList<>();
+    }
+
     private AgentInfoDTO agentId(TAmdbAgentInfoDO agentInfoDO) {
         if (agentInfoDO == null) {
             return null;

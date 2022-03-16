@@ -118,7 +118,7 @@
     </select>
     <select id="selectExceptionList" parameterType="java.lang.String" resultType="java.lang.String">
         select
-            CONCAT('/config/log/pradar/client/',app_name,'/',agent_id)
+            distinct CONCAT('/config/log/pradar/client/',app_name,'/',agent_id)
         from t_amdb_app_instance
         <where>
             <if test="appName != null">

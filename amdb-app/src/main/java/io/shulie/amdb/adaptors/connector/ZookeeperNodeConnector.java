@@ -107,6 +107,7 @@ public class ZookeeperNodeConnector implements Connector {
                             Object result = processor.process(dataContext);
                             if (result != null) {
                                 //执行异常节点删除
+                                logger.warn("删除空节点:{}", result);
                                 zkClient.deleteQuietly(result.toString());
                             }
                         } catch (KeeperException.NoNodeException e) {

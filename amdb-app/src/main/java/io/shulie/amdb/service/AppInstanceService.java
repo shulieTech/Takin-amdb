@@ -70,6 +70,13 @@ public interface AppInstanceService {
     void deleteByParams(TAmdbAppInstanceQueryRequest param);
 
     /**
+     * 查询所有在线应用列表
+     *
+     * @return
+     */
+    List<TAmdbAppInstanceDO> selectOnlineAppList();
+
+    /**
      * 查询agent上报的信息
      *
      * @param request
