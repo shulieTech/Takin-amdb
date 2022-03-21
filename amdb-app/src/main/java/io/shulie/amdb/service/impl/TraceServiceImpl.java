@@ -365,7 +365,7 @@ public class TraceServiceImpl implements TraceService {
         //时间范围
         if (param.getStartTime() != null && param.getStartTime() > 0) {
             andFilterList.add(
-                    "startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime() + 5000), "yyyy-MM-dd HH:mm:ss") + "'");
+                    "startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime() - 5000), "yyyy-MM-dd HH:mm:ss") + "'");
         }
         if (param.getEndTime() != null && param.getEndTime() > 0) {
             andFilterList.add(
@@ -441,10 +441,15 @@ public class TraceServiceImpl implements TraceService {
         } else {
             //如果不传rpcType且查询来源是空或者tro(控制台),只查询服务端和入口日志,如果是e2e,则还需要查询压测数据
             if (StringUtils.isBlank(param.getTaskId())) {
-                if (e2eFlag) {
-                    andFilterList.add("(logType in ('1','3','5'))");
+                if (param.getQueryType() == 2) {
+                    andFilterList.add("(logType = '5')");
                 } else {
-                    andFilterList.add("(logType='1' or logType='3')");
+                    //链路查询
+                    if (e2eFlag) {
+                        andFilterList.add("(logType in ('1','3','5'))");
+                    } else {
+                        andFilterList.add("(logType='1' or logType='3')");
+                    }
                 }
             }
         }
@@ -495,9 +500,16 @@ public class TraceServiceImpl implements TraceService {
                 List<String> entryList = Arrays.asList(param.getEntranceList().split(","));
                 entryList.forEach(entrance -> {
                     String[] entranceInfo = entrance.split("#");
-                    if (StringUtils.isNotBlank(entranceInfo[0])) {
-                        orFilterList.add("(appName='" + entranceInfo[0] + "' and parsedServiceName='" + entranceInfo[1]
-                                + "' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
+                    if (param.getQueryType() == 2) {
+                        if (entranceInfo.length == 4) {
+                            orFilterList.add("(parsedServiceName='" + entranceInfo[1]
+                                    + "' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
+                        }
+                    } else {
+                        if (StringUtils.isNotBlank(entranceInfo[0]) && !"null".equals(entranceInfo[0])) {
+                            orFilterList.add("(appName='" + entranceInfo[0] + "' and parsedServiceName='" + entranceInfo[1]
+                                    + "' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
+                        }
                     }
                 });
             }
