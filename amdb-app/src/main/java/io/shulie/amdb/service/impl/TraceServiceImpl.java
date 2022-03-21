@@ -529,7 +529,7 @@ public class TraceServiceImpl implements TraceService {
                 andFilterList.add("(resultCode='00' or resultCode='200')");
             }
             if ("0".equals(param.getResultType())) {
-                andFilterList.add("(resultCode not in ('00','200','05')");
+                andFilterList.add("(resultCode not in ('00','200','05'))");
             }
         }
 
