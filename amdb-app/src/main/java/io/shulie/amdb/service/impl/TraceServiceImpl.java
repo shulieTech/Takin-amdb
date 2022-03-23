@@ -380,11 +380,11 @@ public class TraceServiceImpl implements TraceService {
                     "startDate <= '" + DateFormatUtils.format(now, "yyyy-MM-dd HH:mm:ss") + "'");
         }
 
-        //租户信息
-        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+        //租户信息(压力引擎没有租户信息,查询非压测报告时候再带上租户条件)
+        if (StringUtils.isNotBlank(param.getTenantAppKey()) && param.getQueryType() != 2) {
             andFilterList.add("userAppKey='" + param.getTenantAppKey() + "'");
         }
-        if (StringUtils.isNotBlank(param.getEnvCode())) {
+        if (StringUtils.isNotBlank(param.getEnvCode()) && param.getQueryType() != 2) {
             andFilterList.add("envCode='" + param.getEnvCode() + "'");
         }
 
