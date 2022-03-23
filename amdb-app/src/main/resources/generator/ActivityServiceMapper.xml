@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2021 Shulie Technology, Co.Ltd
+  ~ Email: shulie@shulie.io
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shulie.amdb.mapper.ActivityServiceMapper">
+
+    <insert id="batchInsert" parameterType="io.shulie.amdb.entity.ActivityServiceDO"
+            useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        insert into t_amdb_report_service (
+            task_id, app_name, service_name, method_name, rpc_type, req_cnt, avg_cost, activity_id, activity_sum_cost, gmt_create
+        ) values
+        <foreach collection="list" item="sr" separator=",">
+            (
+            #{sr.taskId, jdbcType=VARCHAR}, #{sr.appName, jdbcType=VARCHAR}, #{sr.serviceName, jdbcType=VARCHAR}
+            , #{sr.methodName, jdbcType=VARCHAR}, #{sr.rpcType, jdbcType=VARCHAR}, #{sr.reqCnt, jdbcType=BIGINT}
+            , #{sr.avgCost, jdbcType=DECIMAL}, #{sr.activityId, jdbcType=BIGINT}, #{sr.activitySumCost, jdbcType=BIGINT}, now()
+            )
+        </foreach>
+    </insert>
+
+    <update id="batchUpdateCostIndicators">
+        update t_amdb_report_service
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="min_cost=case" suffix="end,">
+                <foreach collection="serviceList" item="service">
+                    when id = #{service.id, jdbcType=BIGINT} then #{service.minCost, jdbcType=BIGINT}
+                </foreach>
+            </trim>
+            <trim prefix="max_cost=case" suffix="end,">
+                <foreach collection="serviceList" item="service">
+                    when id = #{service.id, jdbcType=BIGINT} then #{service.maxCost, jdbcType=BIGINT}
+                </foreach>
+            </trim>
+            <trim prefix="sum_cost=case" suffix="end,">
+                <foreach collection="serviceList" item="service">
+                    when id = #{service.id, jdbcType=BIGINT} then #{service.sumCost, jdbcType=BIGINT}
+                </foreach>
+            </trim>
+            <trim prefix="avg_cost=case" suffix="end,">
+                <foreach collection="serviceList" item="service">
+                    when id = #{service.id, jdbcType=BIGINT} then (#{service.sumCost, jdbcType=BIGINT} / req_cnt)
+                </foreach>
+            </trim>
+            <trim prefix="cost_percent=case" suffix="end,">
+                <foreach collection="serviceList" item="service">
+                    when id = #{service.id, jdbcType=BIGINT} then (#{service.sumCost, jdbcType=BIGINT} * 100 / activity_sum_cost)
+                </foreach>
+            </trim>
+        </trim>
+        <where>
+            <foreach collection="serviceList" separator="or" item="srv">
+                id = #{srv.id}
+            </foreach>
+        </where>
+    </update>
+</mapper>

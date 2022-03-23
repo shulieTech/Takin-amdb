@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2021 Shulie Technology, Co.Ltd
+  ~ Email: shulie@shulie.io
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shulie.amdb.mapper.ActivityServiceDateMapper">
+
+    <insert id="insertList" parameterType="io.shulie.amdb.entity.ActivityServiceDateDO">
+        insert into t_amdb_report_service_metrics (
+            task_id, app_name, service_name, method_name, rpc_type, req_cnt, avg_cost, service_id, agent_id
+            , start_date, end_date, min_cost, min_cost_traceId, max_cost, max_cost_traceId, sum_cost, gmt_create
+        ) values
+        <foreach collection="serviceList" item="srd" separator=",">
+            (   #{srd.taskId, jdbcType=VARCHAR}, #{srd.appName, jdbcType=VARCHAR}, #{srd.serviceName, jdbcType=VARCHAR}
+                , #{srd.methodName, jdbcType=VARCHAR}, #{srd.rpcType, jdbcType=VARCHAR}, #{srd.reqCnt, jdbcType=BIGINT}
+                , #{srd.avgCost, jdbcType=DECIMAL}, #{srd.serviceId, jdbcType=BIGINT}, #{srd.agentId, jdbcType=VARCHAR}
+                , #{srd.startDate, jdbcType=TIMESTAMP}, #{srd.endDate, jdbcType=TIMESTAMP}, #{srd.minCost, jdbcType=BIGINT}
+                , #{srd.minCostTraceId, jdbcType=VARCHAR}, #{srd.maxCost, jdbcType=BIGINT}, #{srd.maxCostTraceId, jdbcType=VARCHAR}
+                , #{srd.sumCost, jdbcType=BIGINT}, now()
+            )
+        </foreach>
+    </insert>
+
+
+    <select id="statisticalIndicators" resultType="io.shulie.amdb.entity.ActivityServiceDO">
+        select service_id `id`, max(max_cost) maxCost, min(min_cost) minCost, sum(sum_cost) sumCost
+        from t_amdb_report_service_metrics where service_id in
+        <foreach collection="serviceIds" item="serviceId" separator="," open="(" close=")">
+            #{serviceId}
+        </foreach>
+        group by service_id;
+    </select>
+</mapper>

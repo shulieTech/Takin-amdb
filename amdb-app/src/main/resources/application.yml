@@ -16,7 +16,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://pradar.host.mysql.amdb:3306/amdb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    url: jdbc:mysql://192.168.1.129:3306/amdb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
     username: root
     password: shulie@2020
     initialSize: 1
@@ -37,7 +37,7 @@ spring:
 tro:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://pradar.host.mysql.tro:3306/trodb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    url: jdbc:mysql://192.168.1.129:3306/trodb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
     username: root
     password: shulie@2020
 
@@ -53,13 +53,13 @@ pagehelper:
   params: count=countSql
 
 influx:
-  openurl: http://pradar.host.influxdb:8086
+  openurl: http://192.168.1.129:8086
   username: pradar
   password: pradar
   database: pradar
 
 zookeeper:
-  server: pradar.host.zk01:2181,pradar.host.zk02:2181,pradar.host.zk03:2181
+  server: 192.168.1.154:2181,192.168.1.154:2181,192.168.1.154:2181
 
 datasource:
   # t_trace_all 数据源类型 支持mysql、clickhouse
@@ -68,7 +68,7 @@ datasource:
 config:
   clickhouse:
     enable: true
-    url: jdbc:clickhouse://pradar.host.clickhouse01:8123,pradar.host.clickhouse02:8123/default
+    url: jdbc:clickhouse://192.168.1.129:8123,192.168.1.129:8123/default
     userName: default
     password: rU4zGjA/
     enableRound: true
@@ -84,7 +84,7 @@ config:
   agentlog:
     reserveDays: 7
   tenantConfig:
-    host: pradar.host.troweb
+    host: 192.168.1.225
     port: 10008
     url: /takin-web/api/tenant/app/all
     defaultTenantAppKey: ed45ef6b-bf94-48fa-b0c0-15e0285365d2
