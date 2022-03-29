@@ -10,4 +10,5 @@ public class TendencyChart extends WaterlineMetrics {
     private String disk = "0";
     private String net = "0";
     private String hostIp;
+    private double totalTps;
 }

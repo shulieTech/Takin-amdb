@@ -87,7 +87,7 @@ public class WaterlineServiceImpl implements WaterlineService {
                 }
             }
         }
-        StringBuilder sql = new StringBuilder("select totalCount,appName,hostIp from waterline_trace_metrics where")
+        StringBuilder sql = new StringBuilder("select totalCount,appName,hostIp,totalTps from waterline_trace_metrics where")
                 .append(" appName = '")
                 .append(applicationName)
                 .append("'");
@@ -110,68 +110,65 @@ public class WaterlineServiceImpl implements WaterlineService {
             String finalEndTime = endTime;
             final int[] index = {0};
             for (QueryResult.Series s : series) {
-                double totalCount;
-                TendencyChart tendencyChart = new TendencyChart();
                 List<List<Object>> values = s.getValues();
                 if (CollectionUtils.isNotEmpty(values)) {
-                    List<Object> objects = values.get(0);
-                    if (CollectionUtils.isNotEmpty(objects)) {
-                        totalCount = (double) objects.get(1);
-                        tendencyChart.setTotalCount(totalCount);
+                    values.forEach(objects -> {
+                        TendencyChart tendencyChart = new TendencyChart();
+                        tendencyChart.setTotalCount((double) objects.get(1));
                         tendencyChart.setApplicationName(objects.get(2).toString());
                         tendencyChart.setHostIp(objects.get(3).toString());
-                    }
-                    StringBuilder baseSql = new StringBuilder();
-                    baseSql.append("select cpu_rate,mem_rate,disk,net_bandwidth_rate,tag_app_name,tag_app_ip from app_base_data where time >= ")
-                            .append(finalStartTime)
-                            .append(" and time <= ")
-                            .append(finalEndTime)
-                            .append(" and tag_app_name = '")
-                            .append(objects.get(2).toString())
-                            .append("'")
-                            .append(" and tag_app_ip = '")
-                            .append(objects.get(3).toString())
-                            .append("'")
-                            .append(" limit 5 offset ")
-                            .append(index[0]);
-                    index[0] += 5;
-                    System.out.println(baseSql);
-                    QueryResult queryBaseResult = influxDbManager.query(baseSql.toString(), "base");
-                    List<QueryResult.Result> baseResults = queryBaseResult.getResults();
-                    QueryResult.Result baseResult = baseResults.get(0);
-                    List<QueryResult.Series> baseSeries = baseResult.getSeries();
-                    if (CollectionUtils.isNotEmpty(baseSeries)) {
-                        AtomicInteger size = new AtomicInteger();
-                        DecimalFormat df = new DecimalFormat("0.00");
-                        baseSeries.stream().map(QueryResult.Series::getValues).forEach(baseValue -> {
+                        tendencyChart.setTotalTps((Double) objects.get(4));
+                        StringBuilder baseSql = new StringBuilder();
+                        baseSql.append("select cpu_rate,mem_rate,disk,net_bandwidth_rate,tag_app_name,tag_app_ip from app_base_data where time >= ")
+                                .append(finalStartTime)
+                                .append(" and time <= ")
+                                .append(finalEndTime)
+                                .append(" and tag_app_name = '")
+                                .append(objects.get(2).toString())
+                                .append("'")
+                                .append(" and tag_app_ip = '")
+                                .append(objects.get(3).toString())
+                                .append("'")
+                                .append(" limit 5 offset ")
+                                .append(index[0]);
+                        index[0] += 5;
+                        System.out.println(baseSql);
+                        QueryResult queryBaseResult = influxDbManager.query(baseSql.toString(), "base");
+                        List<QueryResult.Result> baseResults = queryBaseResult.getResults();
+                        QueryResult.Result baseResult = baseResults.get(0);
+                        List<QueryResult.Series> baseSeries = baseResult.getSeries();
+                        if (CollectionUtils.isNotEmpty(baseSeries)) {
+                            AtomicInteger size = new AtomicInteger();
+                            DecimalFormat df = new DecimalFormat("0.00");
+                            baseSeries.stream().map(QueryResult.Series::getValues).forEach(baseValue -> {
+                                if (CollectionUtils.isNotEmpty(baseValue)) {
+                                    size.set(baseValue.size());
+                                    baseValue.forEach(baseObjects -> {
+                                        double cpu;
+                                        double memory;
+                                        double disk;
+                                        double net;
 
-                            if (CollectionUtils.isNotEmpty(baseValue)) {
-                                size.set(baseValue.size());
-                                baseValue.forEach(baseObjects -> {
-                                    double cpu;
-                                    double memory;
-                                    double disk;
-                                    double net;
-
-                                    if (CollectionUtils.isNotEmpty(baseObjects)) {
-                                        cpu = (double) baseObjects.get(1) + Double.parseDouble(tendencyChart.getCpuLoad());
-                                        memory = (double) baseObjects.get(2) + Double.parseDouble(tendencyChart.getMemory());
-                                        disk = (double) baseObjects.get(3) + Double.parseDouble(tendencyChart.getDisk());
-                                        net = (double) baseObjects.get(4) + Double.parseDouble(tendencyChart.getNet());
-                                        tendencyChart.setCpuLoad(df.format(cpu));
-                                        tendencyChart.setMemory(df.format(memory));
-                                        tendencyChart.setDisk(df.format(disk));
-                                        tendencyChart.setNet(df.format(net));
-                                    }
-                                });
-                            }
-                        });
-                        tendencyChart.setCpuLoad(df.format(Double.parseDouble(tendencyChart.getCpuLoad()) / size.get()));
-                        tendencyChart.setMemory(df.format(Double.parseDouble(tendencyChart.getMemory()) / size.get()));
-                        tendencyChart.setDisk(df.format(Double.parseDouble(tendencyChart.getDisk()) / size.get()));
-                        tendencyChart.setNet(df.format(Double.parseDouble(tendencyChart.getNet()) / size.get()));
-                        tendencyCharts.add(tendencyChart);
-                    }
+                                        if (CollectionUtils.isNotEmpty(baseObjects)) {
+                                            cpu = (double) baseObjects.get(1) + Double.parseDouble(tendencyChart.getCpuLoad());
+                                            memory = (double) baseObjects.get(2) + Double.parseDouble(tendencyChart.getMemory());
+                                            disk = (double) baseObjects.get(3) + Double.parseDouble(tendencyChart.getDisk());
+                                            net = (double) baseObjects.get(4) + Double.parseDouble(tendencyChart.getNet());
+                                            tendencyChart.setCpuLoad(df.format(cpu));
+                                            tendencyChart.setMemory(df.format(memory));
+                                            tendencyChart.setDisk(df.format(disk));
+                                            tendencyChart.setNet(df.format(net));
+                                        }
+                                    });
+                                }
+                            });
+                            tendencyChart.setCpuLoad(df.format(Double.parseDouble(tendencyChart.getCpuLoad()) / size.get()));
+                            tendencyChart.setMemory(df.format(Double.parseDouble(tendencyChart.getMemory()) / size.get()));
+                            tendencyChart.setDisk(df.format(Double.parseDouble(tendencyChart.getDisk()) / size.get()));
+                            tendencyChart.setNet(df.format(Double.parseDouble(tendencyChart.getNet()) / size.get()));
+                            tendencyCharts.add(tendencyChart);
+                        }
+                    });
                 }
             }
         }
