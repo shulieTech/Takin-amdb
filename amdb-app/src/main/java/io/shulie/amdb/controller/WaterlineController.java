@@ -1,6 +1,7 @@
 package io.shulie.amdb.controller;
 
 import io.shulie.amdb.common.Response;
+import io.shulie.amdb.common.dto.waterline.TendencyChart;
 import io.shulie.amdb.common.dto.waterline.WaterlineMetrics;
 import io.shulie.amdb.service.WaterlineService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,16 @@ public class WaterlineController {
     @GetMapping("/getAllApplicationWithMetrics")
     public Response<List<WaterlineMetrics>> getAllApplicationWithMetrics(@RequestParam(name = "names") List<String> names,@RequestParam(name = "startTime") String startTime) {
         return Response.success(waterlineService.getAllApplicationWithMetrics(names,startTime));
+    }
+
+    @GetMapping("/getTendencyChart")
+    public Response<List<TendencyChart>> getTendencyChart(
+            @RequestParam(name = "applicationName") String applicationName,
+            @RequestParam(name = "startTime") String startTime,
+            @RequestParam(name = "endTime") String endTime,
+            @RequestParam(name = "nodes") List<String> nodes
+    ) {
+        return Response.success(waterlineService.getTendencyChart(applicationName,startTime,endTime,nodes));
     }
 
 }
