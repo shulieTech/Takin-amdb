@@ -36,6 +36,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -248,7 +250,7 @@ public class ZipkinQueryApiV2 {
 
 
     private Span rpcBasedToSpan(RpcBased rpcBased) {
-        Span.Builder builder = Span.newBuilder().traceId(rpcBased.getTraceId()).timestamp(rpcBased.getLogTime() * 1000).id(rpcBased.getRpcId().replaceAll("\\.", "a")).localEndpoint(Endpoint.newBuilder().serviceName(rpcBased.getAppName()).ip(rpcBased.getRemoteIp()).build()).addAnnotation(rpcBased.getLogTime() * 1000, "cs").name("logStartTime").addAnnotation(rpcBased.getLogTime() * 1000 + rpcBased.getCost() * 1000, "cs").name(rpcBased.getMiddlewareName());
+        Span.Builder builder = Span.newBuilder().traceId(rpcBased.getTraceId()).timestamp(rpcBased.getLogTime() * 1000).id(transformLengthTo16(rpcBased.getRpcId().replaceAll("\\.", "a"))).localEndpoint(Endpoint.newBuilder().serviceName(rpcBased.getAppName()).ip(rpcBased.getRemoteIp()).build()).addAnnotation(rpcBased.getLogTime() * 1000, "cs").name("logStartTime").addAnnotation(rpcBased.getLogTime() * 1000 + rpcBased.getCost() * 1000, "cs").name(rpcBased.getMiddlewareName());
         if (StringUtils.isNotBlank(rpcBased.getRpcId()) && (!"0".equals(rpcBased.getRpcId()) || !"9".equals(rpcBased.getRpcId())) && rpcBased.getRpcId().lastIndexOf(".") != -1) {
             builder.parentId(rpcBased.getRpcId().substring(0, rpcBased.getRpcId().lastIndexOf(".")).replaceAll("\\.", "a"));
         }
@@ -296,6 +298,21 @@ public class ZipkinQueryApiV2 {
         builder.putTag("response", String.valueOf(rpcBased.getResponse()));
         return builder.build();
     }
+
+    /**
+     * 如果spanId长度大于16，Span.Builder中的id会抛出`id.length > 16`的异常，这里做一次转码处理
+     */
+    private static String transformLengthTo16(String code) {
+        try {
+            if (code.length() > 16) {
+                byte[] md5s = MessageDigest.getInstance("md5").digest(code.getBytes());
+                return new BigInteger(1, md5s).toString(16);
+            }
+        }catch (Exception e){
+        }
+        return code;
+    }
+
 
     static byte[] writeTraces(SpanBytesEncoder codec, List<List<Span>> traces) {
         // Get the encoded size of the nested list so that we don't need to grow the buffer
