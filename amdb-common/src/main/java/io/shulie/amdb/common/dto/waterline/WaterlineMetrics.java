@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class WaterlineMetrics {
     private String applicationName;
-    private String cpuLoad;
-    private String memory;
+    private String cpuLoad = "0";
+    private String memory = "0";
 }

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TendencyChart extends WaterlineMetrics {
     private double totalCount;
-    private String disk;
-    private String net;
+    private String disk = "0";
+    private String net = "0";
     private String hostIp;
 }
