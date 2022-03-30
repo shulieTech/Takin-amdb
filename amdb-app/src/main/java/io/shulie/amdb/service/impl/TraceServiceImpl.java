@@ -185,6 +185,18 @@ public class TraceServiceImpl implements TraceService {
             e2eFlag = true;
         }
         String queryTable;
+
+        //如果是2022-03-31 00:00:00之前的压测报告,还需要查询老表判断
+        long now = System.currentTimeMillis();
+        Calendar instance = Calendar.getInstance();
+        instance.set(2022, 2, 31, 0, 0, 0);
+        long splitTime = instance.getTime().getTime();
+        Boolean isOldReport = false;
+        if (now < splitTime) {
+            logger.info("查询老压测报告数据");
+            isOldReport = true;
+        }
+
         if (param.getQueryType() == 1 && StringUtils.isBlank(param.getTaskId())) {
             queryTable = TABLE_TRACE_AGENT;
         } else if (param.getQueryType() == 2 || StringUtils.isNotBlank(param.getTaskId())) {
@@ -223,6 +235,11 @@ public class TraceServiceImpl implements TraceService {
 
         sql.append(getLimitInfo(param));
         List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
+        //老压测报告
+        if (CollectionUtils.isEmpty(modelList) && isOldReport) {
+            StringBuilder replace = sql.replace(sql.indexOf(TABLE_TRACE_PRESSURE), sql.indexOf(TABLE_TRACE_PRESSURE) + 16, TABLE_TRACE_AGENT);
+            modelList = traceDao.queryForList(replace.toString(), TTrackClickhouseModel.class);
+        }
         Response result = Response.success(modelList.stream().map(model -> convert(model)).collect(Collectors.toList()));
         setResponseCount(andFilterList, orFilterList, result, queryTable);
         return result;
@@ -502,13 +519,13 @@ public class TraceServiceImpl implements TraceService {
                     String[] entranceInfo = entrance.split("#");
                     if (param.getQueryType() == 2) {
                         if (entranceInfo.length == 4) {
-                            orFilterList.add("(parsedServiceName='" + entranceInfo[1]
-                                    + "' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
+                            orFilterList.add("(parsedServiceName like '%" + entranceInfo[1]
+                                    + "%' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
                         }
                     } else {
                         if (StringUtils.isNotBlank(entranceInfo[0]) && !"null".equals(entranceInfo[0])) {
-                            orFilterList.add("(appName='" + entranceInfo[0] + "' and parsedServiceName='" + entranceInfo[1]
-                                    + "' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
+                            orFilterList.add("(appName='" + entranceInfo[0] + "' and parsedServiceName like '%" + entranceInfo[1]
+                                    + "%' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
                         }
                     }
                 });
