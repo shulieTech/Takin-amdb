@@ -186,10 +186,10 @@ public class TraceServiceImpl implements TraceService {
         }
         String queryTable;
 
-        //如果是2022-03-31 00:00:00之前的压测报告,还需要查询老表判断
+        //如果是2022-04-03 00:00:00之前的压测报告,还需要查询老表判断
         long now = System.currentTimeMillis();
         Calendar instance = Calendar.getInstance();
-        instance.set(2022, 2, 31, 0, 0, 0);
+        instance.set(2022, 3, 4, 0, 0, 0);
         long splitTime = instance.getTime().getTime();
         Boolean isOldReport = false;
         if (now < splitTime) {
