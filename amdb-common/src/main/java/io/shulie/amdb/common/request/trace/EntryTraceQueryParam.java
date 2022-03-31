@@ -26,6 +26,16 @@ import java.util.Set;
 @Data
 @ApiModel
 public class EntryTraceQueryParam extends AbstractAmdbBaseRequest {
+    @ApiModelProperty("查询数据类型(1-agent上报trace明细,2-压测报告请求trace明细)")
+    int queryType = 1;
+    @ApiModelProperty("调用类型(指定中间件名称)")
+    String middlewareName;
+    @ApiModelProperty("排序字段")
+    String sortField = "cost";
+    @ApiModelProperty("排序方式")
+    String sortType = "desc";
+    @ApiModelProperty("调用参数")
+    String request;
     @ApiModelProperty("是否压测流量")
     String clusterTest;
     @ApiModelProperty("结果类型(1代表成功请求,0代表失败请求)")
