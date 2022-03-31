@@ -91,6 +91,8 @@ public class TraceController {
         try {
             //设置查询来源为调试流量
             param.setQuerySource("debug");
+            //设置为压测报告数据查询
+            param.setQueryType(2);
             return traceService.getEntryTraceListByTaskId(param);
         } catch (Exception e) {
             logger.error("流量明细(调试流量)查询失败", e);
@@ -153,6 +155,9 @@ public class TraceController {
         }
         try {
             List<RpcBased> rpcBasedList = traceService.getTraceDetail(param);
+            //模拟控制台接收参数后的调用栈解析过程
+            //RpcStack rpcStack = ProtocolParserFactory.getFactory().parseRpcStackByRpcBase(param.getTraceId(), rpcBasedList);
+
             Response<List<RpcBased>> response = Response.success(rpcBasedList);
             response.setTotal(rpcBasedList == null ? 0 : rpcBasedList.size());
             return response;

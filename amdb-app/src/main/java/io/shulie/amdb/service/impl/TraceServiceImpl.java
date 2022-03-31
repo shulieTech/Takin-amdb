@@ -22,6 +22,7 @@ import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
 import io.shulie.amdb.common.enums.RpcType;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
 import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
+import io.shulie.amdb.constant.SqlConstants;
 import io.shulie.amdb.dao.ITraceDao;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.service.TraceService;
@@ -65,6 +66,10 @@ public class TraceServiceImpl implements TraceService {
     @Value("${config.trace.limit}")
     private String traceQueryLimit;
 
+    public static final String TABLE_TRACE_AGENT = "t_trace_all";
+    public static final String TABLE_TRACE_PRESSURE = "t_trace_pressure";
+
+
     @Override
     public Response<List<EntryTraceInfoDTO>> getEntryTraceInfo(EntryTraceQueryParam param) {
         Boolean e2eFlag = false;
@@ -76,6 +81,15 @@ public class TraceServiceImpl implements TraceService {
             return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "appName and entranceList are all empty.");
         }
 
+        String queryTable;
+        if (param.getQueryType() == 1) {
+            queryTable = TABLE_TRACE_AGENT;
+        } else if (param.getQueryType() == 2) {
+            queryTable = TABLE_TRACE_PRESSURE;
+        } else {
+            queryTable = TABLE_TRACE_AGENT;
+        }
+
         // 拼装过滤条件
         Pair<List<String>, List<String>> filters = getFilters(param, e2eFlag);
         List<String> andFilterList = filters.getFirst();
@@ -83,18 +97,24 @@ public class TraceServiceImpl implements TraceService {
         if (isEmpty(andFilterList)) {
             return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "查询条件为空");
         }
-        String sql = "select " + TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(
-                andFilterList, " and ");
+        StringBuilder sql = new StringBuilder("select " + TRACE_SELECT_FILED + " from " + queryTable + " where " + StringUtils.join(
+                andFilterList, " and ")).append(SqlConstants.BLANK);
         if (CollectionUtils.isNotEmpty(orFilterList)) {
-            sql += " and (" + StringUtils.join(orFilterList, " or ") + ")";
+            sql.append(" and (" + StringUtils.join(orFilterList, " or ") + ")").append(SqlConstants.BLANK);
         }
-        sql += (e2eFlag ? " order by startTime desc " : " order by traceId desc ") + getLimitInfo(param);
+        if (StringUtils.isNotBlank(param.getSortField())) {
+            sql.append("order by ").append(param.getSortField()).append(SqlConstants.BLANK);
+            if (StringUtils.isNotBlank(param.getSortType())) {
+                sql.append(" ").append(param.getSortType()).append(SqlConstants.BLANK);
+            }
+        }
+        sql.append(getLimitInfo(param));
         // 入口trace列表
-        List<TTrackClickhouseModel> traceModelList = traceDao.queryForList(sql, TTrackClickhouseModel.class);
+        List<TTrackClickhouseModel> traceModelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
 
         if (e2eFlag) {
             Response result = Response.success(traceModelList.stream().map(model -> convert(model)).collect(Collectors.toList()));
-            setResponseCount(andFilterList, orFilterList, result);
+            setResponseCount(andFilterList, orFilterList, result, queryTable);
             return result;
         }
 
@@ -118,7 +138,7 @@ public class TraceServiceImpl implements TraceService {
                 entryTraceInfoDtos.add(entryTraceInfoDTO);
             }
             Response<List<EntryTraceInfoDTO>> result = Response.success(entryTraceInfoDtos);
-            setResponseCount(andFilterList, orFilterList, result);
+            setResponseCount(andFilterList, orFilterList, result, queryTable);
             return result;
         }
 
@@ -129,7 +149,7 @@ public class TraceServiceImpl implements TraceService {
         Map<String, TTrackClickhouseModel> traceId2EngineTraceMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(traceModelList) && !"dau".equals(param.getQuerySource())) {
             String engineSql = "select " + TRACE_SELECT_FILED
-                    + " from t_trace_all where traceId in ('"
+                    + " from " + queryTable + " where traceId in ('"
                     + StringUtils.join(traceId2TraceMap.keySet(), "','")
                     + "') and logType='5' and appName='pressure-engine'";
 
@@ -154,68 +174,74 @@ public class TraceServiceImpl implements TraceService {
         // 合并结果
         List<EntryTraceInfoDTO> entryTraceInfoDtos = mergeEngineTraceAndTrace(traceId2EngineTraceMap, traceId2TraceMap);
         Response<List<EntryTraceInfoDTO>> result = Response.success(entryTraceInfoDtos);
-        setResponseCount(andFilterList, orFilterList, result);
+        setResponseCount(andFilterList, orFilterList, result, queryTable);
         return result;
     }
 
     @Override
     public Response<List<EntryTraceInfoDTO>> getEntryTraceListByTaskId(EntryTraceQueryParam param) {
+        Boolean e2eFlag = false;
+        if (StringUtils.isNotBlank(param.getQuerySource()) && "e2e".equals(param.getQuerySource())) {
+            e2eFlag = true;
+        }
+        String queryTable;
+
+        //如果是2022-04-03 00:00:00之前的压测报告,还需要查询老表判断
+        long now = System.currentTimeMillis();
+        Calendar instance = Calendar.getInstance();
+        instance.set(2022, 3, 4, 0, 0, 0);
+        long splitTime = instance.getTime().getTime();
+        Boolean isOldReport = false;
+        if (now < splitTime) {
+            logger.info("查询老压测报告数据");
+            isOldReport = true;
+        }
+
+        if (param.getQueryType() == 1 && StringUtils.isBlank(param.getTaskId())) {
+            queryTable = TABLE_TRACE_AGENT;
+        } else if (param.getQueryType() == 2 || StringUtils.isNotBlank(param.getTaskId())) {
+            queryTable = TABLE_TRACE_PRESSURE;
+        } else {
+            queryTable = TABLE_TRACE_AGENT;
+        }
+
         // 拼装查询字段
         List<String> selectFields = getSelectFields(param.getFieldNames());
         if (isEmpty(selectFields)) {
             return Response.fail(AmdbExceptionEnums.TRACE_EMPTY_SELECT_FILED);
         }
+
         // 拼装过滤条件
-        Pair<List<String>, List<String>> filters = getFilters2(param);
+        Pair<List<String>, List<String>> filters = getFilters(param, e2eFlag);
         List<String> andFilterList = filters.getFirst();
         List<String> orFilterList = filters.getSecond();
         if (isEmpty(andFilterList)) {
             return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "查询条件为空");
         }
 
-        // 分页
-        String limit = getLimitInfo(param);
         // 流量引擎日志
-        String sql = null;
-        // 如果查询响应失败和断言失败,则对重复数据进行去重
-        if ("0".equals(param.getResultType()) || "2".equals(param.getResultType())) {
-            sql = "select distinct" + TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(
-                    andFilterList, " and ");
-        } else {
-            sql = "select " + TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(
-                    andFilterList, " and ");
-        }
+        StringBuilder sql = new StringBuilder();
+        sql.append("select " + TRACE_SELECT_FILED + " from " + queryTable + " where " + StringUtils.join(
+                andFilterList, " and ")).append(SqlConstants.BLANK);
         if (CollectionUtils.isNotEmpty(orFilterList)) {
-            sql += " and (" + StringUtils.join(orFilterList, " or ") + ")";
+            sql.append(" and (" + StringUtils.join(orFilterList, " or ") + ")").append(SqlConstants.BLANK);
         }
-        //1027 三变让改成接口耗时降序排序
-        sql += " order by cost desc " + limit;
-        List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql, TTrackClickhouseModel.class);
-//        Map<String, TTrackClickhouseModel> traceId2EngineTraceMap = modelList.stream().collect(
-//                Collectors.toMap(TTrackClickhouseModel::getTraceId, model -> model, (k1, k2) -> k1));
-        // 入口日志查询
-        /*Set<String> traceIdSet = traceId2EngineTraceMap.keySet();
-        Map<String, TTrackClickhouseModel> traceId2TraceMap = new HashMap<>();
-        if (CollectionUtils.isNotEmpty(traceIdSet)) {
-            param.setTraceIdList(traceIdSet);
-            Pair<List<String>, List<String>> filters = getFilters(param);
-            sql = "select " + TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(
-                    filters.getFirst(), " and ");
-            if (CollectionUtils.isNotEmpty(filters.getSecond())) {
-                sql += " and (" + StringUtils.join(filters.getSecond(), " or ") + ")";
+        if (StringUtils.isNotBlank(param.getSortField())) {
+            sql.append("order by ").append(param.getSortField()).append(SqlConstants.BLANK);
+            if (StringUtils.isNotBlank(param.getSortType())) {
+                sql.append(" ").append(param.getSortType()).append(SqlConstants.BLANK);
             }
-            sql += " order by startDate asc ";
-            modelList = clickhouseService.queryForList(sql, TTrackClickhouseModel.class);
-            traceId2TraceMap = modelList.stream().collect(
-                    Collectors.toMap(TTrackClickhouseModel::getTraceId, model -> model, (k1, k2) -> k1));
         }
-        entryTraceInfoDtos = mergeEngineTraceAndTrace(traceId2EngineTraceMap, traceId2TraceMap);*/
+
+        sql.append(getLimitInfo(param));
+        List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
+        //老压测报告
+        if (CollectionUtils.isEmpty(modelList) && isOldReport) {
+            StringBuilder replace = sql.replace(sql.indexOf(TABLE_TRACE_PRESSURE), sql.indexOf(TABLE_TRACE_PRESSURE) + 16, TABLE_TRACE_AGENT);
+            modelList = traceDao.queryForList(replace.toString(), TTrackClickhouseModel.class);
+        }
         Response result = Response.success(modelList.stream().map(model -> convert(model)).collect(Collectors.toList()));
-        if ("0".equals(param.getResultType()) || "2".equals(param.getResultType())) {
-            setDistinctResponseCount(andFilterList, orFilterList, result);
-        } else {
-            setResponseCount(andFilterList, orFilterList, result);
-        }
+        setResponseCount(andFilterList, orFilterList, result, queryTable);
         return result;
     }
 
@@ -345,6 +371,58 @@ public class TraceServiceImpl implements TraceService {
     private Pair<List<String>, List<String>> getFilters(EntryTraceQueryParam param, Boolean e2eFlag) {
         List<String> andFilterList = new ArrayList<>();
         List<String> orFilterList = new ArrayList<>();
+
+        //开始时间-结束时间
+        /**
+         *   1. 实况：默认最近5s~当前时间，每5s刷新一次
+         *   2. 报告：默认压测开始时间~压测结束时间，无法调整时间到压测时间范围外
+         *     提示：非压测时间范围内，请调整开始时间和结束时间
+         *   3. 链路查询：默认最近24H~当前
+         */
+        //时间范围
+        if (param.getStartTime() != null && param.getStartTime() > 0) {
+            andFilterList.add(
+                    "startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime() - 5000), "yyyy-MM-dd HH:mm:ss") + "'");
+        }
+        if (param.getEndTime() != null && param.getEndTime() > 0) {
+            andFilterList.add(
+                    "startDate <= '" + DateFormatUtils.format(new Date(param.getEndTime()), "yyyy-MM-dd HH:mm:ss") + "'");
+        }
+        //如果开始时间/结束时间没传,默认查询最近一小时
+        if (e2eFlag && param.getStartTime() == null && param.getEndTime() == null) {
+            Date now = new Date();
+            andFilterList.add(
+                    "startDate >= '" + DateFormatUtils.format(now.getTime() - 3600 * 1000, "yyyy-MM-dd HH:mm:ss") + "'");
+            andFilterList.add(
+                    "startDate <= '" + DateFormatUtils.format(now, "yyyy-MM-dd HH:mm:ss") + "'");
+        }
+
+        //租户信息(压力引擎没有租户信息,查询非压测报告时候再带上租户条件)
+        if (StringUtils.isNotBlank(param.getTenantAppKey()) && param.getQueryType() != 2) {
+            andFilterList.add("userAppKey='" + param.getTenantAppKey() + "'");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode()) && param.getQueryType() != 2) {
+            andFilterList.add("envCode='" + param.getEnvCode() + "'");
+        }
+
+        //调用类型(中间件名称模糊匹配)
+        if (StringUtils.isNotBlank(param.getMiddlewareName())) {
+            andFilterList.add("middlewareName like '%" + param.getMiddlewareName().toLowerCase() + "%'");
+        }
+
+
+        //请求参数模糊匹配
+        if (StringUtils.isNotBlank(param.getRequest())) {
+            andFilterList.add("request like '%" + param.getRequest() + "%'");
+        }
+
+        // DAU特殊条件
+        if ("dau".equals(param.getQuerySource())) {
+            andFilterList.add("middlewareName='tomcat'");
+            andFilterList.add("localAttributes like '%envCode%'");
+        }
+
+        //应用名称等值匹配
         if (StringUtils.isNotBlank(param.getAppName())) {
             if (param.getAppName().contains(",")) {
                 StringBuilder sbuilder = new StringBuilder();
@@ -362,6 +440,8 @@ public class TraceServiceImpl implements TraceService {
                 andFilterList.add("appName='" + param.getAppName() + "'");
             }
         }
+
+        //调用类型等值匹配
         if (StringUtils.isNotBlank(param.getRpcType())) {
             // web server
             if (param.getRpcType().equals(RpcType.TYPE_WEB_SERVER + "")) {
@@ -372,27 +452,27 @@ public class TraceServiceImpl implements TraceService {
                     RpcType.TYPE_MQ + "")) {
                 andFilterList.add("rpcType='" + RpcType.TYPE_WEB_SERVER + "'");
                 andFilterList.add("logType='" + PradarLogType.LOG_TYPE_RPC_SERVER + "'");
-            }
-            // 其他类型暂不支持
-            else {
+            } else {
                 andFilterList.add("1 = -1");
             }
         } else {
             //如果不传rpcType且查询来源是空或者tro(控制台),只查询服务端和入口日志,如果是e2e,则还需要查询压测数据
-            boolean b = e2eFlag ? andFilterList.add("(logType in ('1','3','5'))") : andFilterList.add("(logType='1' or logType='3')");
+            if (StringUtils.isBlank(param.getTaskId())) {
+                if (param.getQueryType() == 2) {
+                    andFilterList.add("(logType = '5')");
+                } else {
+                    //链路查询
+                    if (e2eFlag) {
+                        andFilterList.add("(logType in ('1','3','5'))");
+                    } else {
+                        andFilterList.add("(logType='1' or logType='3')");
+                    }
+                }
+            }
         }
 
-        if (StringUtils.isNotBlank(param.getMethodName())) {
-            andFilterList.add("parsedMethod='" + param.getMethodName() + "'");
-        }
-
-        if ("dau".equals(param.getQuerySource())) {
-            andFilterList.add("middlewareName='tomcat'");
-            andFilterList.add("localAttributes like '%envCode%'");
-        }
-
-        //如果是e2e请求,判断cost条件是否生效
-        if (e2eFlag && param.getMinCost() >= 0) {
+        //耗时范围
+        if (param.getMinCost() >= 0) {
             if (param.getMinCost() > 0 && param.getMaxCost() == 0) {
                 andFilterList.add("cost >= " + param.getMinCost());
             } else if (param.getMaxCost() > 0 && param.getMaxCost() >= param.getMinCost()) {
@@ -400,76 +480,21 @@ public class TraceServiceImpl implements TraceService {
             }
         }
 
+        //方法名等值匹配
+        if (StringUtils.isNotBlank(param.getMethodName())) {
+            andFilterList.add("parsedMethod='" + param.getMethodName() + "'");
+        }
+
+        //接口名模糊匹配
         if (StringUtils.isNotBlank(param.getServiceName())) {
-            boolean b = e2eFlag ? andFilterList.add("parsedServiceName like '%" + param.getServiceName() + "%'") : andFilterList.add("parsedServiceName='" + param.getServiceName() + "'");
+            andFilterList.add("parsedServiceName like '%" + param.getServiceName() + "%'");
         }
 
+        //入口等值匹配
         if (StringUtils.isNotBlank(param.getEntranceList())) {
-            List<String> entryList = Arrays.asList(param.getEntranceList().split(","));
-            entryList.forEach(entrance -> {
-                String[] entranceInfo = entrance.split("#");
-                if (StringUtils.isNotBlank(entranceInfo[0])) {
-                    orFilterList.add("(appName='" + entranceInfo[0] + "' and parsedServiceName='" + entranceInfo[1]
-                            + "' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
-                }
-            });
-        }
-        if (StringUtils.isNotBlank(param.getResultType())) {
-            if ("1".equals(param.getResultType())) {
-                andFilterList.add("(resultCode='00' or resultCode='200')");
-            }
-            if ("0".equals(param.getResultType())) {
-                andFilterList.add("(resultCode<>'00' and resultCode<>'200')");
-            }
-        }
-        if (StringUtils.isNotBlank(param.getClusterTest())) {
-            andFilterList.add("clusterTest='" + param.getClusterTest() + "'");
-        }
-        if (param.getStartTime() != null && param.getStartTime() > 0) {
-            andFilterList.add(
-                    "startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime()), "yyyy-MM-dd HH:mm:ss") + "'");
-        }
-        if (param.getEndTime() != null && param.getEndTime() > 0) {
-            andFilterList.add(
-                    "startDate <= '" + DateFormatUtils.format(new Date(param.getEndTime()), "yyyy-MM-dd HH:mm:ss") + "'");
-        }
-        //如果开始时间/结束时间没传,默认查询最近一小时
-        if (e2eFlag && param.getStartTime() == null && param.getEndTime() == null) {
-            Date now = new Date();
-            andFilterList.add(
-                    "startDate >= '" + DateFormatUtils.format(now.getTime() - 3600 * 1000, "yyyy-MM-dd HH:mm:ss") + "'");
-            andFilterList.add(
-                    "startDate <= '" + DateFormatUtils.format(now, "yyyy-MM-dd HH:mm:ss") + "'");
-        }
-        if (CollectionUtils.isNotEmpty(param.getTraceIdList())) {
-            andFilterList.add("traceId in ('" + StringUtils.join(param.getTraceIdList(), "','") + "')");
-        }
-        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
-            andFilterList.add("userAppKey='" + param.getTenantAppKey() + "'");
-        }
-        if (StringUtils.isNotBlank(param.getEnvCode())) {
-            andFilterList.add("envCode='" + param.getEnvCode() + "'");
-        }
-        return new Pair<>(andFilterList, orFilterList);
-    }
-
-    private Pair<List<String>, List<String>> getFilters2(EntryTraceQueryParam param) {
-        List<String> andFilterList = new ArrayList<>();
-        List<String> orFilterList = new ArrayList<>();
-
-        if (param.getStartTime() != null && param.getStartTime() > 0) {
-            andFilterList.add(
-                    "startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime() + 5000), "yyyy-MM-dd HH:mm:ss") + "'");
-        }
-        if (param.getEndTime() != null && param.getEndTime() > 0) {
-            andFilterList.add(
-                    "startDate <= '" + DateFormatUtils.format(new Date(param.getEndTime()), "yyyy-MM-dd HH:mm:ss") + "'");
-        }
-
-        //如果是调试流量,根据业务活动筛选
-        if ("debug".equals(param.getQuerySource())) {
-            StringBuilder stringBuilder = new StringBuilder();
-            if (StringUtils.isNotBlank(param.getEntranceList())) {
+            //如果是调试流量,根据业务活动筛选
+            if ("debug".equals(param.getQuerySource())) {
+                StringBuilder stringBuilder = new StringBuilder();
                 List<String> entryList = Arrays.asList(param.getEntranceList().split(","));
                 //如果为单独查询一个入口时,可能是两种情况,调试脚本查询指定业务活动数据/压测报告查看一个业务活动压测的流量明细
                 String[] entranceInfo = entryList.get(0).split("#");
@@ -488,21 +513,53 @@ public class TraceServiceImpl implements TraceService {
                     }
                     andFilterList.add(stringBuilder.toString());
                 }
+            } else {
+                List<String> entryList = Arrays.asList(param.getEntranceList().split(","));
+                entryList.forEach(entrance -> {
+                    String[] entranceInfo = entrance.split("#");
+                    if (param.getQueryType() == 2) {
+                        if (entranceInfo.length == 4) {
+                            orFilterList.add("(parsedServiceName like '%" + entranceInfo[1]
+                                    + "%' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
+                        }
+                    } else {
+                        if (StringUtils.isNotBlank(entranceInfo[0]) && !"null".equals(entranceInfo[0])) {
+                            orFilterList.add("(appName='" + entranceInfo[0] + "' and parsedServiceName like '%" + entranceInfo[1]
+                                    + "%' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
+                        }
+                    }
+                });
             }
         }
 
-        andFilterList.add("taskId='" + param.getTaskId() + "'");
+        //压测报告ID等值匹配
+        if (StringUtils.isNotBlank(param.getTaskId())) {
+            andFilterList.add("taskId='" + param.getTaskId() + "'");
+        }
+
+        //调用结果等值匹配
         if (StringUtils.isNotBlank(param.getResultType())) {
             if ("2".equals(param.getResultType())) {
                 andFilterList.add("resultCode='05'");
             }
             if ("1".equals(param.getResultType())) {
-                andFilterList.add("(resultCode='00')");
+                andFilterList.add("(resultCode='00' or resultCode='200')");
             }
             if ("0".equals(param.getResultType())) {
-                andFilterList.add("(resultCode<>'00' and resultCode<>'05')");
+                andFilterList.add("(resultCode not in ('00','200','05'))");
             }
         }
+
+        //是否压测流量等值匹配
+        if (StringUtils.isNotBlank(param.getClusterTest())) {
+            andFilterList.add("clusterTest='" + param.getClusterTest() + "'");
+        }
+
+        //traceId等值匹配
+        if (CollectionUtils.isNotEmpty(param.getTraceIdList())) {
+            andFilterList.add("traceId in ('" + StringUtils.join(param.getTraceIdList(), "','") + "')");
+        }
+
         return new Pair<>(andFilterList, orFilterList);
     }
 
@@ -562,8 +619,8 @@ public class TraceServiceImpl implements TraceService {
         return limit;
     }
 
-    private void setResponseCount(List<String> andFilterList, List<String> orFilterList, Response response) {
-        String countSql = "select count(1) as total " + " from t_trace_all where " + StringUtils.join(andFilterList,
+    private void setResponseCount(List<String> andFilterList, List<String> orFilterList, Response response, String queryTable) {
+        String countSql = "select count(1) as total " + " from " + queryTable + " where " + StringUtils.join(andFilterList,
                 " and ");
         if (CollectionUtils.isNotEmpty(orFilterList)) {
             countSql += " and (" + StringUtils.join(orFilterList, " or ") + ")";
@@ -573,8 +630,8 @@ public class TraceServiceImpl implements TraceService {
         response.setTotal(total);
     }
 
-    private void setDistinctResponseCount(List<String> andFilterList, List<String> orFilterList, Response response) {
-        String countSql = "select count(1) as total " + " from ( select distinct " + TRACE_SELECT_FILED + " from t_trace_all where " + StringUtils.join(andFilterList,
+    private void setDistinctResponseCount(List<String> andFilterList, List<String> orFilterList, Response response, String queryTable) {
+        String countSql = "select count(1) as total " + " from ( select distinct " + TRACE_SELECT_FILED + " from " + queryTable + " where " + StringUtils.join(andFilterList,
                 " and ");
         if (CollectionUtils.isNotEmpty(orFilterList)) {
             countSql += " and (" + StringUtils.join(orFilterList, " or ") + "))";
