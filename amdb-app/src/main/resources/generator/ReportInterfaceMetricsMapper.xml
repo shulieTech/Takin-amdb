@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2021 Shulie Technology, Co.Ltd
+  ~ Email: shulie@shulie.io
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shulie.amdb.mapper.ReportInterfaceMetricsMapper">
+
+    <select id="selectByRequest" parameterType="io.shulie.amdb.request.query.ReportInterfaceQueryRequest"
+            resultType="io.shulie.amdb.entity.ReportInterfaceMetricsDO">
+        select
+            report_id reportId, app_name appName, service_name serviceName, method_name methodName, rpc_type rpcType
+            , min_cost minCost, max_cost maxCost, sum_cost sumCost, req_cnt reqCnt, gmt_create gmtCreate, avg_cost avgCost
+            , entrance_app_name entranceAppName, entrance_service_name entranceServiceName, entrance_method_name entranceMethodName
+            , entrance_rpc_type entranceRpcType, time_window timeWindow, count_after_simp countAfterSimp
+        from t_amdb_interface_metrics
+        <trim prefix="where" prefixOverrides="and">
+            report_id = #{reportId}
+            <if test="params != null and params.size() > 0">
+                <foreach collection="params" item="param" separator="or" open="and (" close=")">
+                (
+                    <trim prefixOverrides="and">
+                        <if test="param.appName != null and param.appName != ''">
+                            and app_name = #{param.appName}
+                        </if>
+                        <if test="param.serviceName != null and param.serviceName != ''">
+                            and service_name = #{param.serviceName}
+                        </if>
+                        <if test="param.methodName != null and param.methodName != ''">
+                            and method_name = #{param.methodName}
+                        </if>
+                        <if test="param.rpcType != null and param.rpcType != ''">
+                            and rpc_type = #{param.rpcType}
+                        </if>
+                        <if test="param.entranceAppName != null and param.entranceAppName != ''">
+                            and entrance_app_name = #{param.entranceAppName}
+                        </if>
+                        <if test="param.entranceServiceName != null and param.entranceServiceName != ''">
+                            and entrance_service_name = #{param.entranceServiceName}
+                        </if>
+                        <if test="param.entranceMethodName != null and param.entranceMethodName != ''">
+                            and entrance_method_name = #{param.entranceMethodName}
+                        </if>
+                        <if test="param.entranceRpcType != null and param.entranceRpcType != ''">
+                            and entrance_rpc_type = #{param.entranceRpcType}
+                        </if>
+                    </trim>
+                )
+                </foreach>
+            </if>
+        </trim>
+    </select>
+</mapper>
