@@ -78,9 +78,9 @@ public class WaterlineServiceImpl implements WaterlineService {
         endTime += "000000";
         List<TendencyChart> tendencyCharts = new ArrayList<>();
         StringBuilder nodeSql = new StringBuilder();
-        if (CollectionUtils.isNotEmpty(nodes)) {
+        if (CollectionUtils.isNotEmpty(nodes) && !org.apache.commons.lang3.StringUtils.equals("[]",nodes.get(0))) {
             for (int i = 0; i < nodes.size(); i++) {
-                nodeSql.append(" hostIp = '")
+                nodeSql.append(" agentId = '")
                         .append(nodes.get(i).replace("[", "").replace("]", "").replace("\"", ""))
                         .append("'");
                 if (i != nodes.size() - 1) {
