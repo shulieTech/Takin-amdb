@@ -4,6 +4,7 @@ import io.shulie.amdb.common.dto.waterline.TendencyChart;
 import io.shulie.amdb.common.dto.waterline.WaterlineMetrics;
 import io.shulie.amdb.service.WaterlineService;
 import io.shulie.amdb.utils.InfluxDBManager;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.influxdb.dto.QueryResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,16 +20,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class WaterlineServiceImpl implements WaterlineService {
 
     @Autowired
     private InfluxDBManager influxDbManager;
 
     @Override
-    public List<WaterlineMetrics> getAllApplicationWithMetrics(List<String> names, String startTime) {
+    public List<WaterlineMetrics> getAllApplicationWithMetrics(List<String> names, String startTime, String tenantAppKey, String envCode) {
         startTime += "000000";
+        //查询app_base_data平均数据
         StringBuilder sql = new StringBuilder("select mean(cpu_rate) as cpu_rate,mean(mem_rate) as memory from app_base_data where time >= ")
-                .append(startTime);
+                .append(startTime)
+                .append(" and env_code = '")
+                .append(envCode)
+                .append("'")
+                .append(" and tenant_app_key = '")
+                .append(tenantAppKey)
+                .append("'");
         if (CollectionUtils.isNotEmpty(names)) {
             sql.append(" and ( ");
             for (int i = 0; i < names.size(); i++) {
@@ -41,7 +50,7 @@ public class WaterlineServiceImpl implements WaterlineService {
             sql.append(" )");
         }
         sql.append(" group by tag_app_name");
-        System.out.println(sql);
+        log.debug(String.valueOf(sql));
         QueryResult queryResult = influxDbManager.query(sql.toString(), "base");
         List<QueryResult.Result> results = queryResult.getResults();
         if (CollectionUtils.isNotEmpty(results)) {
@@ -73,7 +82,7 @@ public class WaterlineServiceImpl implements WaterlineService {
     }
 
     @Override
-    public List<TendencyChart> getTendencyChart(String applicationName, String startTime, String endTime, List<String> nodes) {
+    public List<TendencyChart> getTendencyChart(String applicationName, String startTime, String endTime, List<String> nodes, String tenantAppKey, String envCode) {
         startTime += "000000";
         endTime += "000000";
         List<TendencyChart> tendencyCharts = new ArrayList<>();
@@ -88,6 +97,7 @@ public class WaterlineServiceImpl implements WaterlineService {
                 }
             }
         }
+        //先查询指标表里的数据
         StringBuilder sql = new StringBuilder("select totalCount,appName,agentId,totalTps from waterline_trace_metrics where")
                 .append(" appName = '")
                 .append(applicationName)
@@ -100,8 +110,13 @@ public class WaterlineServiceImpl implements WaterlineService {
         sql.append(" and time >= ")
                 .append(startTime)
                 .append(" and time <= ")
-                .append(endTime);
-        System.out.println(sql);
+                .append(endTime)
+                .append(" and env_code = '")
+                .append(envCode)
+                .append("'")
+                .append(" and tenant_app_key = '")
+                .append(tenantAppKey)
+                .append("'");
         QueryResult queryResult = influxDbManager.query(sql.toString(), "pradar");
         List<QueryResult.Result> results = queryResult.getResults();
         QueryResult.Result result = results.get(0);
@@ -113,6 +128,7 @@ public class WaterlineServiceImpl implements WaterlineService {
             for (QueryResult.Series s : series) {
                 List<List<Object>> values = s.getValues();
                 if (CollectionUtils.isNotEmpty(values)) {
+                    //遍历每条数据查询base_data表
                     values.forEach(objects -> {
                         TendencyChart tendencyChart = new TendencyChart();
                         tendencyChart.setTime(objects.get(0).toString());
@@ -136,7 +152,7 @@ public class WaterlineServiceImpl implements WaterlineService {
                                 .append(" limit 5 offset ")
                                 .append(offsetNum);
                         offsetMap.put(objects.get(3).toString(), offsetNum + 5);
-                        System.out.println(baseSql);
+                        //数据的聚合5S的数据聚合成一条
                         QueryResult queryBaseResult = influxDbManager.query(baseSql.toString(), "base");
                         List<QueryResult.Result> baseResults = queryBaseResult.getResults();
                         QueryResult.Result baseResult = baseResults.get(0);
