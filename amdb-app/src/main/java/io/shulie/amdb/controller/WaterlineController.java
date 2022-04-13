@@ -26,7 +26,7 @@ public class WaterlineController {
             @RequestParam(name = "names") List<String> names,
             @RequestParam(name = "startTime") String startTime,
             @RequestParam(name = "tenantAppKey")String tenantAppKey,
-            @RequestParam(name = "tenantAppKey")String envCode
+            @RequestParam(name = "envCode")String envCode
     ) {
         return Response.success(waterlineService.getAllApplicationWithMetrics(names,startTime,tenantAppKey,envCode));
     }
@@ -38,7 +38,7 @@ public class WaterlineController {
             @RequestParam(name = "endTime") String endTime,
             @RequestParam(name = "nodes") List<String> nodes,
             @RequestParam(name = "tenantAppKey")String tenantAppKey,
-            @RequestParam(name = "tenantAppKey")String envCode
+            @RequestParam(name = "envCode")String envCode
     ) {
         return Response.success(waterlineService.getTendencyChart(applicationName,startTime,endTime,nodes,tenantAppKey,envCode));
     }
