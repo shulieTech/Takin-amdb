@@ -199,4 +199,13 @@ public class InfluxDBManager implements AutoCloseable {
         }
         return results;
     }
+
+    private List<QueryResult.Result> parseRecords(String command, String database) {
+        QueryResult queryResult = getInfluxDb().query(new Query(command, database));
+        List<QueryResult.Result> results = queryResult.getResults();
+        if (results == null || results.size() == 0) {
+            return null;
+        }
+        return results;
+    }
 }

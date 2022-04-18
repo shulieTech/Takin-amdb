@@ -438,7 +438,7 @@
         select * from (select a.*,a.online_instance_count-b.normal_count as exception_count,c.access_time from (select app_name,count(1) as online_instance_count from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag in ('1','3') group by user_app_key,env_code,app_name) a ,(select app_name,count(1) as normal_count from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag  = '3' group by user_app_key,env_code,app_name) b ,(select app_name,min(gmt_create) as access_time from t_amdb_app_instance where user_app_key = #{userAppKey} and env_code = #{envCode} and flag in ('1','3') group by user_app_key,env_code,app_name) c where a.app_name = b.app_name and b.app_name = c.app_name) t
         <where>
             <if test="appName != null">
-                app_name = #{appName, jdbcType=VARCHAR}
+                app_name like concat('%',#{appName, jdbcType=VARCHAR},'%')
             </if>
             <if test="appStatus == true">
                 and exception_count = 0
