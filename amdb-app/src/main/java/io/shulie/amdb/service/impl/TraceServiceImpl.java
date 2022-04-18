@@ -835,6 +835,34 @@ public class TraceServiceImpl implements TraceService {
     }
 
     @Override
+    public Response<String> getAppNameByUrl(EntryTraceQueryParam param) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select appName from t_trace_all where 1=1 and logType != 5 ");
+        if (param.getStartTime() != null && param.getStartTime() > 0) {
+            sql.append("and startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime()), "yyyy-MM-dd HH:mm:ss") + "' ");
+        }
+        if (param.getEndTime() != null && param.getEndTime() > 0) {
+            sql.append("and startDate <= '" + DateFormatUtils.format(new Date(param.getEndTime()), "yyyy-MM-dd HH:mm:ss") + "' ");
+        }
+
+        if (StringUtils.isNotBlank(param.getMethodName())) {
+            sql.append("and methodName='" + param.getMethodName() + "' ");
+        }
+
+        if (StringUtils.isNotBlank(param.getServiceName())) {
+            sql.append("and serviceName='" + param.getServiceName() + "' ");
+        }
+        sql.append(" limit 1");
+
+        List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
+
+        if (CollectionUtils.isNotEmpty(modelList)) {
+            return Response.success(modelList.get(0).getAppName());
+        }
+        return Response.success("");
+    }
+
+    @Override
     public List<RpcBased> getTraceDetail(TraceStackQueryParam param) {
         StringBuilder sql = new StringBuilder();
         sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where 1=1 ");

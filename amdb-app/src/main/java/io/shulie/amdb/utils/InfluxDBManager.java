@@ -151,6 +151,10 @@ public class InfluxDBManager implements AutoCloseable {
         return parseRecords(command);
     }
 
+    public List<QueryResult.Result> query(String command, String database) {
+        return parseRecords(command, database);
+    }
+
     public <T> Collection<T> query(Class<T> clazz, Query query) {
         InfluxDB influxDb = getInfluxDb();
         if (influxDb != null) {
@@ -182,6 +186,15 @@ public class InfluxDBManager implements AutoCloseable {
     }
 
     private List<QueryResult.Result> parseRecords(String command) {
+        QueryResult queryResult = getInfluxDb().query(new Query(command, database));
+        List<QueryResult.Result> results = queryResult.getResults();
+        if (results == null || results.size() == 0) {
+            return null;
+        }
+        return results;
+    }
+
+    private List<QueryResult.Result> parseRecords(String command, String database) {
         QueryResult queryResult = getInfluxDb().query(new Query(command, database));
         List<QueryResult.Result> results = queryResult.getResults();
         if (results == null || results.size() == 0) {

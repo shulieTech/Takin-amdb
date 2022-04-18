@@ -127,6 +127,21 @@ public class TraceController {
      * @param param
      * @return
      */
+    @RequestMapping(value = "/getAppNameByUrl", method = RequestMethod.GET)
+    public Response<String> getAppNameByUrl(EntryTraceQueryParam param) {
+        logger.info("根据参数查询服务所属应用名称 请求参数:{}", param);
+        if (StringUtils.isBlank(param.getServiceName()) || StringUtils.isBlank(param.getMethodName()) || param.getStartTime() == null || param.getEndTime() == null) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "serviceName or methodName or startTime or endTime");
+        }
+        return traceService.getAppNameByUrl(param);
+    }
+
+    /**
+     * 流量明细
+     *
+     * @param param
+     * @return
+     */
     @RequestMapping(value = "/getEntryTraceListByTaskId", method = RequestMethod.GET)
     public Response<List<EntryTraceInfoDTO>> getEntryTraceListByTaskId(EntryTraceQueryParam param) {
         logger.info("流量明细查询(根据报告ID查询)请求参数:{}", param);
@@ -140,6 +155,7 @@ public class TraceController {
             return Response.fail(AmdbExceptionEnums.TRACE_QUERY);
         }
     }
+
 
     /**
      * 查询调用链
