@@ -43,7 +43,7 @@ public class InfluxDbQueryServiceImpl implements InfluxDbQueryService {
             log.info("influxdb query sql:{}", querySql);
             List<QueryResult.Result> queryResult;
             try {
-                queryResult = influxDbManager.query(querySql, request.getDatabase());
+                queryResult = influxDbManager.queryList(querySql, request.getDatabase());
                 List<QueryResult.Series> list = queryResult.get(0).getSeries();
                 if (list != null) {
                     for (QueryResult.Series result : list) {

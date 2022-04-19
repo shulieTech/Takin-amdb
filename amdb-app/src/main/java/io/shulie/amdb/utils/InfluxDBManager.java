@@ -151,7 +151,11 @@ public class InfluxDBManager implements AutoCloseable {
         return parseRecords(command);
     }
 
-    public QueryResult query(String command,String database) {
+    public List<QueryResult.Result> queryList(String command, String database) {
+        return parseRecords(command, database);
+    }
+
+    public QueryResult query(String command, String database) {
         Query query = new Query(command, database);
         InfluxDB influxDb = getInfluxDb();
         if (influxDb != null) {
