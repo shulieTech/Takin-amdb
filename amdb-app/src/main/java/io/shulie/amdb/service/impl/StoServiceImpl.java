@@ -46,7 +46,7 @@ public class StoServiceImpl implements StoService {
 
             //这里的平均tps有可能小于1,因为有的接口本身调用量就少,如果时间范围跨度较大,数据就会被平均
             StringBuilder metricQuerySql = new StringBuilder();
-            metricQuerySql.append("select appName,parsedServiceName,parsedMethod,parsedMiddlewareName,sum(toInt32(samplingInterval)) as invokeCount,sum(cost) as totalCost,count(1) as count,toDecimal32(invokeCount/" + request.getInterval() + ",3) as tps,toDecimal32((totalCost/count),3) as rt,concat(appName,parsedServiceName,parsedMethod,parsedMiddlewareName) as key from t_trace_all where");
+            metricQuerySql.append("select appName,parsedServiceName,parsedMethod,parsedMiddlewareName,sum(toInt32(samplingInterval)) as invokeCount,sum(cost) as totalCost,count(1) as count,toDecimal128(invokeCount/" + request.getInterval() + ",3) as tps,toDecimal128((totalCost/count),3) as rt,concat(appName,parsedServiceName,parsedMethod,parsedMiddlewareName) as key from t_trace_all where");
             metricQuerySql.append(condition);
             metricQuerySql.append(" group by appName,parsedServiceName,parsedMethod,parsedMiddlewareName");
             if (request.getInvokeCount() > 0) {
