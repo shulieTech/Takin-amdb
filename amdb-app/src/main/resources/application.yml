@@ -81,6 +81,8 @@ config:
     delaySec: 120
   trace:
     limit: 500
+    oldTask:
+      queryDate: 2023-01-01
   agentlog:
     reserveDays: 7
   tenantConfig:
