@@ -40,4 +40,6 @@ public interface TraceService {
     Response<List<TTrackClickhouseModel>> getAllTraceList(EntryTraceQueryParam param);
 
     Response<String> getAppNameByUrl(EntryTraceQueryParam param);
+
+    List<RpcBased> getTraceListByTraceIdList(List<String> traceIdList);
 }

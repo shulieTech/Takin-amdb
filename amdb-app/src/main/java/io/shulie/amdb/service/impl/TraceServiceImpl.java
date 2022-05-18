@@ -17,6 +17,7 @@ package io.shulie.amdb.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.pamirs.pradar.log.parser.trace.RpcBased;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
 import io.shulie.amdb.common.enums.RpcType;
@@ -45,6 +46,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
@@ -245,6 +249,9 @@ public class TraceServiceImpl implements TraceService {
         return result;
     }
 
+    public void compensate(String content) {
+
+    }
 
     public EntryTraceInfoDTO convert(TTrackClickhouseModel trackClickhouseModel) {
         EntryTraceInfoDTO entryTraceInfoDTO = new EntryTraceInfoDTO();
@@ -270,8 +277,9 @@ public class TraceServiceImpl implements TraceService {
      * @param traceId2EngineTraceMap 流量引擎日志
      * @param traceId2TraceMap       入口trace日志
      */
-    private List<EntryTraceInfoDTO> mergeEngineTraceAndTrace(Map<String, TTrackClickhouseModel> traceId2EngineTraceMap,
-                                                             Map<String, TTrackClickhouseModel> traceId2TraceMap) {
+    private List<EntryTraceInfoDTO> mergeEngineTraceAndTrace
+    (Map<String, TTrackClickhouseModel> traceId2EngineTraceMap,
+     Map<String, TTrackClickhouseModel> traceId2TraceMap) {
         List<EntryTraceInfoDTO> entryTraceInfoDtos = new ArrayList<>();
         List<String> traceIdSet = new ArrayList<>();
         if (MapUtils.isNotEmpty(traceId2EngineTraceMap)) {
@@ -619,7 +627,8 @@ public class TraceServiceImpl implements TraceService {
         return limit;
     }
 
-    private void setResponseCount(List<String> andFilterList, List<String> orFilterList, Response response, String queryTable) {
+    private void setResponseCount(List<String> andFilterList, List<String> orFilterList, Response
+            response, String queryTable) {
         String countSql = "select count(1) as total " + " from " + queryTable + " where " + StringUtils.join(andFilterList,
                 " and ");
         if (CollectionUtils.isNotEmpty(orFilterList)) {
@@ -630,7 +639,8 @@ public class TraceServiceImpl implements TraceService {
         response.setTotal(total);
     }
 
-    private void setDistinctResponseCount(List<String> andFilterList, List<String> orFilterList, Response response, String queryTable) {
+    private void setDistinctResponseCount(List<String> andFilterList, List<String> orFilterList, Response
+            response, String queryTable) {
         String countSql = "select count(1) as total " + " from ( select distinct " + TRACE_SELECT_FILED + " from " + queryTable + " where " + StringUtils.join(andFilterList,
                 " and ");
         if (CollectionUtils.isNotEmpty(orFilterList)) {
@@ -860,6 +870,64 @@ public class TraceServiceImpl implements TraceService {
             return Response.success(modelList.get(0).getAppName());
         }
         return Response.success("");
+    }
+
+    private static ExecutorService executorService;
+
+    static {
+        executorService = Executors.newFixedThreadPool(5, new DefaultThreadFactory("traceIds-query-pool"));
+    }
+
+    @Override
+    public List<RpcBased> getTraceListByTraceIdList(List<String> traceIdList) {
+        String traceIds = StringUtils.join(traceIdList, "','");
+        StringBuilder countSql = new StringBuilder();
+        countSql.append("select count(1) as total from t_trace_all where 1=1 and logType != 5");
+        countSql.append(" and traceId global in ");
+        countSql.append("('");
+        countSql.append(traceIds);
+        countSql.append("')");
+        Map<String, Object> countMap = traceDao.queryForMap(countSql.toString());
+        long count = NumberUtils.toLong("" + countMap.get("total"), 0);
+
+        int pageSize = 1000;
+        long pageNum = (count % pageSize == 0 ? count / pageSize : count / pageSize + 1);
+
+        final CountDownLatch latch = new CountDownLatch(Integer.parseInt(pageNum + ""));
+        List<RpcBased> rpcBasedList = Lists.newArrayList();
+        for (int i = 0; i < pageNum; i++) {
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    StringBuilder sql = new StringBuilder();
+                    sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where 1=1 and logType != 5");
+                    sql.append(" and traceId global in ");
+                    sql.append("('");
+                    sql.append(traceIds);
+                    sql.append("')");
+                    sql.append(" limit ");
+                    sql.append((pageNum - 1) * pageSize);
+                    sql.append(",");
+                    sql.append(pageSize);
+
+                    List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
+                    for (TTrackClickhouseModel model : modelList) {
+                        // 所有客户端都要重新计算耗时
+                        if (model.getLogType() == 2) {
+                            calculateCost(model, modelList);
+                        }
+                    }
+                    rpcBasedList.addAll(modelList.stream().map(model -> model.getRpcBased()).collect(Collectors.toList()));
+                    latch.countDown();
+                }
+            });
+        }
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return rpcBasedList;
     }
 
     @Override

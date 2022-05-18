@@ -156,6 +156,27 @@ public class TraceController {
         }
     }
 
+    /**
+     * 流量明细查询
+     *
+     * @return
+     */
+    @RequestMapping(value = "/getTraceListByTraceIdList", method = RequestMethod.POST)
+    public Response<List<RpcBased>> getTraceListByTraceIdList(@RequestBody List<String> traceIdList) {
+        if (CollectionUtils.isEmpty(traceIdList)) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "taskId");
+        }
+        try {
+            List<RpcBased> rpcBasedList = traceService.getTraceListByTraceIdList(traceIdList);
+            Response<List<RpcBased>> response = Response.success(rpcBasedList);
+            response.setTotal(rpcBasedList == null ? 0 : rpcBasedList.size());
+            return response;
+        } catch (Exception e) {
+            logger.error("流量明细查询(根据traceIdList)失败", e);
+            return Response.fail(AmdbExceptionEnums.TRACE_QUERY);
+        }
+    }
+
 
     /**
      * 查询调用链
@@ -192,6 +213,16 @@ public class TraceController {
     @RequestMapping(value = "/log/query", method = RequestMethod.GET)
     public Response<List<LogResultDTO>> logQuery(LogResultRequest logResultRequest) {
         return Response.success(new ArrayList<>());
+    }
+
+    /**
+     * trace日志补偿
+     *
+     * @return
+     */
+    @RequestMapping(value = "/compensate", method = RequestMethod.POST)
+    public Response<String> logQuery(String content) {
+        return null;
     }
 
 
