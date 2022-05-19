@@ -120,7 +120,7 @@ public class SurgePushLogServiceImpl implements PushLogService {
             }
 
             if ("true".equals(StringUtil.parseStr(JSONObject.parseObject(content).get("success")))) {
-                log.info("takin-web回调成功:{}", callbackUrl);
+                log.info("takin-web回调成功:{},{}", callbackUrl, request.getContent());
             }
         } catch (Throwable e) {
             if (log.isInfoEnabled()) {
