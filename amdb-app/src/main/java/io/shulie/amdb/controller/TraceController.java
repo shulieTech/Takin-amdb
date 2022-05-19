@@ -19,6 +19,7 @@ import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
+import io.shulie.amdb.common.request.trace.TraceCompensateRequest;
 import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
 import io.shulie.amdb.dto.LogResultDTO;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
@@ -221,8 +222,18 @@ public class TraceController {
      * @return
      */
     @RequestMapping(value = "/compensate", method = RequestMethod.POST)
-    public Response<String> logQuery(String content) {
-        return null;
+    public Response<String> compensate(@RequestBody TraceCompensateRequest request) {
+        if (request.getResourceId() == null || request.getJobId() == null || StringUtils.isBlank(request.getCallbackUrl())) {
+            return new Response<>("参数为空");
+        }
+
+        try {
+            traceService.startCompensate(request);
+        } catch (Exception e) {
+            logger.error("压测trace补偿失败", e);
+            return Response.fail(AmdbExceptionEnums.TRACE_COMPENSATE_ERROR, "压测trace补偿失败");
+        }
+        return new Response<>("200");
     }
 
 

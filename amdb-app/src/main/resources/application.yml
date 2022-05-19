@@ -83,6 +83,10 @@ config:
     limit: 500
     oldTask:
       queryDate: 2023-01-01
+    compensate:
+      nfsdir: /data/nfs_dir/ptl
+      defaultVersion: 1.6
+      surgeAddress: http://pradar.host.apisix:39900/takin-surge/log/link/upload
   agentlog:
     reserveDays: 7
   tenantConfig:

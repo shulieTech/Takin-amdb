@@ -37,7 +37,11 @@
     </properties>
 
     <dependencies>
-
+        <dependency>
+            <groupId>io.shulie.amdb</groupId>
+            <artifactId>amdb-common</artifactId>
+            <version>1.1.2</version>
+        </dependency>
         <dependency>
             <groupId>io.shulie.surge.data</groupId>
             <artifactId>mysql</artifactId>
@@ -78,6 +82,12 @@
             <groupId>io.zipkin.zipkin2</groupId>
             <artifactId>zipkin</artifactId>
             <version>2.11.12</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.13</version>
         </dependency>
 
         <dependency>
@@ -138,7 +148,7 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.70</version>
+            <version>1.2.79</version>
         </dependency>
 
         <dependency>
@@ -214,11 +224,6 @@
             <groupId>io.shulie.pradar</groupId>
             <artifactId>log-rule</artifactId>
             <version>2.0.4.3</version>
-        </dependency>
-        <dependency>
-            <groupId>io.shulie.amdb</groupId>
-            <artifactId>amdb-common</artifactId>
-            <version>1.1.1</version>
         </dependency>
         <dependency>
             <groupId>ru.yandex.clickhouse</groupId>

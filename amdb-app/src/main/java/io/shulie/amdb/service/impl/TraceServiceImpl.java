@@ -16,17 +16,24 @@
 package io.shulie.amdb.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
 import io.shulie.amdb.common.enums.RpcType;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
+import io.shulie.amdb.common.request.trace.TraceCompensateRequest;
 import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
+import io.shulie.amdb.common.request.trodata.LogCompensateCallbackRequest;
 import io.shulie.amdb.constant.SqlConstants;
 import io.shulie.amdb.dao.ITraceDao;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.service.TraceService;
+import io.shulie.amdb.service.log.PushLogService;
+import io.shulie.amdb.task.PressureTraceCompensateTask;
+import io.shulie.amdb.utils.FileUtil;
 import io.shulie.amdb.utils.StringUtil;
 import io.shulie.surge.data.common.utils.Pair;
 import io.shulie.surge.data.deploy.pradar.link.model.TTrackClickhouseModel;
@@ -45,10 +52,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
@@ -67,14 +76,34 @@ public class TraceServiceImpl implements TraceService {
     @Qualifier("traceDaoImpl")
     ITraceDao traceDao;
 
+    @Autowired
+    private PushLogService pushLogService;
+
     @Value("${config.trace.limit}")
     private String traceQueryLimit;
 
     @Value("${config.trace.oldTask.queryDate}")
     private String queryDate;
 
+    @Value("${config.trace.compensate.nfsdir}")
+    private String nfsdir;
+
+    @Value("${config.trace.compensate.defaultVersion}")
+    private String defaultVersion;
+
+    @Value("${config.trace.compensate.surgeAddress}")
+    private String surgeAddress;
+
     public static final String TABLE_TRACE_AGENT = "t_trace_all";
     public static final String TABLE_TRACE_PRESSURE = "t_trace_pressure";
+
+    private static ExecutorService executorService;
+    private static ExecutorService compensateExecutorService;
+
+    static {
+        executorService = Executors.newFixedThreadPool(5, new DefaultThreadFactory("traceIds-query-pool"));
+        compensateExecutorService = Executors.newFixedThreadPool(5, new DefaultThreadFactory("trace-compensate-pool"));
+    }
 
 
     @Override
@@ -262,9 +291,6 @@ public class TraceServiceImpl implements TraceService {
         return result;
     }
 
-    public void compensate(String content) {
-
-    }
 
     public EntryTraceInfoDTO convert(TTrackClickhouseModel trackClickhouseModel) {
         EntryTraceInfoDTO entryTraceInfoDTO = new EntryTraceInfoDTO();
@@ -885,12 +911,12 @@ public class TraceServiceImpl implements TraceService {
         return Response.success("");
     }
 
-    private static ExecutorService executorService;
-
-    static {
-        executorService = Executors.newFixedThreadPool(5, new DefaultThreadFactory("traceIds-query-pool"));
-    }
-
+    /**
+     * todo 1.优化查询速度 2.增加接口开关 3.增加接口合法性校验 4.增加代码稳定性校验
+     *
+     * @param traceIdList
+     * @return
+     */
     @Override
     public List<RpcBased> getTraceListByTraceIdList(List<String> traceIdList) {
         String traceIds = StringUtils.join(traceIdList, "','");
@@ -941,6 +967,89 @@ public class TraceServiceImpl implements TraceService {
             e.printStackTrace();
         }
         return rpcBasedList;
+    }
+
+    //是否回调
+    private static Cache<String, Boolean> taskStautsCache = CacheBuilder.newBuilder().maximumSize(100).expireAfterWrite(10, TimeUnit.MINUTES).build();
+
+    @Override
+    public void startCompensate(TraceCompensateRequest request) {
+        StringBuilder builder = new StringBuilder(nfsdir);
+        builder.append("/").append(request.getResourceId());
+        builder.append("/").append(request.getJobId());
+        logger.info("current check path is {}", builder);
+        String checkDirectory = builder.toString();
+
+        Boolean isChecked = taskStautsCache.getIfPresent(checkDirectory);
+        //10分钟内已经触发过校准任务
+        if (isChecked != null && isChecked) {
+            logger.warn("current task:{} has checked finished!!!", checkDirectory);
+            return;
+        }
+
+        LogCompensateCallbackRequest callbackTakinRequest = new LogCompensateCallbackRequest();
+        callbackTakinRequest.setJobId(request.getJobId());
+        callbackTakinRequest.setResourceId(String.valueOf(request.getResourceId()));
+
+        //启动校准任务
+        //如果不包含err文件,代表所有ptl都已经上传成功
+        if (!checkIsNeedCompensate(checkDirectory)) {
+            callbackTakinRequest.setCompleted(true);
+            callbackTakinRequest.setContent("当前目录下无err文件,校准自动完成");
+            //开始回调
+            pushLogService.callbackTakin(request.getCallbackUrl(), callbackTakinRequest);
+            return;
+        } else {
+            //启动补偿
+            List<File> fileList = FileUtil.getFileList(checkDirectory, ".err");
+            if (CollectionUtils.isEmpty(fileList)) {
+                //校准通过
+                callbackTakinRequest.setCompleted(true);
+                callbackTakinRequest.setContent("当前目录下无err文件,校准自动完成");
+                //开始回调
+                pushLogService.callbackTakin(request.getCallbackUrl(), callbackTakinRequest);
+                //开始回调
+                return;
+            } else {
+                final CountDownLatch latch = new CountDownLatch(fileList.size());
+                //每个文件开启一个线程去上传
+                StringBuilder fileNameBuilder = new StringBuilder();
+                for (int i = 0; i < fileList.size(); i++) {
+                    File file = fileList.get(i);
+                    if (file.length() == 0) {
+                        latch.countDown();
+                        continue;
+                    }
+                    fileNameBuilder.append("[" + file.getAbsolutePath() + "]");
+                    String[] split = file.getName().split("-");
+                    String version = defaultVersion;
+                    if (split.length == 3) {
+                        version = split[1];
+                    }
+                    compensateExecutorService.execute(new PressureTraceCompensateTask(file, pushLogService, version, surgeAddress, latch));
+                }
+
+                try {
+                    latch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                //校准通过
+                callbackTakinRequest.setCompleted(true);
+                callbackTakinRequest.setContent(checkDirectory + "目录下存在以下文件需要校准:" + fileNameBuilder + ",已校准完成");
+                //开始回调
+                pushLogService.callbackTakin(request.getCallbackUrl(), callbackTakinRequest);
+
+            }
+        }
+        //写入缓存
+        taskStautsCache.put(checkDirectory, true);
+    }
+
+
+    private boolean checkIsNeedCompensate(String nfsdir) {
+        return FileUtil.checkFileKeywordExists(nfsdir, ".err");
     }
 
     @Override
