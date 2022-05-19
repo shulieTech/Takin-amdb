@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,17 +26,15 @@ public class PressureTraceCompensateTask implements Runnable {
     private File file;
     private String version;
     private String address;
-    private Cache<String, Long> positionCache = CacheBuilder.newBuilder().maximumSize(1).expireAfterWrite(10, TimeUnit.MINUTES).build();
+    private volatile Cache<String, Long> positionCache = CacheBuilder.newBuilder().maximumSize(1).expireAfterWrite(10, TimeUnit.MINUTES).build();
     private static final Long MAX_PUSH_SIZE = 1024L * 1024L;
     private static final int MAX_WAIT_TIME = 1500;
-    private final CountDownLatch latch;
 
-    public PressureTraceCompensateTask(File file, PushLogService pushLogService, String version, String address, CountDownLatch latch) {
+    public PressureTraceCompensateTask(File file, PushLogService pushLogService, String version, String address) {
         this.pushLogService = pushLogService;
         this.file = file;
         this.version = version;
         this.address = address;
-        this.latch = latch;
     }
 
     /**
@@ -45,23 +42,22 @@ public class PressureTraceCompensateTask implements Runnable {
      */
     @Override
     public void run() {
-        uploadPtlFile(file);
-        latch.countDown();
+        uploadPtlFile();
     }
 
     /**
      * 上传PTL文件
      */
-    private void uploadPtlFile(File ptlFile) {
-        if (ptlFile == null) {
+    private void uploadPtlFile() {
+        if (file == null) {
             return;
         }
         //去掉特殊字符
-        String subFileName = ptlFile.getName().replaceAll("\\.", "");
+        String subFileName = file.getName().replaceAll("\\.", "");
         byte[] data;
         FileFetcher fileFetcher;
         try {
-            fileFetcher = new FileFetcher(ptlFile);
+            fileFetcher = new FileFetcher(file);
         } catch (FileNotFoundException e) {
             return;
         }
@@ -72,20 +68,20 @@ public class PressureTraceCompensateTask implements Runnable {
                 //+1;
                 i.getAndIncrement();
                 Long position = getPosition(subFileName);
-                data = readFile(ptlFile, subFileName, position, ptlFile.getAbsolutePath(), fileFetcher, MAX_PUSH_SIZE);
+                data = readFile(file, subFileName, position, file.getAbsolutePath(), fileFetcher, MAX_PUSH_SIZE);
                 // 如果没有读到数据需要判断是不是报告已经完成，如果报告已经完成说明任务已经结束，并且日志都已经推送完成，这时就可以结束这个文件的推送任务
                 //否则下一次继续读取
                 if (data == null || data.length == 0) {
                     if (true) {
-                        long fileSize = getFileSize(ptlFile);
+                        long fileSize = getFileSize(file);
                         long lastSize = Math.max(fileSize - position, MAX_PUSH_SIZE);
-                        data = readFile(ptlFile, subFileName, position, ptlFile.getAbsolutePath(), fileFetcher,
+                        data = readFile(file, subFileName, position, file.getAbsolutePath(), fileFetcher,
                                 lastSize);
                         if (data != null && data.length > 0) {
                             pushLogService.pushLogToAmdb(data, version, address);
                         } else if (lastSize > 0) {
                             TimeUnit.SECONDS.sleep(10);
-                            data = readFile(ptlFile, subFileName, position, ptlFile.getAbsolutePath(), fileFetcher,
+                            data = readFile(file, subFileName, position, file.getAbsolutePath(), fileFetcher,
                                     lastSize);
                             pushLogService.pushLogToAmdb(data, version, address);
                         }

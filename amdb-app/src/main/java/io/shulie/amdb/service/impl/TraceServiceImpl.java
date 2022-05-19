@@ -18,6 +18,7 @@ package io.shulie.amdb.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.shulie.amdb.common.Response;
@@ -30,6 +31,7 @@ import io.shulie.amdb.common.request.trodata.LogCompensateCallbackRequest;
 import io.shulie.amdb.constant.SqlConstants;
 import io.shulie.amdb.dao.ITraceDao;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
+import io.shulie.amdb.queue.NoLengthBlockingQueue;
 import io.shulie.amdb.service.TraceService;
 import io.shulie.amdb.service.log.PushLogService;
 import io.shulie.amdb.task.PressureTraceCompensateTask;
@@ -54,10 +56,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
@@ -972,6 +971,11 @@ public class TraceServiceImpl implements TraceService {
     //是否回调
     private static Cache<String, Boolean> taskStautsCache = CacheBuilder.newBuilder().maximumSize(100).expireAfterWrite(10, TimeUnit.MINUTES).build();
 
+    private final static ExecutorService THREAD_POOL = new ThreadPoolExecutor(100, 200,
+            300L, TimeUnit.SECONDS,
+            new NoLengthBlockingQueue<>(), new ThreadFactoryBuilder()
+            .setNameFormat("ptl-log-push-%d").build(), new ThreadPoolExecutor.AbortPolicy());
+
     @Override
     public void startCompensate(TraceCompensateRequest request) {
         StringBuilder builder = new StringBuilder(nfsdir);
@@ -1011,40 +1015,69 @@ public class TraceServiceImpl implements TraceService {
                 //开始回调
                 return;
             } else {
-                final CountDownLatch latch = new CountDownLatch(fileList.size());
-                //每个文件开启一个线程去上传
-                StringBuilder fileNameBuilder = new StringBuilder();
-                for (int i = 0; i < fileList.size(); i++) {
-                    File file = fileList.get(i);
-                    if (file.length() == 0) {
-                        latch.countDown();
-                        continue;
+                Thread thread = new Thread(new Runnable() {
+
+                    /**
+                     * When an object implementing interface <code>Runnable</code> is used
+                     * to create a thread, starting the thread causes the object's
+                     * <code>run</code> method to be called in that separately executing
+                     * thread.
+                     * <p>
+                     * The general contract of the method <code>run</code> is that it may
+                     * take any action whatsoever.
+                     *
+                     * @see Thread#run()
+                     */
+                    @Override
+                    public void run() {
+                        compensate(request, checkDirectory, callbackTakinRequest, fileList);
                     }
-                    fileNameBuilder.append("[" + file.getAbsolutePath() + "]");
-                    String[] split = file.getName().split("-");
-                    String version = defaultVersion;
-                    if (split.length == 3) {
-                        version = split[1];
-                    }
-                    compensateExecutorService.execute(new PressureTraceCompensateTask(file, pushLogService, version, surgeAddress, latch));
-                }
-
-                try {
-                    latch.await();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                //校准通过
-                callbackTakinRequest.setCompleted(true);
-                callbackTakinRequest.setContent(checkDirectory + "目录下存在以下文件需要校准:" + fileNameBuilder + ",已校准完成");
-                //开始回调
-                pushLogService.callbackTakin(request.getCallbackUrl(), callbackTakinRequest);
-
+                });
+                thread.start();
             }
         }
         //写入缓存
         taskStautsCache.put(checkDirectory, true);
+    }
+
+    private void compensate(TraceCompensateRequest request, String checkDirectory, LogCompensateCallbackRequest callbackTakinRequest, List<File> fileList) {
+        final CountDownLatch latch = new CountDownLatch(fileList.size());
+        //每个文件开启一个线程去上传
+        StringBuilder fileNameBuilder = new StringBuilder();
+        for (int i = 0; i < fileList.size(); i++) {
+            File file = fileList.get(i);
+            if (file.length() == 0) {
+                latch.countDown();
+                continue;
+            }
+            fileNameBuilder.append("[" + file.getAbsolutePath() + "]");
+            String[] split = file.getName().split("-");
+
+            String version = defaultVersion;
+            if (split.length == 3) {
+                version = split[1];
+            }
+            String finalVersion = version;
+            compensateExecutorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    THREAD_POOL.submit(new PressureTraceCompensateTask(file, pushLogService, finalVersion, surgeAddress));
+                    latch.countDown();
+                }
+            });
+        }
+
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        //校准通过
+        callbackTakinRequest.setCompleted(true);
+        callbackTakinRequest.setContent(checkDirectory + "目录下存在以下文件需要校准:" + fileNameBuilder + ",已校准完成");
+        //开始回调
+        pushLogService.callbackTakin(request.getCallbackUrl(), callbackTakinRequest);
     }
 
 
