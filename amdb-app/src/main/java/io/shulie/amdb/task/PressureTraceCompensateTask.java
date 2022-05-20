@@ -1,6 +1,7 @@
 package io.shulie.amdb.task;
 
 import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import io.shulie.amdb.service.log.PushLogService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,16 +27,17 @@ public class PressureTraceCompensateTask implements Runnable {
     private File file;
     private String version;
     private String address;
-    private Cache<String, Long> positionCache;
+    private final CountDownLatch latch;
+    private Cache<String, Long> positionCache = CacheBuilder.newBuilder().maximumSize(1).expireAfterWrite(10, TimeUnit.MINUTES).build();
     private static final Long MAX_PUSH_SIZE = 1024L * 1024L;
     private static final int MAX_WAIT_TIME = 1500;
 
-    public PressureTraceCompensateTask(File file, PushLogService pushLogService, String version, String address, Cache<String, Long> positionCache) {
+    public PressureTraceCompensateTask(File file, PushLogService pushLogService, String version, String address, CountDownLatch latch) {
         this.pushLogService = pushLogService;
         this.file = file;
         this.version = version;
         this.address = address;
-        this.positionCache = positionCache;
+        this.latch = latch;
     }
 
     /**
@@ -43,6 +46,7 @@ public class PressureTraceCompensateTask implements Runnable {
     @Override
     public void run() {
         uploadPtlFile();
+        latch.countDown();
     }
 
     /**

@@ -97,11 +97,9 @@ public class TraceServiceImpl implements TraceService {
     public static final String TABLE_TRACE_PRESSURE = "t_trace_pressure";
 
     private static ExecutorService executorService;
-    private static ExecutorService compensateExecutorService;
 
     static {
         executorService = Executors.newFixedThreadPool(5, new DefaultThreadFactory("traceIds-query-pool"));
-        compensateExecutorService = Executors.newFixedThreadPool(5, new DefaultThreadFactory("trace-compensate-pool"));
     }
 
 
@@ -1044,12 +1042,7 @@ public class TraceServiceImpl implements TraceService {
             String finalVersion = version;
 
             //每个文件开启一个线程去上传
-            compensateExecutorService.execute(() -> {
-                //每个文件创建一个位点缓存
-                Cache<String, Long> positionCache = CacheBuilder.newBuilder().maximumSize(1).expireAfterWrite(10, TimeUnit.MINUTES).build();
-                THREAD_POOL.submit(new PressureTraceCompensateTask(file, pushLogService, finalVersion, surgeAddress, positionCache));
-                latch.countDown();
-            });
+            THREAD_POOL.submit(new PressureTraceCompensateTask(file, pushLogService, finalVersion, surgeAddress, latch));
         }
 
         try {
