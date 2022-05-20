@@ -1,7 +1,6 @@
 package io.shulie.amdb.task;
 
 import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import io.shulie.amdb.service.log.PushLogService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -26,15 +25,16 @@ public class PressureTraceCompensateTask implements Runnable {
     private File file;
     private String version;
     private String address;
-    private volatile Cache<String, Long> positionCache = CacheBuilder.newBuilder().maximumSize(1).expireAfterWrite(10, TimeUnit.MINUTES).build();
+    private Cache<String, Long> positionCache;
     private static final Long MAX_PUSH_SIZE = 1024L * 1024L;
     private static final int MAX_WAIT_TIME = 1500;
 
-    public PressureTraceCompensateTask(File file, PushLogService pushLogService, String version, String address) {
+    public PressureTraceCompensateTask(File file, PushLogService pushLogService, String version, String address, Cache<String, Long> positionCache) {
         this.pushLogService = pushLogService;
         this.file = file;
         this.version = version;
         this.address = address;
+        this.positionCache = positionCache;
     }
 
     /**

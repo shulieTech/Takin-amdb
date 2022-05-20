@@ -1027,7 +1027,6 @@ public class TraceServiceImpl implements TraceService {
 
     private void compensate(TraceCompensateRequest request, String checkDirectory, LogCompensateCallbackRequest callbackTakinRequest, List<File> fileList) {
         final CountDownLatch latch = new CountDownLatch(fileList.size());
-        //每个文件开启一个线程去上传
         StringBuilder fileNameBuilder = new StringBuilder();
         for (int i = 0; i < fileList.size(); i++) {
             File file = fileList.get(i);
@@ -1043,8 +1042,12 @@ public class TraceServiceImpl implements TraceService {
                 version = split[1];
             }
             String finalVersion = version;
+
+            //每个文件开启一个线程去上传
             compensateExecutorService.execute(() -> {
-                THREAD_POOL.submit(new PressureTraceCompensateTask(file, pushLogService, finalVersion, surgeAddress));
+                //每个文件创建一个位点缓存
+                Cache<String, Long> positionCache = CacheBuilder.newBuilder().maximumSize(1).expireAfterWrite(10, TimeUnit.MINUTES).build();
+                THREAD_POOL.submit(new PressureTraceCompensateTask(file, pushLogService, finalVersion, surgeAddress, positionCache));
                 latch.countDown();
             });
         }
