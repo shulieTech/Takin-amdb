@@ -57,6 +57,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
@@ -925,27 +926,31 @@ public class TraceServiceImpl implements TraceService {
         countSql.append("')");
         Map<String, Object> countMap = traceDao.queryForMap(countSql.toString());
         long count = NumberUtils.toLong("" + countMap.get("total"), 0);
+        if (count > 10000) {
+            return Lists.newArrayList();
+        }
 
         int pageSize = 1000;
         long pageNum = (count % pageSize == 0 ? count / pageSize : count / pageSize + 1);
 
         final CountDownLatch latch = new CountDownLatch(Integer.parseInt(pageNum + ""));
         List<RpcBased> rpcBasedList = Lists.newArrayList();
-        for (int i = 0; i < pageNum; i++) {
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    StringBuilder sql = new StringBuilder();
-                    sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where 1=1 and logType != 5");
-                    sql.append(" and traceId global in ");
-                    sql.append("('");
-                    sql.append(traceIds);
-                    sql.append("')");
-                    sql.append(" limit ");
-                    sql.append((pageNum - 1) * pageSize);
-                    sql.append(",");
-                    sql.append(pageSize);
 
+        AtomicReference<Boolean> isHappenException = new AtomicReference<>(false);
+        for (int i = 0; i < pageNum; i++) {
+            executorService.submit(() -> {
+                StringBuilder sql = new StringBuilder();
+                sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where 1=1 and logType != 5");
+                sql.append(" and traceId global in ");
+                sql.append("('");
+                sql.append(traceIds);
+                sql.append("')");
+                sql.append(" limit ");
+                sql.append((pageNum - 1) * pageSize);
+                sql.append(",");
+                sql.append(pageSize);
+
+                try {
                     List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
                     for (TTrackClickhouseModel model : modelList) {
                         // 所有客户端都要重新计算耗时
@@ -955,6 +960,10 @@ public class TraceServiceImpl implements TraceService {
                     }
                     rpcBasedList.addAll(modelList.stream().map(model -> model.getRpcBased()).collect(Collectors.toList()));
                     latch.countDown();
+                } catch (Exception e) {
+                    isHappenException.set(true);
+                    logger.error("分页查询clickhouse获取traceId列表失败{},{},查询sql如下:{}", e, e.getStackTrace(), sql);
+                    latch.countDown();
                 }
             });
         }
@@ -962,6 +971,9 @@ public class TraceServiceImpl implements TraceService {
             latch.await();
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+        if (isHappenException.get()) {
+            throw new IllegalStateException("分页查询clickhouse获取traceId列表失败");
         }
         return rpcBasedList;
     }
