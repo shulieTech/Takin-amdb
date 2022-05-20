@@ -975,6 +975,8 @@ public class TraceServiceImpl implements TraceService {
             300L, TimeUnit.SECONDS,
             new NoLengthBlockingQueue<>(), new ThreadFactoryBuilder()
             .setNameFormat("ptl-log-push-%d").build(), new ThreadPoolExecutor.AbortPolicy());
+    private final ExecutorService executor = Executors.newFixedThreadPool(1, new ThreadFactoryBuilder()
+            .setNameFormat("tarce-compensate-commit-%d").build());
 
     @Override
     public void startCompensate(TraceCompensateRequest request) {
@@ -1015,25 +1017,8 @@ public class TraceServiceImpl implements TraceService {
                 //开始回调
                 return;
             } else {
-                Thread thread = new Thread(new Runnable() {
-
-                    /**
-                     * When an object implementing interface <code>Runnable</code> is used
-                     * to create a thread, starting the thread causes the object's
-                     * <code>run</code> method to be called in that separately executing
-                     * thread.
-                     * <p>
-                     * The general contract of the method <code>run</code> is that it may
-                     * take any action whatsoever.
-                     *
-                     * @see Thread#run()
-                     */
-                    @Override
-                    public void run() {
-                        compensate(request, checkDirectory, callbackTakinRequest, fileList);
-                    }
-                });
-                thread.start();
+                //异步提交,不阻塞主线程
+                executor.submit(() -> compensate(request, checkDirectory, callbackTakinRequest, fileList));
             }
         }
         //写入缓存
@@ -1050,7 +1035,7 @@ public class TraceServiceImpl implements TraceService {
                 latch.countDown();
                 continue;
             }
-            fileNameBuilder.append("[" + file.getAbsolutePath() + "]");
+            fileNameBuilder.append("[" + file.getAbsolutePath() + "(" + file.length() + ")]");
             String[] split = file.getName().split("-");
 
             String version = defaultVersion;
@@ -1058,12 +1043,9 @@ public class TraceServiceImpl implements TraceService {
                 version = split[1];
             }
             String finalVersion = version;
-            compensateExecutorService.execute(new Runnable() {
-                @Override
-                public void run() {
-                    THREAD_POOL.submit(new PressureTraceCompensateTask(file, pushLogService, finalVersion, surgeAddress));
-                    latch.countDown();
-                }
+            compensateExecutorService.execute(() -> {
+                THREAD_POOL.submit(new PressureTraceCompensateTask(file, pushLogService, finalVersion, surgeAddress));
+                latch.countDown();
             });
         }
 
