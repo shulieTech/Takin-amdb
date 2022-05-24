@@ -66,6 +66,9 @@ public class TraceServiceImpl implements TraceService {
     @Value("${config.trace.limit}")
     private String traceQueryLimit;
 
+    @Value("${config.trace.oldTask.queryDate}")
+    private String queryDate;
+
     public static final String TABLE_TRACE_AGENT = "t_trace_all";
     public static final String TABLE_TRACE_PRESSURE = "t_trace_pressure";
 
@@ -186,10 +189,20 @@ public class TraceServiceImpl implements TraceService {
         }
         String queryTable;
 
-        //如果是2022-04-03 00:00:00之前的压测报告,还需要查询老表判断
+        //配置压测报告切换的日期,之前的压测报告还需要查询老表判断,默认是2023/01/01
+        //todo 控制台如果能传一个是否是旧压测报告的标识是最好的
         long now = System.currentTimeMillis();
         Calendar instance = Calendar.getInstance();
-        instance.set(2022, 3, 4, 0, 0, 0);
+        int year = 2023;
+        int month = 0;
+        int date = 1;
+        if (StringUtils.isNotBlank(queryDate)) {
+            year = Integer.parseInt(queryDate.split("-")[0].replaceAll("^(0+)", ""));
+            month = Integer.parseInt(queryDate.split("-")[1].replaceAll("^(0+)", "")) - 1;
+            //默认当天的压测报告保留4天
+            date = Integer.parseInt(queryDate.split("-")[2].replaceAll("^(0+)", "")) + 4;
+        }
+        instance.set(year, month, date, 0, 0, 0);
         long splitTime = instance.getTime().getTime();
         Boolean isOldReport = false;
         if (now < splitTime) {
