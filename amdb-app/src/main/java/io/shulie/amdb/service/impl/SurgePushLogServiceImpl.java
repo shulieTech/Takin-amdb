@@ -71,7 +71,7 @@ public class SurgePushLogServiceImpl implements PushLogService {
 
             int httpCode = response.getStatusLine().getStatusCode();
             if (httpCode != HttpStatus.SC_OK) {
-                throw new IllegalStateException("push log failed,code is incorrect.");
+                throw new IllegalStateException("push log failed,code is incorrect." + httpCode);
             }
             String content = EntityUtils.toString(response.getEntity());
             if (StringUtils.isBlank(content)) {
