@@ -83,9 +83,7 @@ public class SurgePushLogServiceImpl implements PushLogService {
                 return;
             }
         } catch (Throwable e) {
-            if (log.isInfoEnabled()) {
-                log.info("http log push error", e);
-            }
+            log.error("http log push error", e);
             if (response != null) {
                 try {
                     EntityUtils.consume(response.getEntity());
@@ -123,9 +121,7 @@ public class SurgePushLogServiceImpl implements PushLogService {
                 log.info("takin-web回调成功:{},{}", callbackUrl, request.getContent());
             }
         } catch (Throwable e) {
-            if (log.isInfoEnabled()) {
-                log.info("callbackTakin error", e);
-            }
+            log.error("callbackTakin error", e);
             if (response != null) {
                 try {
                     EntityUtils.consume(response.getEntity());
