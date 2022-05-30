@@ -41,5 +41,5 @@ public interface TraceService {
 
     Response<String> getAppNameByUrl(EntryTraceQueryParam param);
 
-    Response<EntryTraceInfoDTO> getAppAndReqByUrl(EntryTraceQueryParam param);
+    Response<List<EntryTraceInfoDTO>> getAppAndReqByUrl(EntryTraceQueryParam param);
 }
