@@ -876,6 +876,53 @@ public class TraceServiceImpl implements TraceService {
     }
 
     @Override
+    public Response<EntryTraceInfoDTO> getAppAndReqByUrl(EntryTraceQueryParam param) {
+        StringBuilder sql = buildSql(param);
+        List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
+        EntryTraceInfoDTO result = new EntryTraceInfoDTO();
+        if (CollectionUtils.isNotEmpty(modelList)) {
+            result.setAppName(modelList.get(0).getAppName());
+            result.setRequest(modelList.get(0).getRequest());
+        }
+        return Response.success(result);
+    }
+
+    private StringBuilder buildSql(EntryTraceQueryParam param) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select appName,request from t_trace_all where 1=1");
+        //设置为当前时间往前10分钟
+        if (param.getStartTime() == null) {
+            param.setStartTime(System.currentTimeMillis() - (10 * 60 * 1000));
+        }
+        //设置为当前时间往后5分钟
+        if (param.getEndTime() == null) {
+            param.setEndTime(System.currentTimeMillis() + (5 * 60 * 1000));
+        }
+        if (param.getStartTime() != null && param.getStartTime() > 0) {
+            sql.append(" and startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime()), "yyyy-MM-dd HH:mm:ss") + "' ");
+        }
+        if (param.getEndTime() != null && param.getEndTime() > 0) {
+            sql.append(" and startDate <= '" + DateFormatUtils.format(new Date(param.getEndTime()), "yyyy-MM-dd HH:mm:ss") + "' ");
+        }
+        if (StringUtils.isNotBlank(param.getServiceName())) {
+            sql.append(" and parsedServiceName='" + param.getServiceName() + "'");
+        }
+        if (StringUtils.isNotBlank(param.getMethodName())) {
+            sql.append(" and parsedMethod='" + param.getMethodName() + "'");
+        }
+        //只取http相关调用
+        sql.append(" and rpcType in ('0','1')");
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+        }
+        sql.append(" order by startDate desc limit 1");
+        return sql;
+    }
+
+    @Override
     public List<RpcBased> getTraceDetail(TraceStackQueryParam param) {
         StringBuilder sql = new StringBuilder();
         sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where 1=1 ");
