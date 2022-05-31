@@ -55,7 +55,7 @@ public class AgentConfigController {
             PageInfo<AgentConfigDTO> agentConfigDTOPageInfo = agentConfigService.selectByParams(param);
             return Response.success(agentConfigDTOPageInfo);
         } catch (Exception e) {
-            log.error("查询应用实例状态失败", e);
+            log.error("查询agent配置失败", e);
             return Response.fail(AmdbExceptionEnums.APP_INSTANCE_STATUS_SELECT);
         }
     }
@@ -74,7 +74,7 @@ public class AgentConfigController {
             }
             return Response.success(agentConfigService.count(param));
         } catch (Exception e) {
-            log.error("查询应用实例状态失败", e);
+            log.error("查询配置条数失败", e);
             return Response.fail(AmdbExceptionEnums.APP_INSTANCE_STATUS_SELECT);
         }
     }

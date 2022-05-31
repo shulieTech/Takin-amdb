@@ -68,6 +68,7 @@ public enum AmdbExceptionEnums {
     TRACE_DETAIL_QUERY("AMDB_0400_U0001", "trace详情查询异常"),
     TRACE_EMPTY_SELECT_FILED("AMDB_0400_U0003", "trace查询失败,参数错误，未指定查询结果字段列表"),
     TRACE_QUERY_WARN("AMDB_0400_U0004", "警告: %s"),
+    TRACE_COMPENSATE_ERROR("AMDB_0400_U0005", "警告: %s"),
 
     /**
      * E2E业务异常 AMDB_0500_UXXXX
