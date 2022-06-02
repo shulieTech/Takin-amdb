@@ -19,6 +19,7 @@ import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
+import io.shulie.amdb.common.request.trace.TraceCompensateRequest;
 import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
 import io.shulie.amdb.dto.LogResultDTO;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
@@ -137,6 +138,21 @@ public class TraceController {
     }
 
     /**
+     * 根据url和方法查询应用名和request
+     *
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "/getAppAndReqByUrl", method = RequestMethod.GET)
+    public Response<List<EntryTraceInfoDTO>> getAppAndReqByUrl(EntryTraceQueryParam param) {
+        logger.info("根据参数查询服务所属应用名称以及请求体 请求参数:{}", param);
+        if (StringUtils.isBlank(param.getServiceName()) || StringUtils.isBlank(param.getMethodName())) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "serviceName or methodName ");
+        }
+        return traceService.getAppAndReqByUrl(param);
+    }
+
+    /**
      * 流量明细
      *
      * @param param
@@ -152,6 +168,27 @@ public class TraceController {
             return traceService.getEntryTraceListByTaskId(param);
         } catch (Exception e) {
             logger.error("流量明细查询(根据报告ID查询)失败", e);
+            return Response.fail(AmdbExceptionEnums.TRACE_QUERY);
+        }
+    }
+
+    /**
+     * 流量明细查询
+     *
+     * @return
+     */
+    @RequestMapping(value = "/getTraceListByTraceIdList", method = RequestMethod.POST)
+    public Response<List<RpcBased>> getTraceListByTraceIdList(@RequestBody List<String> traceIdList) {
+        if (CollectionUtils.isEmpty(traceIdList)) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "taskId");
+        }
+        try {
+            List<RpcBased> rpcBasedList = traceService.getTraceListByTraceIdList(traceIdList);
+            Response<List<RpcBased>> response = Response.success(rpcBasedList);
+            response.setTotal(rpcBasedList == null ? 0 : rpcBasedList.size());
+            return response;
+        } catch (Exception e) {
+            logger.error("流量明细查询(根据traceIdList)失败", e);
             return Response.fail(AmdbExceptionEnums.TRACE_QUERY);
         }
     }
@@ -192,6 +229,26 @@ public class TraceController {
     @RequestMapping(value = "/log/query", method = RequestMethod.GET)
     public Response<List<LogResultDTO>> logQuery(LogResultRequest logResultRequest) {
         return Response.success(new ArrayList<>());
+    }
+
+    /**
+     * trace日志补偿
+     *
+     * @return
+     */
+    @RequestMapping(value = "/compensate", method = RequestMethod.POST)
+    public Response<String> compensate(@RequestBody TraceCompensateRequest request) {
+        if (request.getResourceId() == null || request.getJobId() == null || StringUtils.isBlank(request.getCallbackUrl())) {
+            return new Response<>("参数为空");
+        }
+
+        try {
+            traceService.startCompensate(request);
+        } catch (Exception e) {
+            logger.error("压测trace补偿失败", e);
+            return Response.fail(AmdbExceptionEnums.TRACE_COMPENSATE_ERROR, "压测trace补偿失败");
+        }
+        return new Response<>("200");
     }
 
 
