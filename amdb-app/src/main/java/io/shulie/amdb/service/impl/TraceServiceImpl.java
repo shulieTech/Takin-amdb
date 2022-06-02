@@ -381,7 +381,7 @@ public class TraceServiceImpl implements TraceService {
         return selectFields;
     }
 
-    private Pair<List<String>, List<String>> getFilters(EntryTraceQueryParam param, Boolean e2eFlag) {
+    protected Pair<List<String>, List<String>> getFilters(EntryTraceQueryParam param, Boolean e2eFlag) {
         List<String> andFilterList = new ArrayList<>();
         List<String> orFilterList = new ArrayList<>();
 
