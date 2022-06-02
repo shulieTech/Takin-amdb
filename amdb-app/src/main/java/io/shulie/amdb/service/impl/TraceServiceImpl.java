@@ -532,8 +532,13 @@ public class TraceServiceImpl implements TraceService {
                     String[] entranceInfo = entrance.split("#");
                     if (param.getQueryType() == 2) {
                         if (entranceInfo.length == 4) {
-                            orFilterList.add("(parsedServiceName like '%" + entranceInfo[1]
-                                    + "%' and parsedMethod='" + entranceInfo[2] + "' and rpcType='" + entranceInfo[3] + "')");
+                            StringBuilder sqlPart = new StringBuilder("(parsedServiceName like '%").append(entranceInfo[1]).append("%' and rpcType='").append(entranceInfo[3]).append('\'');
+                            if (StringUtils.isNotBlank(entranceInfo[2]))
+                            {
+                                sqlPart.append(" and parsedMethod='").append(entranceInfo[2]).append('\'').append(' ');
+                            }
+                            sqlPart.append(')');
+                            orFilterList.add(sqlPart.toString());
                         }
                     } else {
                         if (StringUtils.isNotBlank(entranceInfo[0]) && !"null".equals(entranceInfo[0])) {
