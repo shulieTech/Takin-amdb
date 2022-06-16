@@ -16,7 +16,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://pradar.host.mysql.amdb:3306/amdb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    url: jdbc:mysql://pradar.host.mysql.amdb:3306/amdb2?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
     username: root
     password: shulie@2020
     initialSize: 1
@@ -40,6 +40,10 @@ tro:
     url: jdbc:mysql://pradar.host.mysql.tro:3306/trodb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
     username: root
     password: shulie@2020
+
+logging:
+    level:
+      io.shulie.amdb.mapper: debug
 
 mybatis:
   configuration:

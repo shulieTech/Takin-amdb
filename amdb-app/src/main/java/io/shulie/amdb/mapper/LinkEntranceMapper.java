@@ -16,8 +16,14 @@
 package io.shulie.amdb.mapper;
 
 import io.shulie.amdb.entity.PradarLinkEntranceDO;
-import org.apache.ibatis.annotations.Select;
 import tk.mybatis.mapper.common.Mapper;
+import tk.mybatis.mapper.common.MySqlMapper;
 
-public interface LinkEntranceMapper extends Mapper<PradarLinkEntranceDO> {
+import java.util.List;
+
+public interface LinkEntranceMapper extends Mapper<PradarLinkEntranceDO>, MySqlMapper<PradarLinkEntranceDO> {
+    /**
+     * 根据id删除
+     */
+    void deleteByIds(List<Long> ids);
 }

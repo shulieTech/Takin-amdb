@@ -46,6 +46,7 @@ import io.shulie.amdb.exception.AmdbException;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.mapper.*;
 import io.shulie.amdb.request.LinkRequest;
+import io.shulie.amdb.scheduled.EntryAlignScheduled;
 import io.shulie.amdb.service.AppService;
 import io.shulie.amdb.service.LinkConfigService;
 import io.shulie.amdb.service.LinkService;
@@ -66,11 +67,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.AntPathMatcher;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicMarkableReference;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
@@ -418,7 +422,25 @@ public class LinkServiceImpl implements LinkService {
             if (serviceNameAry.length > 1) {
                 criteria.andIn("serviceName", Arrays.asList(serviceNameAry).stream().distinct().collect(Collectors.toList()));
             } else {
-                serviceNameFilter += "service_name like '%" + serviceNameAry[0] + "%'";
+                AntPathMatcher antPathMatcher = new AntPathMatcher();
+                String key = param.getTenantAppKey() + "#" + param.getEnvCode() + "#" + param.getAppName();
+                List<String> locResult = EntryAlignScheduled.apisCacheLoc.asMap().get(key);
+                AtomicReference matchStr = new AtomicReference();
+                if(locResult!=null){
+                    locResult.forEach(s -> {
+                        if(s.split("#").length==2){
+                            if(antPathMatcher.match(s.split("#")[0], serviceNameAry[0])){
+                                matchStr.set(s.split("#")[0]);
+                            }
+                        }
+                    });
+                }
+                if(matchStr.get()!=null){
+                    serviceNameFilter += "service_name like '%" + serviceNameAry[0] + "%' or " +
+                            "service_name like '%" + matchStr.get() + "%'" ;
+                }else{
+                    serviceNameFilter += "service_name like '%" + serviceNameAry[0] + "%'";
+                }
                 criteria.andCondition("(" + serviceNameFilter + ")");
             }
         }
