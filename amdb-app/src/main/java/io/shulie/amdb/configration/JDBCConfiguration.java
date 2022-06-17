@@ -28,6 +28,7 @@ import ru.yandex.clickhouse.settings.ClickHouseProperties;
 
 import javax.sql.DataSource;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author anjone
@@ -64,7 +65,12 @@ public class JDBCConfiguration {
         if (StringUtils.isNotBlank(clickhousePassword)) {
             clickHouseProperties.setPassword(clickhousePassword);
         }
-        DataSource clickHouseDataSource = new BalancedClickhouseDataSource(clickhouseUrl, clickHouseProperties);
+        //DataSource clickHouseDataSource = new BalancedClickhouseDataSource(clickhouseUrl, clickHouseProperties);
+
+        //开启高可用检测
+        BalancedClickhouseDataSource clickHouseDataSource = new BalancedClickhouseDataSource(clickhouseUrl, clickHouseProperties);
+        clickHouseDataSource.scheduleActualization(2, TimeUnit.SECONDS);
+
         return new JdbcTemplate(clickHouseDataSource);
     }
 
