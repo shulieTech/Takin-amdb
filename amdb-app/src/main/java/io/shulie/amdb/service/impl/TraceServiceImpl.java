@@ -304,6 +304,7 @@ public class TraceServiceImpl implements TraceService {
         entryTraceInfoDTO.setCost(trackClickhouseModel.getCost());
         entryTraceInfoDTO.setResponse(trackClickhouseModel.getResponse());
         entryTraceInfoDTO.setAssertResult(trackClickhouseModel.getCallbackMsg());
+        entryTraceInfoDTO.setClusterTest(trackClickhouseModel.isClusterTest());
         return entryTraceInfoDTO;
     }
 
