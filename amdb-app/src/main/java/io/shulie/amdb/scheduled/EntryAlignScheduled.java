@@ -97,7 +97,7 @@ public class EntryAlignScheduled  {
                         List<String> rmtResult = rmtMap.get(key)==null?new ArrayList<>():rmtMap.get(key);
                         //System.out.println(key+"----locResult----"+locResult);
                         //System.out.println(key+"----rmtResult---->"+rmtResult);
-                        rmtResult.stream().filter(s -> !locResult.contains(s)).forEach(s2 -> {
+                        rmtResult.stream().forEach(s2 -> {
                             //新增入口规则
                             Example example = new Example(PradarLinkEntranceDO.class);
                             Example.Criteria criteria = example.createCriteria();
