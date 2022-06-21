@@ -34,10 +34,7 @@ import tk.mybatis.mapper.entity.Example;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * @author sunshiyu
@@ -56,17 +53,6 @@ public class EntryAlignScheduled  {
     @Resource
     private LinkEntranceMapper linkEntranceMapper;
 
-    @Value("${config.entryRule.queryThreads}")
-    private int queryThreads;
-
-    private ExecutorService executorService;
-
-    @PostConstruct
-    public void init() {
-        //设置一个50(暂定20)个线程的线程池
-        executorService = Executors.newFixedThreadPool(queryThreads, Executors.defaultThreadFactory());
-    }
-
     public static Cache<String, List<String>> apisCacheLoc = CacheBuilder.newBuilder().expireAfterWrite(2, TimeUnit.HOURS).maximumSize(10000).build();
 
     /**
@@ -78,10 +64,7 @@ public class EntryAlignScheduled  {
         long startTime = System.currentTimeMillis();
         log.info("对齐规则开始,批次:{}",startTime);
         try {
-            ConcurrentMap<String, List<String>> locMap = apisCacheLoc.asMap();
             ConcurrentMap<String, List<String>> rmtMap = EntryRuleScheduled.apisCache.asMap();
-            //System.out.println("----locMap----"+locMap);
-            //System.out.println("----rmtMap---->"+rmtMap);
             //1.首先获取全量在线的应用
             List<TAmdbAppInstanceDO> appInstanceList = appInstanceService.selectOnlineAppList();
             //3.提交任务到线程池,查询每个应用的入口规则
@@ -90,42 +73,28 @@ public class EntryAlignScheduled  {
                 String userAppKey = appInstance.getUserAppKey();
                 String envCode = appInstance.getEnvCode();
                 String key = userAppKey + "#" + envCode + "#" + appName;
-                executorService.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        List<String> locResult = locMap.get(key)==null?new ArrayList<>():locMap.get(key);
-                        List<String> rmtResult = rmtMap.get(key)==null?new ArrayList<>():rmtMap.get(key);
-                        //System.out.println(key+"----locResult----"+locResult);
-                        //System.out.println(key+"----rmtResult---->"+rmtResult);
-                        rmtResult.stream().forEach(s2 -> {
-                            //新增入口规则
-                            Example example = new Example(PradarLinkEntranceDO.class);
-                            Example.Criteria criteria = example.createCriteria();
-                            if(s2.split("#").length==2){
-                                List<Long> ids = new ArrayList<>();
-                                criteria.andEqualTo("appName", appName);
-                                criteria.andEqualTo("methodName", s2.split("#")[1]);
-                                criteria.andEqualTo("userAppKey", userAppKey);
-                                criteria.andEqualTo("envCode", envCode);
-                                List<PradarLinkEntranceDO> linkEntranceDOList = linkEntranceMapper.selectByExample(example);
-                                //System.out.println("key:"+key+"\nrule:"+s2+"\n"+linkEntranceDOList.size());
-                                linkEntranceDOList.forEach(s3 ->{
-                                    boolean match = antPathMatcher.match(s2.split("#")[0], s3.getServiceName());
-                                    //System.out.println(match+"  <|>  "+s2+"  <|>  "+s3.getServiceName()+"  <|>  "+antPathMatcher.isPattern(s3.getServiceName()));
-                                    if(match&&!s2.equals(s3.getServiceName()+"#"+s3.getMethodName())){
-                                        ids.add(s3.getId());
-                                    }
-                                });
-                                //TODO:测试
-                                if(ids.size()!=0){
-                                    //批量删除
-                                    linkEntranceMapper.deleteByIds(ids);
-                                    //System.out.println("---------------------------------");
-                                    //System.out.println(s2+">--ids-->:"+ids);
-                                    //System.out.println("---------------------------------");
-                                }
+                List<String> rmtResult = rmtMap.get(key)==null?new ArrayList<>():rmtMap.get(key);
+                rmtResult.forEach(s2 -> {
+                    //新增入口规则
+                    Example example = new Example(PradarLinkEntranceDO.class);
+                    Example.Criteria criteria = example.createCriteria();
+                    if(s2.split("#").length==2){
+                        List<Long> ids = new ArrayList<>();
+                        criteria.andEqualTo("appName", appName);
+                        criteria.andEqualTo("methodName", s2.split("#")[1]);
+                        criteria.andEqualTo("userAppKey", userAppKey);
+                        criteria.andEqualTo("envCode", envCode);
+                        List<PradarLinkEntranceDO> linkEntranceDOList = linkEntranceMapper.selectByExample(example);
+                        linkEntranceDOList.forEach(s3 ->{
+                            boolean match = antPathMatcher.match(s2.split("#")[0], s3.getServiceName());
+                            if(match&&!s2.equals(s3.getServiceName()+"#"+s3.getMethodName())){
+                                ids.add(s3.getId());
                             }
                         });
+                        if(ids.size()!=0){
+                            //批量删除
+                            linkEntranceMapper.deleteByIds(ids);
+                        }
                     }
                 });
             });
