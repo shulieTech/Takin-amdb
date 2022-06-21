@@ -87,7 +87,7 @@ public class SurgePushLogServiceImpl implements PushLogService {
 
             int httpCode = response.getStatusLine().getStatusCode();
             if (httpCode != HttpStatus.SC_OK) {
-                throw new IllegalStateException("push log failed,code is incorrect.");
+                throw new IllegalStateException("push log failed,code is incorrect." + httpCode);
             }
             String content = EntityUtils.toString(response.getEntity());
             if (StringUtils.isBlank(content)) {
@@ -99,9 +99,7 @@ public class SurgePushLogServiceImpl implements PushLogService {
                 return;
             }
         } catch (Throwable e) {
-            if (log.isInfoEnabled()) {
-                log.info("http log push error", e);
-            }
+            log.error("http log push error", e);
             if (response != null) {
                 try {
                     EntityUtils.consume(response.getEntity());
@@ -138,9 +136,7 @@ public class SurgePushLogServiceImpl implements PushLogService {
                 log.info("takin-web回调成功:{},{}", callbackUrl, request.getContent());
             }
         } catch (Throwable e) {
-            if (log.isInfoEnabled()) {
-                log.info("callbackTakin error", e);
-            }
+            log.error("callbackTakin error", e);
             if (response != null) {
                 try {
                     EntityUtils.consume(response.getEntity());

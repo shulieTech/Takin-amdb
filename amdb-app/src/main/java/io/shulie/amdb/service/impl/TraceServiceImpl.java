@@ -1083,6 +1083,102 @@ public class TraceServiceImpl implements TraceService {
     }
 
     @Override
+    public Response<List<EntryTraceInfoDTO>> getAppAndReqByUrl(EntryTraceQueryParam param) {
+        List<Map<String, Object>> appNameList = traceDao.queryForList(buildAppNameSql(param).toString());
+        List<EntryTraceInfoDTO> response = Lists.newArrayList();
+        if (CollectionUtils.isNotEmpty(appNameList)) {
+            for (int i = 0; i < appNameList.size(); i++) {
+                String appName = StringUtil.parseStr(appNameList.get(i).get("appName"));
+                param.setAppName(appName);
+                List<Map<String, Object>> resultSets = traceDao.queryForList(buildSql(param).toString());
+                EntryTraceInfoDTO trace = new EntryTraceInfoDTO();
+                if (CollectionUtils.isNotEmpty(resultSets)) {
+                    trace.setAppName(appName);
+                    trace.setRequest(StringUtil.parseStr(resultSets.get(0).get("request")));
+                    response.add(trace);
+                }
+            }
+        }
+        Response<List<EntryTraceInfoDTO>> success = Response.success(response);
+        success.setTotal(response.size());
+        return success;
+    }
+
+    private StringBuilder buildAppNameSql(EntryTraceQueryParam param) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select appName from t_trace_all where 1=1 and logType in ('1','3') ");
+        //设置为当前时间往前10分钟
+        if (param.getStartTime() == null) {
+            param.setStartTime(System.currentTimeMillis() - (10 * 60 * 1000));
+        }
+        //设置为当前时间往后5分钟
+        if (param.getEndTime() == null) {
+            param.setEndTime(System.currentTimeMillis() + (5 * 60 * 1000));
+        }
+        if (param.getStartTime() != null && param.getStartTime() > 0) {
+            sql.append(" and startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime()), "yyyy-MM-dd HH:mm:ss") + "' ");
+        }
+        if (param.getEndTime() != null && param.getEndTime() > 0) {
+            sql.append(" and startDate <= '" + DateFormatUtils.format(new Date(param.getEndTime()), "yyyy-MM-dd HH:mm:ss") + "' ");
+        }
+        if (StringUtils.isNotBlank(param.getServiceName())) {
+            sql.append(" and parsedServiceName='" + param.getServiceName() + "'");
+        }
+        if (StringUtils.isNotBlank(param.getMethodName())) {
+            sql.append(" and parsedMethod='" + param.getMethodName() + "'");
+        }
+        //只取http相关调用
+        sql.append(" and rpcType in ('0','1')");
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+        }
+        sql.append("group by appName");
+        return sql;
+    }
+
+    private StringBuilder buildSql(EntryTraceQueryParam param) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select request from t_trace_all where 1=1");
+        //设置为当前时间往前10分钟
+        if (param.getStartTime() == null) {
+            param.setStartTime(System.currentTimeMillis() - (10 * 60 * 1000));
+        }
+        //设置为当前时间往后5分钟
+        if (param.getEndTime() == null) {
+            param.setEndTime(System.currentTimeMillis() + (5 * 60 * 1000));
+        }
+        if (param.getStartTime() != null && param.getStartTime() > 0) {
+            sql.append(" and startDate >= '" + DateFormatUtils.format(new Date(param.getStartTime()), "yyyy-MM-dd HH:mm:ss") + "' ");
+        }
+        if (param.getEndTime() != null && param.getEndTime() > 0) {
+            sql.append(" and startDate <= '" + DateFormatUtils.format(new Date(param.getEndTime()), "yyyy-MM-dd HH:mm:ss") + "' ");
+        }
+
+        if (StringUtils.isNotBlank(param.getAppName())) {
+            sql.append(" and appName='" + param.getAppName() + "' ");
+        }
+        if (StringUtils.isNotBlank(param.getServiceName())) {
+            sql.append(" and parsedServiceName='" + param.getServiceName() + "'");
+        }
+        if (StringUtils.isNotBlank(param.getMethodName())) {
+            sql.append(" and parsedMethod='" + param.getMethodName() + "'");
+        }
+        //只取http相关调用
+        sql.append(" and rpcType in ('0','1')");
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+        }
+        sql.append(" order by startDate desc limit 1");
+        return sql;
+    }
+
+    @Override
     public List<RpcBased> getTraceDetail(TraceStackQueryParam param) {
         StringBuilder sql = new StringBuilder();
         sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where 1=1 ");

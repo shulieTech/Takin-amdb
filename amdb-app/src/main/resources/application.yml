@@ -90,7 +90,7 @@ config:
     compensate:
       nfsdir: /data/nfs_dir/ptl
       defaultVersion: 1.6
-      surgeAddress: http://pradar.host.apisix:39900/takin-surge/log/link/upload
+      surgeAddress: http://pradar.host.apisix:9080/takin-surge/log/link/upload
   agentlog:
     reserveDays: 7
   tenantConfig:

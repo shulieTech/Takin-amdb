@@ -42,6 +42,8 @@ public interface TraceService {
 
     Response<String> getAppNameByUrl(EntryTraceQueryParam param);
 
+    Response<List<EntryTraceInfoDTO>> getAppAndReqByUrl(EntryTraceQueryParam param);
+
     List<RpcBased> getTraceListByTraceIdList(List<String> traceIdList);
 
     void startCompensate(TraceCompensateRequest request);
