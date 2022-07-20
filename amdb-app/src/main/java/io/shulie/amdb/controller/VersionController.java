@@ -18,12 +18,17 @@ package io.shulie.amdb.controller;
 import com.google.common.collect.Maps;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.InputStream;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Properties;
 
 /**
  * @Author: xingchen
@@ -47,16 +52,31 @@ public class VersionController {
     @Value("${app.build.time}")
     private String serviceBuildDate;
 
+    private static Properties VERSION = null;
+
     @RequestMapping(value = "/getVersion", method = RequestMethod.GET)
-    public Map<String, String> getVersion() {
-        Map<String, String> ret = Maps.newHashMap();
+    public Map<String, Object> getVersion() {
+        Map<String, Object> ret = Maps.newHashMap();
         ret.put("version", serviceVersion);
         ret.put("buildTime", serviceBuildDate);
+        ret.put("gitVersion", Objects.isNull(VERSION) ? (VERSION = readGitVersion()) : VERSION);
         return ret;
     }
 
     @GetMapping(value = "/api/health")
     public String checkHealth() {
         return "success";
+    }
+
+    private Properties readGitVersion() {
+        Properties properties = new Properties();
+        Resource resource = new DefaultResourceLoader().getResource("classpath:git.properties");
+        if (resource.exists()) {
+            try (InputStream stream = resource.getInputStream()) {
+                properties.load(stream);
+            } catch (Exception ignore) {
+            }
+        }
+        return properties;
     }
 }
