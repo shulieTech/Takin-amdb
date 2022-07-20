@@ -15,15 +15,17 @@
 
 package io.shulie.amdb.controller;
 
+import java.util.Map;
+import java.util.Properties;
+
 import com.google.common.collect.Maps;
+import io.shulie.amdb.run.VersionRegister;
 import io.swagger.annotations.Api;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 /**
  * @Author: xingchen
@@ -58,5 +60,10 @@ public class VersionController {
     @GetMapping(value = "/api/health")
     public String checkHealth() {
         return "success";
+    }
+
+    @GetMapping(value = "/api/gitVersion")
+    public Properties gitVersion() {
+        return VersionRegister.readGitVersion();
     }
 }
