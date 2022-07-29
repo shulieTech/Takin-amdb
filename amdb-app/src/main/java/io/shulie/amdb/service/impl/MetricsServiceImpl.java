@@ -17,9 +17,13 @@ package io.shulie.amdb.service.impl;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import io.shulie.amdb.adaptors.common.Pair;
 import io.shulie.amdb.dao.ITraceDao;
+import io.shulie.amdb.entity.TAMDBPradarLinkConfigDO;
 import io.shulie.amdb.entity.TAmdbPradarLinkEdgeDO;
+import io.shulie.amdb.mapper.PradarLinkConfigMapper;
 import io.shulie.amdb.mapper.PradarLinkEdgeMapper;
 import io.shulie.amdb.request.query.MetricsDetailQueryRequest;
 import io.shulie.amdb.request.query.MetricsFromInfluxdbQueryRequest;
@@ -29,6 +33,7 @@ import io.shulie.amdb.response.metrics.MetricsDetailResponse;
 import io.shulie.amdb.response.metrics.MetricsResponse;
 import io.shulie.amdb.service.MetricsService;
 import io.shulie.amdb.utils.InfluxDBManager;
+import io.shulie.surge.data.deploy.pradar.parser.PradarLogType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -38,11 +43,14 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import tk.mybatis.mapper.entity.Example;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -57,6 +65,9 @@ public class MetricsServiceImpl implements MetricsService {
 
     @Resource
     PradarLinkEdgeMapper pradarLinkEdgeMapper;
+
+    @Resource
+    PradarLinkConfigMapper pradarLinkConfigMapper;
 
     @Autowired
     @Qualifier("traceDaoImpl")
@@ -330,20 +341,14 @@ public class MetricsServiceImpl implements MetricsService {
     //查询关联业务活动
     private Cache<String, List<String>> cache2 = CacheBuilder.newBuilder().maximumSize(90000).expireAfterWrite(1, TimeUnit.HOURS).build();
 
-    public MetricsServiceImpl() {
-        initCache();
-    }
-
-    private synchronized void initCache() {
+    @PostConstruct
+    public void initCache() {
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> refreshCache(), 0, 5, TimeUnit.MINUTES);
     }
 
     private void refreshCache() {
         try {
-            if (pradarLinkEdgeMapper == null) {
-                return;
-            }
-            List<TAmdbPradarLinkEdgeDO> allList1 = pradarLinkEdgeMapper.getAllEdge1();
+            List<TAmdbPradarLinkEdgeDO> allList1 = this.getAllEdge1();
             for (TAmdbPradarLinkEdgeDO edge : allList1) {
                 if (this.cache1.getIfPresent(edge.getLinkId()) == null) {
                     this.cache1.put(edge.getLinkId(), new ArrayList<>());
@@ -351,7 +356,7 @@ public class MetricsServiceImpl implements MetricsService {
                 //可能存在重复的service
                 this.cache1.getIfPresent(edge.getLinkId()).add(edge.getService());
             }
-            List<TAmdbPradarLinkEdgeDO> allList2 = pradarLinkEdgeMapper.getAllEdge2();
+            List<TAmdbPradarLinkEdgeDO> allList2 = this.getAllEdge2(allList1);
             for (TAmdbPradarLinkEdgeDO edge : allList2) {
                 if (this.cache2.getIfPresent(edge.getService()) == null) {
                     this.cache2.put(edge.getService(), new ArrayList<>());
@@ -364,6 +369,86 @@ public class MetricsServiceImpl implements MetricsService {
         } catch (Throwable e) {
             e.printStackTrace();
         }
+    }
+
+    //@Select("select distinct CONCAT(edge.app_name,'#',edge.service,'#',edge.method) as service,\n" +
+    //        "CONCAT(config.app_name,'#',config.service,'#',config.method) as extend\n" +
+    //        "from (select * from t_amdb_pradar_link_edge  where app_name != 'UNKNOWN' and log_type != '2') edge,t_amdb_pradar_link_config config where config.link_id = edge.link_id ")
+    public List<TAmdbPradarLinkEdgeDO> getAllEdge2(List<TAmdbPradarLinkEdgeDO> edges) {
+        // 获取所有的边 edges 已经去重过了
+        if (CollectionUtils.isEmpty(edges)) {
+            return Collections.EMPTY_LIST;
+        }
+        // 读取所有配置
+        List<TAMDBPradarLinkConfigDO> linkList = pradarLinkConfigMapper.selectAll();
+        // 按linkId分组
+        Map<String, List<TAMDBPradarLinkConfigDO>> linkIdMap = linkList.stream().collect(Collectors.groupingBy(TAMDBPradarLinkConfigDO::getLinkId));
+        for (int i = 0; i < edges.size(); i++) {
+            TAmdbPradarLinkEdgeDO edgeDO = edges.get(i);
+            String linkId = edgeDO.getLinkId();
+            List<TAMDBPradarLinkConfigDO> configDOs = linkIdMap.get(linkId);
+            if (CollectionUtils.isNotEmpty(configDOs)) {
+                TAMDBPradarLinkConfigDO configDO = configDOs.get(0);
+                String extend = configDO.getAppName() + "#" + configDO.getService() + "#" + configDO.getMethod();
+                edgeDO.setExtend(extend);
+            }
+        }
+        return edges;
+    }
+
+    // 循环去获取
+    // @Select("select distinct CONCAT(app_name,'#',service,'#',method) as service,link_id as linkId from t_amdb_pradar_link_edge where app_name != 'UNKNOWN' and log_type != '2'")
+    public List<TAmdbPradarLinkEdgeDO> getAllEdge1() {
+        Map<String, String> duMap = Maps.newHashMap();
+        List<TAmdbPradarLinkEdgeDO> linkEdgeList = Lists.newArrayList();
+        //查询所有的链路配置,链路配置不多，可以全量查询
+        List<String> configIds = pradarLinkConfigMapper.selectConfigId();
+        if (CollectionUtils.isEmpty(configIds)) {
+            return Collections.EMPTY_LIST;
+        }
+        List<List<String>> subList = Lists.partition(configIds, 10);
+        for (int i = 0; i < subList.size(); i++) {
+            Example example = new Example(TAmdbPradarLinkEdgeDO.class);
+            Example.Criteria linkIdCriteria = example.createCriteria();
+            linkIdCriteria.andIn("linkId", subList.get(i));
+            linkIdCriteria.andIn("logType", getDefaultLogTypes());
+            linkIdCriteria.andGreaterThan("gmtModify", LocalDateTime.now().minusDays(1));
+            List<TAmdbPradarLinkEdgeDO> edges = pradarLinkEdgeMapper.selectByExample(example);
+            if (CollectionUtils.isNotEmpty(edges)) {
+                if (edges.size() > 10000) {
+                    log.warn("当前链路边太多,请检查 linkIds {}", StringUtils.join(subList.get(i), ","));
+                }
+                for (int j = 0; j < edges.size(); j++) {
+                    TAmdbPradarLinkEdgeDO edgeDO = edges.get(j);
+                    String appName = edgeDO.getAppName();
+                    if (StringUtils.isNotBlank(appName) && appName.equals("UNKNOWN")) {
+                        continue;
+                    }
+                    String service = edgeDO.getAppName() + "#" + edgeDO.getService() + "#" + edgeDO.getMethod();
+                    String linkId = edgeDO.getLinkId();
+                    if (!duMap.containsKey(service)) {
+                        duMap.put(service, "");
+
+                        // 设置值
+                        TAmdbPradarLinkEdgeDO tmp = new TAmdbPradarLinkEdgeDO();
+                        tmp.setService(service);
+                        tmp.setLinkId(linkId);
+                        linkEdgeList.add(tmp);
+                    }
+                }
+            }
+        }
+        return linkEdgeList;
+    }
+
+    private List<String> getDefaultLogTypes() {
+        List<String> logTypes = new ArrayList<>();
+        logTypes.add(String.valueOf(PradarLogType.LOG_TYPE_BIZ));
+        logTypes.add(String.valueOf(PradarLogType.LOG_TYPE_TRACE));
+        logTypes.add(String.valueOf(PradarLogType.LOG_TYPE_RPC_SERVER));
+        logTypes.add(String.valueOf(PradarLogType.LOG_TYPE_RPC_LOG));
+        logTypes.add(String.valueOf(PradarLogType.LOG_TYPE_FLOW_ENGINE));
+        return logTypes;
     }
 
     /**
