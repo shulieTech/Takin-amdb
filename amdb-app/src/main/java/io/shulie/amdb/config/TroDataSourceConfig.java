@@ -39,6 +39,27 @@ class TroDataSourceConfig {
     @Value("${tro.datasource.driver-class-name}")
     private String driverClassName;
 
+    @Value("${tro.datasource.druid.initialSize}")
+    private int initialSize;
+    @Value("${tro.datasource.druid.minIdle}")
+    private int minIdle;
+    @Value("${tro.datasource.druid.maxActive}")
+    private int maxActive;
+    @Value("${tro.datasource.druid.maxWait}")
+    private long maxWait;
+    @Value("${tro.datasource.druid.timeBetweenEvictionRunsMillis}")
+    private long timeBetweenEvictionRunsMillis;
+    @Value("${tro.datasource.druid.validationQuery}")
+    private String validationQuery;
+    @Value("${tro.datasource.druid.testWhileIdle}")
+    private boolean testWhileIdle;
+    @Value("${tro.datasource.druid.testOnReturn}")
+    private boolean testOnReturn;
+    @Value("${tro.datasource.druid.testOnBorrow}")
+    private boolean testOnBorrow;
+    @Value("${tro.datasource.druid.poolPreparedStatements}")
+    private boolean poolPreparedStatements;
+
     @Bean("troDataSource")
     public DataSource troDataSource() {
         DruidDataSource dataSource = new DruidDataSource();
@@ -46,6 +67,16 @@ class TroDataSourceConfig {
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         dataSource.setDriverClassName(driverClassName);
+        dataSource.setInitialSize(initialSize);
+        dataSource.setMinIdle(minIdle);
+        dataSource.setMaxActive(maxActive);
+        dataSource.setMaxWait(maxWait);
+        dataSource.setTimeBetweenEvictionRunsMillis(timeBetweenEvictionRunsMillis);
+        dataSource.setValidationQuery(validationQuery);
+        dataSource.setTestWhileIdle(testWhileIdle);
+        dataSource.setTestOnReturn(testOnReturn);
+        dataSource.setTestOnBorrow(testOnBorrow);
+        dataSource.setPoolPreparedStatements(poolPreparedStatements);
         return dataSource;
     }
 
