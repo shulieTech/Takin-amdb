@@ -39,25 +39,25 @@ class TroDataSourceConfig {
     @Value("${tro.datasource.driver-class-name}")
     private String driverClassName;
 
-    @Value("${tro.datasource.druid.initialSize}")
+    @Value("${tro.datasource.druid.initialSize:1}")
     private int initialSize;
-    @Value("${tro.datasource.druid.minIdle}")
+    @Value("${tro.datasource.druid.minIdle:1}")
     private int minIdle;
-    @Value("${tro.datasource.druid.maxActive}")
+    @Value("${tro.datasource.druid.maxActive:20}")
     private int maxActive;
-    @Value("${tro.datasource.druid.maxWait}")
+    @Value("${spring.datasource.druid.maxWait}")
     private long maxWait;
-    @Value("${tro.datasource.druid.timeBetweenEvictionRunsMillis}")
+    @Value("${spring.datasource.druid.timeBetweenEvictionRunsMillis}")
     private long timeBetweenEvictionRunsMillis;
-    @Value("${tro.datasource.druid.validationQuery}")
+    @Value("${spring.datasource.druid.validationQuery}")
     private String validationQuery;
-    @Value("${tro.datasource.druid.testWhileIdle}")
+    @Value("${spring.datasource.druid.testWhileIdle}")
     private boolean testWhileIdle;
-    @Value("${tro.datasource.druid.testOnReturn}")
+    @Value("${spring.datasource.druid.testOnReturn}")
     private boolean testOnReturn;
-    @Value("${tro.datasource.druid.testOnBorrow}")
+    @Value("${spring.datasource.druid.testOnBorrow}")
     private boolean testOnBorrow;
-    @Value("${tro.datasource.druid.poolPreparedStatements}")
+    @Value("${spring.datasource.druid.poolPreparedStatements}")
     private boolean poolPreparedStatements;
 
     @Bean("troDataSource")
