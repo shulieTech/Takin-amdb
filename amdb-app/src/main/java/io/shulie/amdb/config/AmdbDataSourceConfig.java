@@ -40,6 +40,27 @@ class AmdbDataSourceConfig {
     @Value("${spring.datasource.driver-class-name}")
     private String driverClassName;
 
+    @Value("${spring.datasource.druid.initialSize}")
+    private int initialSize;
+    @Value("${spring.datasource.druid.minIdle}")
+    private int minIdle;
+    @Value("${spring.datasource.druid.maxActive}")
+    private int maxActive;
+    @Value("${spring.datasource.druid.maxWait}")
+    private long maxWait;
+    @Value("${spring.datasource.druid.timeBetweenEvictionRunsMillis}")
+    private long timeBetweenEvictionRunsMillis;
+    @Value("${spring.datasource.druid.validationQuery}")
+    private String validationQuery;
+    @Value("${spring.datasource.druid.testWhileIdle}")
+    private boolean testWhileIdle;
+    @Value("${spring.datasource.druid.testOnReturn}")
+    private boolean testOnReturn;
+    @Value("${spring.datasource.druid.testOnBorrow}")
+    private boolean testOnBorrow;
+    @Value("${spring.datasource.druid.poolPreparedStatements}")
+    private boolean poolPreparedStatements;
+
     @Bean("amdbDataSource")
     @Primary
     public DataSource amdbDataSource() {
@@ -48,6 +69,16 @@ class AmdbDataSourceConfig {
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         dataSource.setDriverClassName(driverClassName);
+        dataSource.setInitialSize(initialSize);
+        dataSource.setMinIdle(minIdle);
+        dataSource.setMaxActive(maxActive);
+        dataSource.setMaxWait(maxWait);
+        dataSource.setTimeBetweenEvictionRunsMillis(timeBetweenEvictionRunsMillis);
+        dataSource.setValidationQuery(validationQuery);
+        dataSource.setTestWhileIdle(testWhileIdle);
+        dataSource.setTestOnReturn(testOnReturn);
+        dataSource.setTestOnBorrow(testOnBorrow);
+        dataSource.setPoolPreparedStatements(poolPreparedStatements);
         return dataSource;
     }
 
