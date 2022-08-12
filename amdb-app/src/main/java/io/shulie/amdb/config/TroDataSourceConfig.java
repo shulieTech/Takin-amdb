@@ -39,11 +39,11 @@ class TroDataSourceConfig {
     @Value("${tro.datasource.driver-class-name}")
     private String driverClassName;
 
-    @Value("${spring.datasource.druid.initialSize}")
+    @Value("${tro.datasource.druid.initialSize:1}")
     private int initialSize;
-    @Value("${spring.datasource.druid.minIdle}")
+    @Value("${tro.datasource.druid.minIdle:1}")
     private int minIdle;
-    @Value("${spring.datasource.druid.maxActive}")
+    @Value("${tro.datasource.druid.maxActive:20}")
     private int maxActive;
     @Value("${spring.datasource.druid.maxWait}")
     private long maxWait;
@@ -66,7 +66,6 @@ class TroDataSourceConfig {
         dataSource.setUrl(url);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
-        dataSource.setDriverClassName(driverClassName);
         dataSource.setDriverClassName(driverClassName);
         dataSource.setInitialSize(initialSize);
         dataSource.setMinIdle(minIdle);
