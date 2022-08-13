@@ -28,6 +28,7 @@ import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
 import io.shulie.amdb.common.request.trace.TraceCompensateRequest;
 import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
 import io.shulie.amdb.common.request.trodata.LogCompensateCallbackRequest;
+import io.shulie.amdb.common.request.trodata.LogCompensateCallbackRequest.LogCompensateCallbackData;
 import io.shulie.amdb.constant.SqlConstants;
 import io.shulie.amdb.dao.ITraceDao;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
@@ -1010,15 +1011,16 @@ public class TraceServiceImpl implements TraceService {
             return;
         }
 
-        LogCompensateCallbackRequest callbackTakinRequest = new LogCompensateCallbackRequest();
-        callbackTakinRequest.setJobId(request.getJobId());
-        callbackTakinRequest.setResourceId(String.valueOf(request.getResourceId()));
+        LogCompensateCallbackData data = new LogCompensateCallbackData();
+        LogCompensateCallbackRequest callbackTakinRequest = new LogCompensateCallbackRequest(data);
+        data.setPressureId(request.getJobId());
+        data.setResourceId(String.valueOf(request.getResourceId()));
 
         //启动校准任务
         //如果不包含err文件,代表所有ptl都已经上传成功
         if (!checkIsNeedCompensate(checkDirectory)) {
-            callbackTakinRequest.setCompleted(true);
-            callbackTakinRequest.setContent("当前目录下无err文件,校准自动完成");
+            data.setCompleted(true);
+            data.setContent("当前目录下无err文件,校准自动完成");
             //开始回调
             pushLogService.callbackTakin(request.getCallbackUrl(), callbackTakinRequest);
             return;
@@ -1027,8 +1029,8 @@ public class TraceServiceImpl implements TraceService {
             List<File> fileList = FileUtil.getFileList(checkDirectory, ".err");
             if (CollectionUtils.isEmpty(fileList)) {
                 //校准通过
-                callbackTakinRequest.setCompleted(true);
-                callbackTakinRequest.setContent("当前目录下无err文件,校准自动完成");
+                data.setCompleted(true);
+                data.setContent("当前目录下无err文件,校准自动完成");
                 //开始回调
                 pushLogService.callbackTakin(request.getCallbackUrl(), callbackTakinRequest);
                 //开始回调
@@ -1043,6 +1045,7 @@ public class TraceServiceImpl implements TraceService {
     }
 
     private void compensate(TraceCompensateRequest request, String checkDirectory, LogCompensateCallbackRequest callbackTakinRequest, List<File> fileList) {
+        LogCompensateCallbackData data = callbackTakinRequest.getData();
         final CountDownLatch latch = new CountDownLatch(fileList.size());
         StringBuilder fileNameBuilder = new StringBuilder();
         for (int i = 0; i < fileList.size(); i++) {
@@ -1071,8 +1074,8 @@ public class TraceServiceImpl implements TraceService {
         }
 
         //校准通过
-        callbackTakinRequest.setCompleted(true);
-        callbackTakinRequest.setContent(checkDirectory + "目录下存在以下文件需要校准:" + fileNameBuilder + ",已校准完成");
+        data.setCompleted(true);
+        data.setContent(checkDirectory + "目录下存在以下文件需要校准:" + fileNameBuilder + ",已校准完成");
         //开始回调
         pushLogService.callbackTakin(request.getCallbackUrl(), callbackTakinRequest);
     }

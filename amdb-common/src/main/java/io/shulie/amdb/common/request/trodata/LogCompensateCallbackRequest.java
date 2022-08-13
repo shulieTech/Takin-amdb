@@ -10,10 +10,19 @@ import lombok.Data;
  */
 @Data
 public class LogCompensateCallbackRequest {
-    private Integer type = 302; // 固定 302
-    private String source = "amdb"; // 来源：amdb、cloud [ 不传默认cloud ]
-    private String resourceId;
-    private Long jobId;
-    private String content;
-    private Boolean completed;
+    private final Integer type = 302; // 固定 302
+    private final String source = "amdb"; // 来源：amdb、cloud [ 不传默认cloud ]
+    private LogCompensateCallbackData data;
+
+    public LogCompensateCallbackRequest(LogCompensateCallbackData data) {
+        this.data = data;
+    }
+
+    @Data
+    public static class LogCompensateCallbackData {
+        private String resourceId;
+        private Long pressureId;
+        private String content;
+        private Boolean completed;
+    }
 }
