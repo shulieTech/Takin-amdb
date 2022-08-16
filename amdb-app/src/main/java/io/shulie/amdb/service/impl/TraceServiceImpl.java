@@ -304,6 +304,7 @@ public class TraceServiceImpl implements TraceService {
         entryTraceInfoDTO.setCost(trackClickhouseModel.getCost());
         entryTraceInfoDTO.setResponse(trackClickhouseModel.getResponse());
         entryTraceInfoDTO.setAssertResult(trackClickhouseModel.getCallbackMsg());
+        entryTraceInfoDTO.setClusterTest(trackClickhouseModel.isClusterTest());
         return entryTraceInfoDTO;
     }
 
@@ -564,13 +565,14 @@ public class TraceServiceImpl implements TraceService {
                     String[] entranceInfo = entrance.split("#");
                     if (param.getQueryType() == 2) {
                         if (entranceInfo.length == 4) {
-                            StringBuilder sqlPart = new StringBuilder("(parsedServiceName like '%").append(entranceInfo[1]).append("%' and rpcType='").append(entranceInfo[3]).append('\'');
-                            if (StringUtils.isNotBlank(entranceInfo[2]))
-                            {
-                                sqlPart.append(" and parsedMethod='").append(entranceInfo[2]).append('\'').append(' ');
+                            StringBuilder builder = new StringBuilder();
+                            builder.append("(parsedServiceName like '%" + entranceInfo[1] + "%' ");
+                            String methodName = entranceInfo[2];
+                            if (StringUtils.isNotBlank(methodName)) {
+                                builder.append(" and parsedMethod='" + methodName + "' ");
                             }
-                            sqlPart.append(')');
-                            orFilterList.add(sqlPart.toString());
+                            builder.append(" and rpcType='" + entranceInfo[3] + "') ");
+                            orFilterList.add(builder.toString());
                         }
                     } else {
                         if (StringUtils.isNotBlank(entranceInfo[0]) && !"null".equals(entranceInfo[0])) {

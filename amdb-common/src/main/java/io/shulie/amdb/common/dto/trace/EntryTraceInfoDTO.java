@@ -32,4 +32,5 @@ public class EntryTraceInfoDTO {
     String request;
     String assertResult;
     String localAttributes;
+    boolean clusterTest;
 }

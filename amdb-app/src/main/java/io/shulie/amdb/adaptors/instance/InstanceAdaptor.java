@@ -98,9 +98,6 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
 
     @Override
     public Object process(DataContext dataContext) {
-        if (log.isDebugEnabled()) {
-            log.debug("当前dataContext为:{}", dataContext);
-        }
         String path[] = dataContext.getPath().replaceAll(INSTANCE_PATH, "").split("/");
         String appName = path[0];
         InstanceModel instanceModel = (InstanceModel) dataContext.getModel();

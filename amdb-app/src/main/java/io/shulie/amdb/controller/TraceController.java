@@ -107,8 +107,8 @@ public class TraceController {
      * @param param
      * @return
      */
-    @RequestMapping(value = "/getEntryTraceList", method = RequestMethod.GET)
-    public Response<List<EntryTraceInfoDTO>> getEntryTraceList(EntryTraceQueryParam param) {
+    @RequestMapping(value = "/getEntryTraceList", method = RequestMethod.POST)
+    public Response<List<EntryTraceInfoDTO>> getEntryTraceList(@RequestBody EntryTraceQueryParam param) {
         logger.info("流量明细查询 请求参数:{}", param);
         //&& "2".equals(param.getResultType())
         if (StringUtils.isNotBlank(param.getTaskId())) {

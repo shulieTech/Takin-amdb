@@ -1,9 +1,25 @@
 package io.shulie.amdb.service.impl;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+
+import com.pamirs.pradar.log.parser.ProtocolParserFactory;
+import com.pamirs.pradar.log.parser.trace.RpcBased;
 import com.pamirs.pradar.remoting.protocol.CommandCode;
 import io.shulie.amdb.common.request.trodata.LogCompensateCallbackRequest;
+import io.shulie.amdb.dao.ITraceDao;
 import io.shulie.amdb.service.log.PushLogService;
 import io.shulie.amdb.utils.StringUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -22,14 +38,7 @@ import org.apache.http.impl.client.StandardHttpRequestRetryHandler;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
+import org.springframework.util.CollectionUtils;
 
 /**
  * @author Sunsy
@@ -41,16 +50,23 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class SurgePushLogServiceImpl implements PushLogService {
 
+    @Resource
+    private ITraceDao traceDao;
+
     private CloseableHttpClient httpClient = null;
 
     /**
      * 向AMDB推送数据
      *
-     * @param data    数据
+     * @param filePath 文件路径
+     * @param traceLine    数据
      * @param version 版本
      */
     @Override
-    public void pushLogToAmdb(byte[] data, String version, String address) throws Exception {
+    public void pushLogToAmdb(String filePath, String traceLine, String version, String address) {
+        if (isRepeatTrace(filePath, traceLine, version)) {
+            return;
+        }
         CloseableHttpResponse response = null;
         try {
             HttpPost httpPost = new HttpPost(address);
@@ -61,7 +77,7 @@ public class SurgePushLogServiceImpl implements PushLogService {
             httpPost.setHeader("hostIp", InetAddress.getLocalHost().getHostAddress());
             httpPost.setHeader("Accept-Encoding", "gzip,deflate,sdch");
 
-            ByteArrayEntity byteArrayEntity = new ByteArrayEntity(data);
+            ByteArrayEntity byteArrayEntity = new ByteArrayEntity(traceLine.getBytes(StandardCharsets.UTF_8));
             GzipCompressingEntity gzipEntity = new GzipCompressingEntity(byteArrayEntity);
             httpPost.setEntity(gzipEntity);
             response = httpClient.execute(httpPost);
@@ -91,7 +107,6 @@ public class SurgePushLogServiceImpl implements PushLogService {
                     log.error("callback consume response entity exception", e);
                 }
             }
-            throw e;
         }
     }
 
@@ -201,6 +216,31 @@ public class SurgePushLogServiceImpl implements PushLogService {
             this.httpClient.close();
         } catch (Throwable e) {
             log.error("close httpClient err!", e);
+        }
+    }
+
+    private boolean isRepeatTrace(String filePath, String traceLine, String dataVersion) {
+        if (StringUtils.isBlank(traceLine)) {
+            return true;
+        }
+        try {
+            String hostIp = InetAddress.getLocalHost().getHostAddress();
+            RpcBased rpcBased = ProtocolParserFactory.getFactory().getTraceProtocolParser(dataVersion)
+                .parse(hostIp, dataVersion, traceLine);
+            if (Objects.isNull(rpcBased)) {
+                log.info("数据校准中，文件[{}]数据[{}]解析失败", filePath, traceLine);
+                return false;
+            }
+            String repeatSql = "select traceId from t_trace_pressure "
+                + " where traceId = '" + rpcBased.getTraceId() + "'"
+                + " and startTime = '" + rpcBased.getStartTime() + "'"
+                + " and serviceName = '" + rpcBased.getServiceName() + "'"
+                + " and methodName = '" + rpcBased.getMethodName() + "'"
+                + " and rpcType = '" + rpcBased.getRpcType() + "'"
+                + " and rpcId = '" + rpcBased.getRpcType() + "' limit 1";
+            return !CollectionUtils.isEmpty(traceDao.queryForList(repeatSql, String.class));
+        } catch (Exception ignore) {
+            return false;
         }
     }
 

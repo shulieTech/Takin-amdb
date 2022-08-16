@@ -41,6 +41,10 @@ tro:
     username: root
     password: shulie@2020
 
+logging:
+    level:
+      io.shulie.amdb.mapper: debug
+
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
