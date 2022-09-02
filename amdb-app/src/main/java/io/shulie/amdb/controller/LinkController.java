@@ -70,9 +70,9 @@ public class LinkController {
     public Response<List<ServiceInfoDTO>> getEntranceList(ServiceQueryParam param) {
         log.info("查询入口 param:{}", JSON.toJSONString(param));
         try {
-            if (StringUtils.isBlank(param.getAppName())) {
+            /*if (StringUtils.isBlank(param.getAppName())) {
                 return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
-            }
+            }*/
             return linkService.getServiceListByMysql(param);
         } catch (Exception e) {
             log.error("查询入口列表失败", e);
