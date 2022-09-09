@@ -29,11 +29,20 @@ public class TopologyQueryParam extends AbstractAmdbBaseRequest {
     String extend;
     Boolean isTrace;
     private String id;
-    
+    private Boolean extFlag;
+
     public boolean isTrace() {
         if (StringUtils.isEmpty(isTrace)) {
             isTrace = true;
         }
         return isTrace;
+    }
+
+    // 默认没有
+    public boolean isExtFlag() {
+        if (StringUtils.isEmpty(extFlag)) {
+            extFlag = false;
+        }
+        return extFlag;
     }
 }

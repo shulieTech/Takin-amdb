@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.link.entrance.ExitInfoDTO;
 import io.shulie.amdb.common.dto.link.entrance.ServiceInfoDTO;
+import io.shulie.amdb.common.dto.link.topology.AppShadowDatabaseDTO;
 import io.shulie.amdb.common.dto.link.topology.LinkEdgeDTO;
 import io.shulie.amdb.common.dto.link.topology.LinkTopologyDTO;
 import io.shulie.amdb.common.enums.EdgeTypeEnum;
@@ -46,6 +47,7 @@ import io.shulie.amdb.exception.AmdbException;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.mapper.*;
 import io.shulie.amdb.request.LinkRequest;
+import io.shulie.amdb.request.query.AppShadowDatabaseRequest;
 import io.shulie.amdb.scheduled.EntryAlignScheduled;
 import io.shulie.amdb.service.AppService;
 import io.shulie.amdb.service.LinkConfigService;
@@ -64,6 +66,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,7 +76,6 @@ import tk.mybatis.mapper.entity.Example;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -426,19 +428,19 @@ public class LinkServiceImpl implements LinkService {
                 String key = param.getTenantAppKey() + "#" + param.getEnvCode() + "#" + param.getAppName();
                 List<String> locResult = EntryAlignScheduled.apisCacheLoc.asMap().get(key);
                 AtomicReference matchStr = new AtomicReference();
-                if(locResult!=null){
+                if (locResult != null) {
                     locResult.forEach(s -> {
-                        if(s.split("#").length==2){
-                            if(antPathMatcher.match(s.split("#")[0], serviceNameAry[0])){
+                        if (s.split("#").length == 2) {
+                            if (antPathMatcher.match(s.split("#")[0], serviceNameAry[0])) {
                                 matchStr.set(s.split("#")[0]);
                             }
                         }
                     });
                 }
-                if(matchStr.get()!=null){
+                if (matchStr.get() != null) {
                     serviceNameFilter += "service_name like '%" + serviceNameAry[0] + "%' or " +
-                            "service_name like '%" + matchStr.get() + "%'" ;
-                }else{
+                            "service_name like '%" + matchStr.get() + "%'";
+                } else {
                     serviceNameFilter += "service_name like '%" + serviceNameAry[0] + "%'";
                 }
                 criteria.andCondition("(" + serviceNameFilter + ")");
@@ -737,6 +739,25 @@ public class LinkServiceImpl implements LinkService {
             linkEdgeDTO.setLogType(edgeDO.getLogType());
             linkEdgeDTO.setRpcType(edgeDO.getRpcType());
             linkEdgeDTO.setServerAppName(edgeDO.getServerAppName());
+
+            // 如果是数据库的话,拼接下数据库扩展信息
+            if (param.isExtFlag() && linkEdgeDTO.getEagleTypeGroup().equals(EdgeTypeGroupEnum.DB.getType())) {
+                // 按照应用和数据源地址去查询下
+                AppShadowDatabaseRequest request = new AppShadowDatabaseRequest();
+                request.setAppName(linkEdgeDTO.getServerAppName());
+                request.setDataSource(linkEdgeDTO.getService());
+                request.setEnvCode(param.getEnvCode());
+                request.setTenantAppKey(param.getTenantAppKey());
+                com.github.pagehelper.PageInfo<AppShadowDatabaseDO> page = appService.selectShadowDatabase(request);
+                if (page != null && CollectionUtils.isNotEmpty(page.getList())) {
+                    List<AppShadowDatabaseDTO> list = page.getList().stream().map(ds -> {
+                        AppShadowDatabaseDTO dsDTO = new AppShadowDatabaseDTO();
+                        BeanUtils.copyProperties(ds, dsDTO);
+                        return dsDTO;
+                    }).collect(Collectors.toList());
+                    linkEdgeDTO.setDsList(list);
+                }
+            }
             return linkEdgeDTO;
         }).collect(Collectors.toList()));
         String isTemp = LinkProcessor.threadLocal.get();

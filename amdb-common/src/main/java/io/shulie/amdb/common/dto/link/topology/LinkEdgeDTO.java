@@ -17,6 +17,8 @@ package io.shulie.amdb.common.dto.link.topology;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class LinkEdgeDTO {
     String sourceId;
@@ -40,4 +42,6 @@ public class LinkEdgeDTO {
     String logType;
     //中间件名称
     String middlewareName;
+
+    List<AppShadowDatabaseDTO> dsList;
 }
