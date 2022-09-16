@@ -41,6 +41,8 @@ public class ExitQueryParam extends PagingRequest {
     String fieldNames;
     @ApiModelProperty("默认白名单标识,不传或者传入false查询正常出口,true为查询默认白名单")
     boolean defaultWhiteFlag;
+    @ApiModelProperty("linkId")
+    String linkId;
 
     public boolean isDefaultWhiteFlag() {
         return defaultWhiteFlag;

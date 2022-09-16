@@ -569,6 +569,10 @@ public class LinkServiceImpl implements LinkService {
             criteria.andEqualTo("envCode", param.getEnvCode());
         }
 
+        if (StringUtils.isNotBlank(param.getLinkId())) {
+            criteria.andEqualTo("link_id", param.getLinkId());
+        }
+
         if (param.isDefaultWhiteFlag()) {
             criteria.andNotEqualTo("defaultWhiteInfo", "");
         }
