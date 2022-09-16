@@ -42,4 +42,6 @@ public class ExitInfoDTO {
     String downAppName;
     @ApiModelProperty("默认白名单信息")
     String defaultWhiteInfo;
+    String rpcId;
+    String linkId;
 }

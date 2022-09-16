@@ -50,6 +50,13 @@ public class PradarLinkEntranceDO extends BaseDatabaseDO {
     private String entranceId;
 
     /**
+     * 入口ID
+     */
+    @Column(name = "`link_id`")
+    @ApiModelProperty("link_id")
+    private String linkId;
+
+    /**
      * 应用名称
      */
     @Column(name = "`app_name`")
@@ -140,6 +147,13 @@ public class PradarLinkEntranceDO extends BaseDatabaseDO {
     @Column(name = "`gmt_modify`")
     @ApiModelProperty("更新时间")
     private Date gmtModify;
+
+    /**
+     * 更新时间
+     */
+    @Column(name = "`rpcId`")
+    @ApiModelProperty("rpcId")
+    private String rpcId;
 
     private static final long serialVersionUID = 1L;
 

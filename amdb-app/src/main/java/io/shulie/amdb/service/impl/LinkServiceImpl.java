@@ -588,6 +588,9 @@ public class LinkServiceImpl implements LinkService {
                 if (selectFields.contains("appName")) {
                     exitInfoDTO.setAppName(data.getAppName());
                 }
+                if (selectFields.contains("linkId")) {
+                    exitInfoDTO.setLinkId(data.getLinkId());
+                }
                 if (selectFields.contains("serviceName")) {
                     exitInfoDTO.setServiceName(data.getServiceName());
                 }
@@ -611,6 +614,9 @@ public class LinkServiceImpl implements LinkService {
                 }
                 if (selectFields.contains("downAppName")) {
                     exitInfoDTO.setDownAppName(data.getDownAppName());
+                }
+                if (selectFields.contains("rpcId")) {
+                    exitInfoDTO.setRpcId(data.getRpcId());
                 }
                 if (selectFields.contains("defaultWhiteInfo")) {
                     String[] defaultWhiteInfo = data.getDefaultWhiteInfo().split("@##");
@@ -663,6 +669,12 @@ public class LinkServiceImpl implements LinkService {
             }
             if (fieldNames.contains("defaultWhiteInfo")) {
                 selectFields.add("defaultWhiteInfo");
+            }
+            if (fieldNames.contains("rpcId")) {
+                selectFields.add("rpcId");
+            }
+            if (fieldNames.contains("linkId")) {
+                selectFields.add("linkId");
             }
         }
         return selectFields;
