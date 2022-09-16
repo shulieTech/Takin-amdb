@@ -570,7 +570,7 @@ public class LinkServiceImpl implements LinkService {
         }
 
         if (StringUtils.isNotBlank(param.getLinkId())) {
-            criteria.andEqualTo("link_id", param.getLinkId());
+            criteria.andEqualTo("linkId", param.getLinkId());
         }
 
         if (param.isDefaultWhiteFlag()) {
