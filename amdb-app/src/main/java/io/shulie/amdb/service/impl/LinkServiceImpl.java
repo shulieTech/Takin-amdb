@@ -1003,7 +1003,7 @@ public class LinkServiceImpl implements LinkService {
      */
     private String objectToString(Object value, String defaultStr) {
         if (value == null || "null".equals(value.toString().toLowerCase())) {
-            return defaultStr;
+            return "";
         }
         return ObjectUtils.toString(value);
     }
