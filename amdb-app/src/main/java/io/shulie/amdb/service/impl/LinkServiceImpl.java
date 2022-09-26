@@ -464,7 +464,7 @@ public class LinkServiceImpl implements LinkService {
             criteria.andEqualTo("envCode", param.getEnvCode());
         }
         //2021-06-01 为了兼容老接口,需要增加link_type!=1 过滤条件,将客户端出口数据过滤掉
-        criteria.andNotIn("linkType", Arrays.asList("1", "2"));
+        criteria.andEqualTo("linkType", 0);
 
         int page = param.getCurrentPage();
         int pageSize = param.getPageSize();
