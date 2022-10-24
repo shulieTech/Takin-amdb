@@ -532,6 +532,11 @@ public class TraceServiceImpl implements TraceService {
             andFilterList.add("parsedMethod='" + param.getMethodName() + "'");
         }
 
+        //方法名模糊
+        if (StringUtils.isNotBlank(param.getQueryMethodName())) {
+            andFilterList.add("parsedMethod like '%" + param.getQueryMethodName() + "%'");
+        }
+
         //接口名模糊匹配
         if (StringUtils.isNotBlank(param.getServiceName())) {
             andFilterList.add("parsedServiceName like '%" + param.getServiceName() + "%'");

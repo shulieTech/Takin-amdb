@@ -46,6 +46,8 @@ public class EntryTraceQueryParam extends AbstractAmdbBaseRequest {
     String serviceName;
     @ApiModelProperty("方法名称")
     String methodName;
+    @ApiModelProperty("方法名称模糊")
+    String queryMethodName;
     @ApiModelProperty("入口列表(多个入口列表用逗号进行分隔)")
     String entranceList;
     @ApiModelProperty("应用名称")
