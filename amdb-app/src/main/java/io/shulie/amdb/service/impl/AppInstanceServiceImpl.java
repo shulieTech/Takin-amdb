@@ -265,6 +265,10 @@ public class AppInstanceServiceImpl implements AppInstanceService {
         if (StringUtils.isNotBlank(request.getAppName())) {
             criteria.andEqualTo("appName", request.getAppName());
         }
+        if (StringUtils.isNotBlank(request.getAppNames())) {
+            String[] split = request.getAppNames().split(",");
+            criteria.andIn("appName", Arrays.asList(split));
+        }
         if (StringUtils.isNotBlank(request.getAgentId())) {
             criteria.andLike("agentId", '%' + request.getAgentId() + '%');
         }
