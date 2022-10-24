@@ -488,7 +488,7 @@ public class TraceServiceImpl implements TraceService {
             }
         }
 
-        //调用类型等值匹配
+        //调用类型等值匹配,优先处理rpcType
         if (StringUtils.isNotBlank(param.getRpcType())) {
             // web server
             if (param.getRpcType().equals(RpcType.TYPE_WEB_SERVER + "")) {
@@ -502,6 +502,8 @@ public class TraceServiceImpl implements TraceService {
             } else {
                 andFilterList.add("1 = -1");
             }
+        } else if (StringUtils.isNotBlank(param.getLogType())) {
+            andFilterList.add("logType = '" + param.getLogType() + "'");
         } else {
             //如果不传rpcType且查询来源是空或者tro(控制台),只查询服务端和入口日志,如果是e2e,则还需要查询压测数据
             if (StringUtils.isBlank(param.getTaskId())) {

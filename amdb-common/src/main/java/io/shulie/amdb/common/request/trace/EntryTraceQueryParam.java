@@ -42,6 +42,8 @@ public class EntryTraceQueryParam extends AbstractAmdbBaseRequest {
     String resultType;
     @ApiModelProperty("调用类型")
     String rpcType;
+    @ApiModelProperty("调用类型")
+    String logType;
     @ApiModelProperty("接口名称")
     String serviceName;
     @ApiModelProperty("方法名称")
