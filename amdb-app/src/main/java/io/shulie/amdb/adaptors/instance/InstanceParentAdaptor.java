@@ -49,11 +49,11 @@ public class InstanceParentAdaptor extends AbstractDefaultAdaptor {
      */
     @Override
     public void registor() {
-        try {
-            adaptorTemplate.addPath(Connector.ConnectorType.ZOOKEEPER_PATH, INSTANCE_PATH, InstanceModel.class, this);
-        } catch (Exception e) {
-            logger.error("Adapter add path error.", e);
-        }
+//        try {
+//            adaptorTemplate.addPath(Connector.ConnectorType.ZOOKEEPER_PATH, INSTANCE_PATH, InstanceModel.class, this);
+//        } catch (Exception e) {
+//            logger.error("Adapter add path error.", e);
+//        }
     }
 
 

@@ -19,6 +19,7 @@ import io.shulie.amdb.adaptors.AdaptorTemplate;
 import io.shulie.amdb.adaptors.base.AbstractDefaultAdaptor;
 import io.shulie.amdb.adaptors.connector.Connector;
 import io.shulie.amdb.adaptors.connector.DataContext;
+import io.shulie.amdb.adaptors.instance.model.InstanceModel;
 import io.shulie.amdb.adaptors.instance.model.InstanceStatusModel;
 import io.shulie.amdb.entity.TAmdbAppInstanceStatusDO;
 import io.shulie.amdb.request.query.AppInstanceStatusQueryRequest;
@@ -38,7 +39,7 @@ import java.util.Map;
 @Slf4j
 public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
 
-    private static final String INSTANCE_STATUS_PATH = "/config/log/pradar/status/";
+    public static final String INSTANCE_STATUS_PATH = "/config/log/pradar/status/";
 
     /**
      * path-> appName+"#"+ip+"#"+pid
@@ -64,7 +65,11 @@ public class InstanceStatusAdaptor extends AbstractDefaultAdaptor {
      */
     @Override
     public void registor() {
-
+        try {
+            adaptorTemplate.addPath(Connector.ConnectorType.KFK_CONSUMER, INSTANCE_STATUS_PATH, InstanceStatusModel.class, this);
+        } catch (Exception e) {
+            log.error("Adapter add path error.", e);
+        }
     }
 
 
