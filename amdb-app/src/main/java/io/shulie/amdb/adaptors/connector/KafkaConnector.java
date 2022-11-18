@@ -52,7 +52,9 @@ public class KafkaConnector implements Connector {
         String redisPort = System.getProperty("redis.port", "6379");
         pool = new JedisPool(redisUrl, Integer.parseInt(redisPort));
         jedis = pool.getResource();
-        jedis.auth(redisPassword);
+        if (redisPassword != null){
+            jedis.auth(redisPassword);
+        }
 
         messageReceiveService = new KafkaSendServiceFactory().getKafkaMessageReceiveInstance();
         pathTopicMap.put(InstanceStatusAdaptor.INSTANCE_STATUS_PATH, "stress-test-config-log-pradar-status");
