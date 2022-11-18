@@ -50,7 +50,7 @@ import java.util.*;
 @Slf4j
 public class InstanceAdaptor extends AbstractDefaultAdaptor {
 
-    private static final String INSTANCE_PATH = "/config/log/pradar/client/";
+    public static final String INSTANCE_PATH = "/config/log/pradar/client/";
     private static String serverUrl = System.getProperty("instance.amdb.server.url");
 
     /**
@@ -81,7 +81,11 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
      */
     @Override
     public void registor() {
-
+        try {
+            adaptorTemplate.addPath(Connector.ConnectorType.KFK_CONSUMER, INSTANCE_PATH, InstanceModel.class, this);
+        } catch (Exception e) {
+            log.error("Adapter add path error.", e);
+        }
     }
 
 
