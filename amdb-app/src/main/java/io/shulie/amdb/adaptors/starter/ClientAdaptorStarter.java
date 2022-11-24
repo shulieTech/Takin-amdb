@@ -58,6 +58,6 @@ public class ClientAdaptorStarter extends DefaultFactoryAdaptorStarter {
         /**
          * turn cate agent config
          */
-        agentConfigService.truncateTable();
+//        agentConfigService.truncateTable();
     }
 }
