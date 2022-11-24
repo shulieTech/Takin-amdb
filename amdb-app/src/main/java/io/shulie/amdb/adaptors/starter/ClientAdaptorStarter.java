@@ -53,7 +53,7 @@ public class ClientAdaptorStarter extends DefaultFactoryAdaptorStarter {
         /**
          * 每次启动前将t_amdb_app_instance_status truncate
          */
-        appInstanceStatusService.truncateTable();
+//        appInstanceStatusService.truncateTable();
 
         /**
          * turn cate agent config
