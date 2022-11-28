@@ -112,13 +112,18 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
             INSTANCEID_CACHE.put(dataContext.getPath(), instanceModel.cacheKey());
         } else {
             // 说明节点被删除，执行实例下线
-            if (oldInstanceKey != null) {
-                instanceOffline(oldInstanceKey);
-                //instanceIdCache.remove(dataContext.getPath());
+//            if (oldInstanceKey != null) {
+//                instanceOffline(oldInstanceKey);
+////                instanceIdCache.remove(dataContext.getPath());
+//
+//                String agentId = path[1];
+//                removeConfig(appName, agentId);
+//            }
+            instanceOffline(oldInstanceKey);
+//                instanceIdCache.remove(dataContext.getPath());
 
-                String agentId = path[1];
-                removeConfig(appName, agentId);
-            }
+            String agentId = path[1];
+            removeConfig(appName, agentId);
         }
         return null;
     }
