@@ -102,7 +102,7 @@ public class InstanceAdaptor extends AbstractDefaultAdaptor {
         String appName = path[0];
         InstanceModel instanceModel = (InstanceModel) dataContext.getModel();
         String oldInstanceKey = INSTANCEID_CACHE.get(dataContext.getPath());
-        log.warn("instanceModel数据:{}",instanceModel);
+        log.error("appName:{},instanceModel是否有数据:{},oldInstanceKey:{}",appName,instanceModel!=null,oldInstanceKey);
         if (instanceModel != null) {
             instanceModel.buildDefaultValue(appName);
 
