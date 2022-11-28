@@ -106,7 +106,7 @@ public class ZookeeperNodeConnector implements Connector {
                             dataContext.setModel(object);
                             processor.process(dataContext);
                         } catch (KeeperException.NoNodeException e) {
-                            logger.warn("节点下线:{}", path);
+                            logger.warn("节点下线:{}", path,e);
                             //执行删除表中历史节点数据操作,必须在shutdownnow方法之前
                             processor.process(dataContext);
                             // 节点删除时执行
