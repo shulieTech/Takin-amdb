@@ -97,29 +97,51 @@ public class ZookeeperNodeConnector implements Connector {
                 @Override
                 public void run() {
                     // FIXME CYF 锁优化
-                    synchronized (lock) {
-                        DataContext dataContext = processor.getContext();
-                        dataContext.setPath(path);
-                        try {
-                            String body = Bytes.toString(zkClient.getData(path));
-                            Object object = JSON.parseObject(body, paramsClazz);
-                            dataContext.setModel(object);
-                            processor.process(dataContext);
-                        } catch (KeeperException.NoNodeException e) {
-                            logger.warn("节点下线:{}", path,e);
-                            //执行删除表中历史节点数据操作,必须在shutdownnow方法之前
-                            processor.process(dataContext);
-                            // 节点删除时执行
-                            // 通知adaptor节点已删除，通过childPath+model同时为NULL即可确认
-                            //logger.error("解析ZK数据失败，path:{}，errorInfo:{}", path, e.getMessage());
-                            if (nodeCache.get(path) != null) {
-                                nodeCache.get(path).stop();
-                                nodeCache.remove(path);
-                                executor.shutdownNow();
-                            }
-                        } catch (Exception e) {
-                            logger.error("processor处理发生异常:{},异常堆栈:{}，path:{}，dataContext:{}", e, e.getStackTrace(), path, dataContext);
+//                    synchronized (lock) {
+//                        DataContext dataContext = processor.getContext();
+//                        dataContext.setPath(path);
+//                        try {
+//                            String body = Bytes.toString(zkClient.getData(path));
+//                            Object object = JSON.parseObject(body, paramsClazz);
+//                            dataContext.setModel(object);
+//                            processor.process(dataContext);
+//                        } catch (KeeperException.NoNodeException e) {
+//                            logger.warn("节点下线:{}", path,e);
+//                            //执行删除表中历史节点数据操作,必须在shutdownnow方法之前
+//                            processor.process(dataContext);
+//                            // 节点删除时执行
+//                            // 通知adaptor节点已删除，通过childPath+model同时为NULL即可确认
+//                            //logger.error("解析ZK数据失败，path:{}，errorInfo:{}", path, e.getMessage());
+//                            if (nodeCache.get(path) != null) {
+//                                nodeCache.get(path).stop();
+//                                nodeCache.remove(path);
+//                                executor.shutdownNow();
+//                            }
+//                        } catch (Exception e) {
+//                            logger.error("processor处理发生异常:{},异常堆栈:{}，path:{}，dataContext:{}", e, e.getStackTrace(), path, dataContext);
+//                        }
+//                    }
+                    DataContext dataContext = processor.getContext();
+                    dataContext.setPath(path);
+                    try {
+                        String body = Bytes.toString(zkClient.getData(path));
+                        Object object = JSON.parseObject(body, paramsClazz);
+                        dataContext.setModel(object);
+                        processor.process(dataContext);
+                    } catch (KeeperException.NoNodeException e) {
+                        logger.warn("节点下线:{}", path,e);
+                        //执行删除表中历史节点数据操作,必须在shutdownnow方法之前
+                        processor.process(dataContext);
+                        // 节点删除时执行
+                        // 通知adaptor节点已删除，通过childPath+model同时为NULL即可确认
+                        //logger.error("解析ZK数据失败，path:{}，errorInfo:{}", path, e.getMessage());
+                        if (nodeCache.get(path) != null) {
+                            nodeCache.get(path).stop();
+                            nodeCache.remove(path);
+                            executor.shutdownNow();
                         }
+                    } catch (Exception e) {
+                        logger.error("processor处理发生异常:{},异常堆栈:{}，path:{}，dataContext:{}", e, e.getStackTrace(), path, dataContext);
                     }
                 }
             };

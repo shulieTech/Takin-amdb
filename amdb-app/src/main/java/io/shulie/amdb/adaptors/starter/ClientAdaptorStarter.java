@@ -48,16 +48,16 @@ public class ClientAdaptorStarter extends DefaultFactoryAdaptorStarter {
         //step 1. set flag offline
         //step 2. acquire flag from zk ,ps: see InstanceAdaptor#process
 
-//        appInstanceService.initOnlineStatus();
+        appInstanceService.initOnlineStatus();
 
         /**
          * 每次启动前将t_amdb_app_instance_status truncate
          */
-//        appInstanceStatusService.truncateTable();
+        appInstanceStatusService.truncateTable();
 
         /**
          * turn cate agent config
          */
-//        agentConfigService.truncateTable();
+        agentConfigService.truncateTable();
     }
 }
