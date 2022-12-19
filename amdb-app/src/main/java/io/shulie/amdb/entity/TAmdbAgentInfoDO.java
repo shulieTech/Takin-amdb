@@ -36,7 +36,7 @@ public class TAmdbAgentInfoDO extends BaseDatabaseDO {
     @Id
     @Column(name = "`id`")
     @ApiModelProperty("")
-    private Integer id;
+    private Long id;
 
     /**
      * agent Id
