@@ -15,6 +15,7 @@
 
 package io.shulie.amdb.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import io.shulie.amdb.common.Response;
@@ -32,17 +33,22 @@ import io.shulie.amdb.response.app.AmdbAppResponse;
 import io.shulie.amdb.response.app.model.InstanceInfo;
 import io.shulie.amdb.service.AppService;
 import io.shulie.amdb.utils.PagingUtils;
+import io.shulie.amdb.utils.RedisUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.Resource;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -56,6 +62,10 @@ public class AppServiceImpl implements AppService {
     @Resource
     private AppShadowDatabaseMapper appShadowDatabaseMapper;
 
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    private static final String APP_INSTANCE_SHADOW_VALUE = "app_instance_shadow_value";
     @Override
     public Response insert(AppDO record) {
         try {
@@ -111,6 +121,8 @@ public class AppServiceImpl implements AppService {
     public List<AppDO> selectByFilter(String filter) {
         return appMapper.selectByFilter(filter);
     }
+
+
 
     @Override
     public PageInfo<AmdbAppResponse> selectByBatchAppParams(TAmdbAppBatchAppQueryRequest param) {
@@ -176,6 +188,150 @@ public class AppServiceImpl implements AppService {
         }
 
         return PagingUtils.result(amdbApps, responses);
+    }
+
+    @Override
+    public PageInfo<AmdbAppResponse> selectByBatchAppParams2(TAmdbAppBatchAppQueryRequest param) {
+        List<AppDO> appDOS = new ArrayList<>();
+        if (org.apache.commons.collections.CollectionUtils.isNotEmpty(param.getAppNames())) {
+            Example example = new Example(AppDO.class);
+            Example.Criteria criteria = example.createCriteria();
+            criteria.andIn("appName", param.getAppNames());
+            extracted(param, criteria);
+            example.selectProperties("id", "tenant", "userAppKey", "envCode");
+            List<AppDO> appDOList = appMapper.selectByExample(example);
+            if (CollectionUtils.isEmpty(appDOList)) {
+                return PagingUtils.result(new ArrayList<>(), new ArrayList<>());
+            }
+
+            Map<String,AppDO> appDOMap = new HashMap<>();
+            for (AppDO appDO : appDOList) {
+                String key = getKey(param, appDO.getId());
+                appDOMap.put(key,appDO);
+            }
+            Map<String, String> map = RedisUtil.hmget(redisTemplate, APP_INSTANCE_SHADOW_VALUE,new ArrayList<>(appDOMap.keySet()));
+
+            List<AppDO> cacheNoneList = new ArrayList<>();
+            if (MapUtils.isEmpty(map)) {
+                cacheNoneList.addAll(appDOList);
+            }else {
+                Iterator<String> iterator = appDOMap.keySet().iterator();
+                while (iterator.hasNext()) {
+                    String key = iterator.next();
+                    if (map.containsKey(key)) {
+                        String value = map.get(key);
+                        appDOS.add(JSON.parseObject(value, AppDO.class));
+                    } else {
+                        cacheNoneList.add(appDOMap.get(key));
+                    }
+                }
+            }
+
+            if (org.apache.commons.collections.CollectionUtils.isNotEmpty(cacheNoneList)) {
+                List<Long> ids = cacheNoneList.stream().map(appDO -> appDO.getId()).collect(Collectors.toList());
+                Example newExample = new Example(AppDO.class);
+                Example.Criteria newCriteria = newExample.createCriteria();
+                extracted(ids, param, newCriteria);
+                List<AppDO> appDOList1 = appMapper.selectByExample(newExample);
+                if (org.apache.commons.collections.CollectionUtils.isNotEmpty(appDOList1)) {
+                    appDOS.addAll(appDOList1);
+                    RedisUtil.hmset(redisTemplate, APP_INSTANCE_SHADOW_VALUE, appDOS.stream().collect(Collectors.toMap(appDO -> getKey(param, appDO.getId()), appDO -> JSON.toJSONString(appDO))));
+                    redisTemplate.expire(APP_INSTANCE_SHADOW_VALUE, 15, TimeUnit.MINUTES);
+                }
+            }
+        } else if (!CollectionUtils.isEmpty(param.getAppIds())) {
+            Example idExample = new Example(AppDO.class);
+            Example.Criteria idCriteria = idExample.createCriteria();
+            idCriteria.andIn("id", param.getAppIds());
+            extracted(param, idCriteria);
+            PageHelper.startPage(param.getCurrentPage(), param.getPageSize());
+            appDOS = appMapper.selectByExample(idExample);
+            if (org.apache.commons.collections.CollectionUtils.isNotEmpty(appDOS)){
+                RedisUtil.hmset(redisTemplate, APP_INSTANCE_SHADOW_VALUE, appDOS.stream().collect(Collectors.toMap(appDO -> getKey(param, appDO.getId()), appDO -> JSON.toJSONString(appDO))));
+                redisTemplate.expire(APP_INSTANCE_SHADOW_VALUE, 15, TimeUnit.MINUTES);}
+        }
+        //无数据直接返回
+        if (org.apache.commons.collections.CollectionUtils.isEmpty(appDOS)) {
+            return PagingUtils.result(appDOS, new ArrayList<>());
+        }
+
+        List<AmdbAppResponse> responses = appDOS.stream()
+                .filter(a -> Objects.nonNull(a))
+                .map(amdbApp -> new AmdbAppResponse(param.getFields(), amdbApp)).collect(Collectors.toList());
+
+        List<TAmdbAppInstanceDO> tAmdbAppInstanceDOS = appInstanceMapper.selectFlagByAppId(appDOS);
+        for (AmdbAppResponse response : responses) {
+            Long appId = response.getAppId();
+            List<TAmdbAppInstanceDO> instanceDOS = tAmdbAppInstanceDOS.stream()
+                    .filter(v -> {
+                        if (!appId.equals(v.getAppId())) {
+                            return false;
+                        }
+                        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+                            if (!param.getTenantAppKey().equals(v.getUserAppKey())) {
+                                return false;
+                            }
+                        }
+                        if (StringUtils.isNotBlank(param.getEnvCode())) {
+                            if (!param.getEnvCode().equals(v.getEnvCode())) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }).collect(Collectors.toList());
+            int totalCount = instanceDOS.size();
+            int onlineCount = (int) instanceDOS.stream().filter(instance -> (instance.getFlag() & 1) == 1).count();
+            long exceptionCount = instanceDOS.stream().filter(instance -> (instance.getFlag() & 2) != 2 && (instance.getFlag() & 1) == 1).count();
+
+            InstanceInfo instanceInfo = new InstanceInfo();
+            instanceInfo.setInstanceAmount(totalCount);
+            instanceInfo.setInstanceOnlineAmount(onlineCount);
+
+            response.setInstanceInfo(instanceInfo);
+            response.setAppIsException(exceptionCount > 0 || onlineCount == 0);
+        }
+        return PagingUtils.result(appDOS, responses);
+    }
+
+    private static String getKey(TAmdbAppBatchAppQueryRequest param,long appId) {
+        StringBuffer stringBuffer = new StringBuffer().append(appId);
+        if (StringUtils.isNotBlank(param.getTenantKey())) {
+            stringBuffer.append("_").append(param.getTenantKey());
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            stringBuffer.append("_").append(param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            stringBuffer.append("_").append(param.getEnvCode());
+        }
+        return stringBuffer.toString();
+    }
+
+    private static void extracted(TAmdbAppBatchAppQueryRequest param, Example.Criteria criteria) {
+        if (StringUtils.isNotBlank(param.getTenantKey())) {
+            criteria.andEqualTo("tenant", param.getTenantKey());
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
+        }
+    }
+
+    private static void extracted(List<Long> ids, TAmdbAppBatchAppQueryRequest param, Example.Criteria criteria) {
+        if (org.apache.commons.collections.CollectionUtils.isNotEmpty(ids)) {
+            criteria.andIn("id", ids);
+        }
+        if (StringUtils.isNotBlank(param.getTenantKey())) {
+            criteria.andEqualTo("tenant", param.getTenantKey());
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            criteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            criteria.andEqualTo("envCode", param.getEnvCode());
+        }
     }
 
     @Override

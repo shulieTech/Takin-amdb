@@ -146,7 +146,7 @@ public class AppController {
             if (CollectionUtils.isEmpty(param.getAppIds()) && CollectionUtils.isEmpty(param.getAppNames())) {
                 return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
             }
-            return Response.success(appService.selectByBatchAppParams(param));
+            return Response.success(appService.selectByBatchAppParams2(param));
         } catch (Exception e) {
             log.error("查询应用信息失败", e);
             return Response.fail(AmdbExceptionEnums.APP_SELECT);
@@ -159,7 +159,7 @@ public class AppController {
             if (CollectionUtils.isEmpty(param.getAppIds()) && CollectionUtils.isEmpty(param.getAppNames())) {
                 return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
             }
-            return Response.success(appService.selectByBatchAppParams(param));
+            return Response.success(appService.selectByBatchAppParams2(param));
         } catch (Exception e) {
             log.error("查询应用信息失败", e);
             return Response.fail(AmdbExceptionEnums.APP_SELECT);

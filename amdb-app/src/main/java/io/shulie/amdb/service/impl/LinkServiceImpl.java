@@ -15,6 +15,7 @@
 
 package io.shulie.amdb.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.JSONPath;
 import com.github.pagehelper.Page;
@@ -65,6 +66,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.AntPathMatcher;
@@ -73,6 +75,7 @@ import tk.mybatis.mapper.entity.Example;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -119,6 +122,12 @@ public class LinkServiceImpl implements LinkService {
 
     @Autowired
     LinkProcessor linkProcessor;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    private final String LINK_NODE_SHADOW_PREFIX = "link_node_shadow_";
+    private final String LINK_EDGE_SHADOW_PREFIX = "link_edge_shadow_";
 
     private List<String> fields = Arrays.asList(new String[]{"appName", "serviceName", "methodName", "middlewareName", "rpcType", "extend", "upAppName"});
 
@@ -891,17 +900,31 @@ public class LinkServiceImpl implements LinkService {
      * @return
      */
     private Pair<List<TAmdbPradarLinkNodeDO>, List<TAmdbPradarLinkEdgeDO>> getPradarLinkInfo(String linkId, TopologyQueryParam param) {
-        Example nodeExample = new Example(TAmdbPradarLinkNodeDO.class);
-        Example.Criteria nodeCriteria = nodeExample.createCriteria();
-        nodeCriteria.andEqualTo("linkId", linkId);
-        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
-            nodeCriteria.andEqualTo("userAppKey", param.getTenantAppKey());
+        Example nodeExample = getExample(linkId, param, TAmdbPradarLinkNodeDO.class);
+        List<TAmdbPradarLinkNodeDO> nodeDOList;
+        Object nodeCache = redisTemplate.opsForValue().get(getKey(linkId, param, LINK_NODE_SHADOW_PREFIX));
+        String nodeCacheStr = Objects.isNull(nodeCache) ? null : String.valueOf(nodeCache);
+        if (StringUtils.isNotBlank(nodeCacheStr)) {
+           nodeDOList = JSON.parseArray(nodeCacheStr, TAmdbPradarLinkNodeDO.class);
+        }else {
+            nodeDOList = pradarLinkNodeMapper.selectByExample(nodeExample);
+            redisTemplate.opsForValue().set(getKey(linkId, param, LINK_NODE_SHADOW_PREFIX), JSON.toJSONString(nodeDOList), 20, TimeUnit.MINUTES);
         }
-        if (StringUtils.isNotBlank(param.getEnvCode())) {
-            nodeCriteria.andEqualTo("envCode", param.getEnvCode());
+
+        Example edgeExample = getExample(linkId, param, TAmdbPradarLinkEdgeDO.class);
+        String edgeCacheStr = (String) redisTemplate.opsForValue().get(getKey(linkId, param, LINK_EDGE_SHADOW_PREFIX));
+        List<TAmdbPradarLinkEdgeDO> edgeDOList;
+        if (StringUtils.isNotBlank(edgeCacheStr)) {
+            edgeDOList = JSON.parseArray(edgeCacheStr, TAmdbPradarLinkEdgeDO.class);
+        }else {
+            edgeDOList = pradarLinkEdgeMapper.selectByExample(edgeExample);
+            redisTemplate.opsForValue().set(getKey(linkId, param, LINK_EDGE_SHADOW_PREFIX), JSON.toJSONString(edgeDOList), 20, TimeUnit.MINUTES);
         }
-        List<TAmdbPradarLinkNodeDO> nodeDOList = pradarLinkNodeMapper.selectByExample(nodeExample);
-        Example edgeExample = new Example(TAmdbPradarLinkEdgeDO.class);
+        return Pair.of(nodeDOList, edgeDOList);
+    }
+
+    private static Example getExample(String linkId, TopologyQueryParam param,Class clazz) {
+        Example edgeExample = new Example(clazz);
         Example.Criteria edgeCriteria = edgeExample.createCriteria();
         edgeCriteria.andEqualTo("linkId", linkId);
         if (StringUtils.isNotBlank(param.getTenantAppKey())) {
@@ -910,8 +933,18 @@ public class LinkServiceImpl implements LinkService {
         if (StringUtils.isNotBlank(param.getEnvCode())) {
             edgeCriteria.andEqualTo("envCode", param.getEnvCode());
         }
-        List<TAmdbPradarLinkEdgeDO> edgeDOList = pradarLinkEdgeMapper.selectByExample(edgeExample);
-        return Pair.of(nodeDOList, edgeDOList);
+        return edgeExample;
+    }
+
+    private String getKey(String linkId, TopologyQueryParam param, String prefix) {
+        StringBuffer stringBuffer = new StringBuffer().append(prefix).append(linkId);
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            stringBuffer.append("_").append(param.getTenantAppKey());
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            stringBuffer.append("_").append(param.getEnvCode());
+        }
+        return stringBuffer.toString();
     }
 
     /**
