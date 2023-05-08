@@ -762,7 +762,8 @@ public class MetricsServiceImpl implements MetricsService {
                         " SUM(totalCount) as allTotalCount," +
                         " SUM(totalTps) as allTotalTps," +
                         " MAX(maxRt) as allMaxRt," +
-                        " SUM(totalRt) as allTotalRt" +
+                        " SUM(totalRt) as allTotalRt," +
+                        " MIN(avgRt) as allMinRt" +
                         " FROM trace_metrics" +
                         " where" +
                         " time >= " + formatTimestamp(startMilli) +
@@ -800,6 +801,7 @@ public class MetricsServiceImpl implements MetricsService {
                     resultMap.put("allTotalTps", Long.parseLong(serie.getValues().get(0).get(3).toString().split("\\.")[0]));
                     resultMap.put("allMaxRt", Long.parseLong(serie.getValues().get(0).get(4).toString().split("\\.")[0]));
                     resultMap.put("allTotalRt", Long.parseLong(serie.getValues().get(0).get(5).toString().split("\\.")[0]));
+                    resultMap.put("allMinRt", Double.parseDouble(serie.getValues().get(0).get(6).toString().split("\\.")[0]));
                     long realSeconds = 0;
                     try {
                         realSeconds = getTracePeriod(startMilli, endMilli, edgeId);
@@ -820,6 +822,7 @@ public class MetricsServiceImpl implements MetricsService {
                         resultMap.put("allTotalTps", 0L);
                         resultMap.put("allMaxRt", 0L);
                         resultMap.put("allTotalRt", 0L);
+                        resultMap.put("allMinRt", 0d);
                         resultMap.put("realSeconds", 0L);
                         result.add(resultMap);
                     }
@@ -837,6 +840,7 @@ public class MetricsServiceImpl implements MetricsService {
                 resultMap.put("allTotalTps", 0L);
                 resultMap.put("allMaxRt", 0L);
                 resultMap.put("allTotalRt", 0L);
+                resultMap.put("allMinRt", 0d);
                 resultMap.put("realSeconds", 0L);
                 result.add(resultMap);
             });
