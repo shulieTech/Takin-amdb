@@ -27,9 +27,14 @@ import java.util.List;
 import java.util.Map;
 
 public interface MetricsService {
+    /**
+     * 通用查询查询 trace_metrics
+     * @param request
+     * @return
+     */
     Map<String, MetricsResponse> getMetrics(MetricsQueryRequest request);
 
-    Pair<List<MetricsDetailResponse>, Integer> metricsDetailes(MetricsDetailQueryRequest request);
+    Pair<List<MetricsDetailResponse>, Integer> metricsDetails(MetricsDetailQueryRequest request);
 
     String entranceFromChickHouse(MetricsFromInfluxdbQueryRequest request);
 

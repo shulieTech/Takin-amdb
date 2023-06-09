@@ -17,6 +17,7 @@ package io.shulie.amdb.controller;
 
 import com.google.common.collect.Lists;
 import io.shulie.amdb.adaptors.common.Pair;
+import io.shulie.amdb.common.IndicateMeasurementEnum;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.request.query.MetricsDetailQueryRequest;
@@ -49,11 +50,64 @@ import java.util.Map;
 public class MetricsController {
 
     @Autowired
-    MetricsService metricsService;
+    private MetricsService metricsService;
 
-    //指标数据查询
+    /**
+     * 查询应用 gc 状态
+     *
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "/queryAppStatGc", method = RequestMethod.POST)
+    public Response queryAppStatGc(@RequestBody MetricsQueryRequest request) {
+        request.setMeasurementName(IndicateMeasurementEnum.APP_STAT_GC.getMeasurementName());
+        return queryMetrics(request);
+    }
+
+    /**
+     * 查询应用线程状态
+     *
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "/queryAppStatThread", method = RequestMethod.POST)
+    public Response queryAppStatThread(@RequestBody MetricsQueryRequest request) {
+        request.setMeasurementName(IndicateMeasurementEnum.APP_STAT_THREAD.getMeasurementName());
+        return queryMetrics(request);
+    }
+
+    /**
+     * 查询应用内部调用状态
+     *
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "/queryAppStatIncall", method = RequestMethod.POST)
+    public Response queryAppStatIncall(@RequestBody MetricsQueryRequest request) {
+        request.setMeasurementName(IndicateMeasurementEnum.APP_STAT_INCALL.getMeasurementName());
+        return queryMetrics(request);
+    }
+
+    /**
+     * 查询应用日志状态
+     *
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "/queryAppStatLog", method = RequestMethod.POST)
+    public Response queryAppStatLog(@RequestBody MetricsQueryRequest request) {
+        request.setMeasurementName(IndicateMeasurementEnum.APP_STAT_LOG.getMeasurementName());
+        return queryMetrics(request);
+    }
+
+    /**
+     * 指标数据查询
+     *
+     * @param request
+     * @return
+     */
     @RequestMapping(value = "/queryMetrics", method = RequestMethod.POST)
-    public Response queryIpList(@RequestBody MetricsQueryRequest request) {
+    public Response queryMetrics(@RequestBody MetricsQueryRequest request) {
         if (StringUtils.isBlank(request.getMeasurementName()) || CollectionUtils.isEmpty(request.getTagMapList())
                 || request.getFieldMap() == null || request.getFieldMap().size() == 0
                 || request.getStartTime() == 0 || request.getEndTime() == 0) {
@@ -69,7 +123,7 @@ public class MetricsController {
         }
         Pair<List<MetricsDetailResponse>, Integer> resultPair;
         try {
-            resultPair = metricsService.metricsDetailes(request);
+            resultPair = metricsService.metricsDetails(request);
         } catch (Exception e) {
             return new Response(Lists.newArrayList());
         }

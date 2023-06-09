@@ -173,7 +173,7 @@ public class MetricsServiceImpl implements MetricsService {
     }
 
     @Override
-    public Pair<List<MetricsDetailResponse>, Integer> metricsDetailes(MetricsDetailQueryRequest request) {
+    public Pair<List<MetricsDetailResponse>, Integer> metricsDetails(MetricsDetailQueryRequest request) {
         List<MetricsDetailResponse> resultList2 = new ArrayList<>();
         if (this.cache1.size() == 0 || this.cache2.size() == 0) {
             refreshCache();
