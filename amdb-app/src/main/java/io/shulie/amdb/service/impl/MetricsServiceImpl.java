@@ -47,6 +47,7 @@ import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -54,6 +55,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -73,6 +75,8 @@ public class MetricsServiceImpl implements MetricsService {
     @Autowired
     @Qualifier("traceDaoImpl")
     ITraceDao traceDao;
+
+    private ScheduledExecutorService scheduledExecutorService;
 
     @Override
     public Map<String, MetricsResponse> getMetrics(MetricsQueryRequest request) {
@@ -344,7 +348,15 @@ public class MetricsServiceImpl implements MetricsService {
 
     @PostConstruct
     public void initCache() {
-        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(() -> refreshCache(), 0, 5, TimeUnit.MINUTES);
+        this.scheduledExecutorService = Executors.newScheduledThreadPool(1);
+        scheduledExecutorService.scheduleAtFixedRate(() -> refreshCache(), 0, 5, TimeUnit.MINUTES);
+    }
+
+    @PreDestroy
+    public void destroy() {
+        if (this.scheduledExecutorService != null) {
+            this.scheduledExecutorService.shutdown();
+        }
     }
 
     private void refreshCache() {
@@ -602,6 +614,7 @@ public class MetricsServiceImpl implements MetricsService {
         return responses;
     }
 
+    @Override
     public String entranceFromChickHouse(MetricsFromInfluxdbQueryRequest request) {
         String startTime = request.getStartTime();
         String endTime = request.getEndTime();
@@ -639,6 +652,7 @@ public class MetricsServiceImpl implements MetricsService {
         return sb.toString();
     }
 
+    @Override
     public Map<String, Object> metricsFromChickHouse(MetricsFromInfluxdbQueryRequest request) {
         String startTime = request.getStartTime();
         String endTime = request.getEndTime();
@@ -747,6 +761,7 @@ public class MetricsServiceImpl implements MetricsService {
         return (lastTime - firstTime) / 1000;
     }
 
+    @Override
     public List<Map<String, Object>> metricFromInfluxdb(MetricsFromInfluxdbRequest request) {
         List result = new ArrayList<Map<String, Object>>();
         Set<String> edgeIdSetFromInfluxdb = new HashSet<String>();
