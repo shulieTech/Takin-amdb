@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2021 Shulie Technology, Co.Ltd
+  ~ Email: shulie@shulie.io
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="io.shulie.amdb.mapper.ScriptMapper">
+    <resultMap id="BaseResultMap" type="io.shulie.amdb.entity.ScriptDO">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="script_code" jdbcType="VARCHAR" property="scriptCode"/>
+        <result column="script_name" jdbcType="VARCHAR" property="scriptName"/>
+        <result column="script" jdbcType="VARCHAR" property="script"/>
+        <result column="tenant" jdbcType="VARCHAR" property="tenant"/>
+        <result column="script_type" jdbcType="VARCHAR" property="scriptType"/>
+        <result column="creator" jdbcType="VARCHAR" property="creator"/>
+        <result column="creator_name" jdbcType="VARCHAR" property="creatorName"/>
+        <result column="modifier" jdbcType="VARCHAR" property="modifier"/>
+        <result column="modifier_name" jdbcType="VARCHAR" property="modifierName"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify"/>
+        <result column="user_app_key" jdbcType="VARCHAR" property="userAppKey"/>
+        <result column="env_code" jdbcType="VARCHAR" property="envCode"/>
+        <result column="user_id" jdbcType="VARCHAR" property="userId"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id
+        , script_code, script_name, script, tenant, script_type, creator, creator_name,
+    modifier, modifier_name, gmt_create, gmt_modify,user_app_key,env_code,user_id
+    </sql>
+    <select id="getScriptByCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_amdb_data_script
+        where script_code = #{code}
+    </select>
+</mapper>
