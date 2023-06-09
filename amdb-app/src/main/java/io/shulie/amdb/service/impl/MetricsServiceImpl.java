@@ -93,7 +93,7 @@ public class MetricsServiceImpl implements MetricsService {
             aggrerateSql += parseGroupBy(request.getGroups());
 
             //log.info("聚合指标查询sql:{}", aggrerateSql);
-            List<QueryResult.Result> aggrerateResult = influxDbManager.query(aggrerateSql);
+            List<QueryResult.Result> aggregateResult = influxDbManager.query(aggrerateSql);
 
             //构造非聚合指标查询sql
             List<QueryResult.Result> nonAggrerateResult = null;
@@ -101,12 +101,12 @@ public class MetricsServiceImpl implements MetricsService {
                 String nonAggrerateSql = "select " + parseAliasFields(request.getNonAggrerateFieldMap()) +
                         " from  " + request.getMeasurementName() + " where " + parseWhereFilter(tagMap) + " and time >= " +
                         formatTimestamp(request.getStartTime()) + " and time < " + formatTimestamp(request.getEndTime());
-                //log.info("非聚合指标查询sql:{}", nonAggrerateSql);
+                //log.info("非聚合指标查询sql:{}", nonAggregateSql);
                 nonAggrerateResult = influxDbManager.query(nonAggrerateSql);
             }
 
             //处理聚合指标
-            aggrerateResult.stream().filter((internalResult) -> {
+            aggregateResult.stream().filter((internalResult) -> {
                 return Objects.nonNull(internalResult) && Objects.nonNull(internalResult.getSeries());
             }).forEach((internalResult) -> {
                 internalResult.getSeries().stream().filter((series) -> {
