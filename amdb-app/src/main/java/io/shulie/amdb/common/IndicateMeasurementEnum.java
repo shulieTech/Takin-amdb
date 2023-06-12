@@ -9,25 +9,15 @@ import org.apache.commons.lang.StringUtils;
  * @since 2023/6/9 15:40
  */
 public enum IndicateMeasurementEnum {
-
     /**
-     * 应用 gc 指标
+     * 应用的节点指标
      */
-    APP_STAT_GC("appstat.gc", "app_stat_gc"),
-    /**
-     * 应用的 thread 指标
-     */
-    APP_STAT_THREAD("appstat.thread", "app_stat_thread"),
+    NODE_INFO("appstat.node", "app_node_info"),
 
     /**
      * 应用的节点调用指标
      */
-    APP_STAT_INCALL("appstat.incall", "trace_metrics"),
-
-    /**
-     * 应用的日志指标
-     */
-    APP_STAT_LOG("appstat.log", "app_stat_log");
+    APP_STAT_INCALL("appstat.incall", "trace_metrics");
     private String indName;
     private String measurementName;
 

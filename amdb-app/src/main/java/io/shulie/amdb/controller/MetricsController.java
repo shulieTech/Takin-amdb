@@ -53,26 +53,14 @@ public class MetricsController {
     private MetricsService metricsService;
 
     /**
-     * 查询应用 gc 状态
-     *
-     * @param request
-     * @return
-     */
-    @RequestMapping(value = "/queryAppStatGc", method = RequestMethod.POST)
-    public Response queryAppStatGc(@RequestBody MetricsQueryRequest request) {
-        request.setMeasurementName(IndicateMeasurementEnum.APP_STAT_GC.getMeasurementName());
-        return queryMetrics(request);
-    }
-
-    /**
      * 查询应用线程状态
      *
      * @param request
      * @return
      */
-    @RequestMapping(value = "/queryAppStatThread", method = RequestMethod.POST)
+    @RequestMapping(value = "/queryNodeMetrics", method = RequestMethod.POST)
     public Response queryAppStatThread(@RequestBody MetricsQueryRequest request) {
-        request.setMeasurementName(IndicateMeasurementEnum.APP_STAT_THREAD.getMeasurementName());
+        request.setMeasurementName(IndicateMeasurementEnum.NODE_INFO.getMeasurementName());
         return queryMetrics(request);
     }
 
@@ -85,18 +73,6 @@ public class MetricsController {
     @RequestMapping(value = "/queryAppStatIncall", method = RequestMethod.POST)
     public Response queryAppStatIncall(@RequestBody MetricsQueryRequest request) {
         request.setMeasurementName(IndicateMeasurementEnum.APP_STAT_INCALL.getMeasurementName());
-        return queryMetrics(request);
-    }
-
-    /**
-     * 查询应用日志状态
-     *
-     * @param request
-     * @return
-     */
-    @RequestMapping(value = "/queryAppStatLog", method = RequestMethod.POST)
-    public Response queryAppStatLog(@RequestBody MetricsQueryRequest request) {
-        request.setMeasurementName(IndicateMeasurementEnum.APP_STAT_LOG.getMeasurementName());
         return queryMetrics(request);
     }
 
