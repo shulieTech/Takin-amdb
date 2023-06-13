@@ -20,15 +20,13 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.shulie.amdb.adaptors.common.Pair;
+import io.shulie.amdb.common.IndicateMeasurementEnum;
 import io.shulie.amdb.dao.ITraceDao;
 import io.shulie.amdb.entity.TAMDBPradarLinkConfigDO;
 import io.shulie.amdb.entity.TAmdbPradarLinkEdgeDO;
 import io.shulie.amdb.mapper.PradarLinkConfigMapper;
 import io.shulie.amdb.mapper.PradarLinkEdgeMapper;
-import io.shulie.amdb.request.query.MetricsDetailQueryRequest;
-import io.shulie.amdb.request.query.MetricsFromInfluxdbQueryRequest;
-import io.shulie.amdb.request.query.MetricsFromInfluxdbRequest;
-import io.shulie.amdb.request.query.MetricsQueryRequest;
+import io.shulie.amdb.request.query.*;
 import io.shulie.amdb.response.metrics.MetricsDetailResponse;
 import io.shulie.amdb.response.metrics.MetricsResponse;
 import io.shulie.amdb.service.MetricsService;
@@ -77,6 +75,71 @@ public class MetricsServiceImpl implements MetricsService {
     ITraceDao traceDao;
 
     private ScheduledExecutorService scheduledExecutorService;
+
+    private String buildSql(CommonMetricsQueryRequest request) {
+        StringBuilder builder = new StringBuilder("select ");
+        if (CollectionUtils.isNotEmpty(request.getDimensions())) {
+            for (String dimension : request.getDimensions()) {
+                builder.append(dimension).append(',');
+            }
+        }
+        if (CollectionUtils.isNotEmpty(request.getMeasures())) {
+            for (String measure : request.getMeasures()) {
+                builder.append(request.getCalcType())
+                        .append('(')
+                        .append(measure)
+                        .append(')')
+                        .append(" as ")
+                        .append(measure)
+                        .append(',');
+            }
+        }
+        if (CollectionUtils.isNotEmpty(request.getDimensions())
+                || CollectionUtils.isNotEmpty(request.getMeasures())) {
+            builder.deleteCharAt(builder.length() - 1);
+        }
+        builder.append(" ");
+        IndicateMeasurementEnum indicateMeasurementEnum = IndicateMeasurementEnum.get(request.getMetric());
+        if (indicateMeasurementEnum == null) {
+            throw new RuntimeException("metric is not found." + request.getMetric());
+        }
+        builder.append(indicateMeasurementEnum.getMeasurementName());
+        builder.append(" where ");
+        builder.append(" time >= ")
+                .append(formatTimestamp(request.getStartTime()))
+                .append(" and time < ")
+                .append(formatTimestamp(request.getEndTime()));
+        if (CollectionUtils.isNotEmpty(request.getFilters())) {
+            for (QueryMetricsFilters filters : request.getFilters()) {
+                builder.append(" and ")
+                        .append(filters.getKey())
+                        .append('=');
+                if (filters.getValue() instanceof String) {
+                    builder.append("'")
+                            .append(filters.getValue())
+                            .append(",");
+                } else {
+                    builder.append(filters.getValue());
+                }
+            }
+        }
+
+        builder.append("group by ");
+        if (CollectionUtils.isNotEmpty(request.getDimensions())) {
+            for (String dimension : request.getDimensions()) {
+                builder.append(dimension).append(",");
+            }
+        }
+        builder.append("time(").append(request.getIntervalSec()).append("s)");
+        return builder.toString();
+    }
+
+    @Override
+    public List<Map<String, Object>> getCommonMetrics(CommonMetricsQueryRequest request) {
+        String sql = buildSql(request);
+        List<QueryResult.Result> aggregateResult = influxDbManager.query(sql);
+        return null;
+    }
 
     @Override
     public Map<String, MetricsResponse> getMetrics(MetricsQueryRequest request) {

@@ -16,10 +16,7 @@
 package io.shulie.amdb.service;
 
 import io.shulie.amdb.adaptors.common.Pair;
-import io.shulie.amdb.request.query.MetricsDetailQueryRequest;
-import io.shulie.amdb.request.query.MetricsFromInfluxdbQueryRequest;
-import io.shulie.amdb.request.query.MetricsFromInfluxdbRequest;
-import io.shulie.amdb.request.query.MetricsQueryRequest;
+import io.shulie.amdb.request.query.*;
 import io.shulie.amdb.response.metrics.MetricsDetailResponse;
 import io.shulie.amdb.response.metrics.MetricsResponse;
 
@@ -28,7 +25,16 @@ import java.util.Map;
 
 public interface MetricsService {
     /**
+     * 查询指标通用方法
+     *
+     * @param request
+     * @return
+     */
+    List<Map<String, Object>> getCommonMetrics(CommonMetricsQueryRequest request);
+
+    /**
      * 通用查询查询 trace_metrics
+     *
      * @param request
      * @return
      */

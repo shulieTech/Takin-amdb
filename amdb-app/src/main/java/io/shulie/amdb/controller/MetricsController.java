@@ -17,13 +17,11 @@ package io.shulie.amdb.controller;
 
 import com.google.common.collect.Lists;
 import io.shulie.amdb.adaptors.common.Pair;
+import io.shulie.amdb.common.CalcType;
 import io.shulie.amdb.common.IndicateMeasurementEnum;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
-import io.shulie.amdb.request.query.MetricsDetailQueryRequest;
-import io.shulie.amdb.request.query.MetricsFromInfluxdbQueryRequest;
-import io.shulie.amdb.request.query.MetricsFromInfluxdbRequest;
-import io.shulie.amdb.request.query.MetricsQueryRequest;
+import io.shulie.amdb.request.query.*;
 import io.shulie.amdb.response.metrics.MetricsDetailResponse;
 import io.shulie.amdb.service.MetricsService;
 import io.swagger.annotations.Api;
@@ -59,9 +57,16 @@ public class MetricsController {
      * @return
      */
     @RequestMapping(value = "/queryNodeMetrics", method = RequestMethod.POST)
-    public Response queryAppStatThread(@RequestBody MetricsQueryRequest request) {
-        request.setMeasurementName(IndicateMeasurementEnum.NODE_INFO.getMeasurementName());
-        return queryMetrics(request);
+    public Response queryAppStatThread(@RequestBody CommonMetricsQueryRequest request) {
+        if (StringUtils.isBlank(request.getMetric())) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
+        }
+        request.setCalcType(StringUtils.upperCase(request.getCalcType()));
+        if (!StringUtils.equals(request.getCalcType(), CalcType.SUM.name())
+                && !StringUtils.equals(request.getCalcType(), CalcType.AVG.name())) {
+            request.setCalcType(CalcType.AVG.name());
+        }
+        return Response.success(metricsService.getCommonMetrics(request));
     }
 
     /**
