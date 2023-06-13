@@ -57,7 +57,7 @@ public class MetricsController {
      * @return
      */
     @RequestMapping(value = "/queryCommonMetrics", method = RequestMethod.POST)
-    public Response queryAppStatThread(@RequestBody CommonMetricsQueryRequest request) {
+    public Response queryCommonMetrics(@RequestBody CommonMetricsQueryRequest request) {
         if (StringUtils.isBlank(request.getMetric())) {
             return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM);
         }
