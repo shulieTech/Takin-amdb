@@ -138,7 +138,24 @@ public class MetricsServiceImpl implements MetricsService {
     public List<Map<String, Object>> getCommonMetrics(CommonMetricsQueryRequest request) {
         String sql = buildSql(request);
         List<QueryResult.Result> aggregateResult = influxDbManager.query(sql);
-        return null;
+        List<Map<String, Object>> ret = new ArrayList<>();
+        aggregateResult.stream().filter((internalResult) -> Objects.nonNull(internalResult) && Objects.nonNull(internalResult.getSeries())).forEachOrdered(series -> {
+            List<Map<String, Object>> rets = series.getSeries().stream().map(serie -> {
+                List<Map<String, Object>> result = new ArrayList<>();
+                for (int i = 0, size = serie.getValues().size(); i < size; i++) {
+                    List<Object> list = serie.getValues().get(i);
+                    Map<String, Object> map = new HashMap<>();
+                    map.putAll(serie.getTags());
+                    for (int j = 0, len = serie.getColumns().size(); j < len; j++) {
+                        map.put(serie.getColumns().get(j), list.get(j));
+                    }
+                    result.add(map);
+                }
+                return result;
+            }).flatMap(s -> s.stream()).collect(Collectors.toList());
+            ret.addAll(rets);
+        });
+        return ret;
     }
 
     @Override
