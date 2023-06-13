@@ -124,6 +124,18 @@ public class MetricsServiceImpl implements MetricsService {
             }
         }
 
+        if (StringUtils.isNotBlank(request.getTenantCode())) {
+            builder.append(" and tenantCode='")
+                    .append(request.getTenantCode())
+                    .append("'");
+        }
+
+        if (StringUtils.isNotBlank(request.getEnvCode())) {
+            builder.append(" and envCode='")
+                    .append(request.getEnvCode())
+                    .append("'");
+        }
+
         builder.append("group by ");
         if (CollectionUtils.isNotEmpty(request.getDimensions())) {
             for (String dimension : request.getDimensions()) {
