@@ -20,6 +20,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import io.shulie.amdb.adaptors.common.Pair;
+import io.shulie.amdb.common.CalcType;
 import io.shulie.amdb.common.IndicateMeasurementEnum;
 import io.shulie.amdb.dao.ITraceDao;
 import io.shulie.amdb.entity.TAMDBPradarLinkConfigDO;
@@ -78,14 +79,12 @@ public class MetricsServiceImpl implements MetricsService {
 
     private String buildSql(CommonMetricsQueryRequest request) {
         StringBuilder builder = new StringBuilder("select ");
-        if (CollectionUtils.isNotEmpty(request.getDimensions())) {
-            for (String dimension : request.getDimensions()) {
-                builder.append(dimension).append(',');
-            }
-        }
+        CalcType calcType = CalcType.get(request.getCalcType());
+        String type = calcType == null ? request.getCalcType() : calcType.getCalcType();
+
         if (CollectionUtils.isNotEmpty(request.getMeasures())) {
             for (String measure : request.getMeasures()) {
-                builder.append(request.getCalcType())
+                builder.append(type)
                         .append('(')
                         .append(measure)
                         .append(')')
@@ -103,7 +102,7 @@ public class MetricsServiceImpl implements MetricsService {
         if (indicateMeasurementEnum == null) {
             throw new RuntimeException("metric is not found." + request.getMetric());
         }
-        builder.append(indicateMeasurementEnum.getMeasurementName());
+        builder.append(" from ").append(indicateMeasurementEnum.getMeasurementName());
         builder.append(" where ");
         builder.append(" time >= ")
                 .append(formatTimestamp(request.getStartTime()))
