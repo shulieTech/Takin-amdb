@@ -656,6 +656,11 @@ public class TraceServiceImpl implements TraceService {
         if (StringUtils.isNotBlank(param.getTenantAppKey())) {
             andFilterList.add("userAppKey='" + param.getTenantAppKey() + "'");
         }
+
+        if (StringUtils.isNotBlank(param.getTenantCode())) {
+            andFilterList.add("tenantCode='" + param.getTenantCode() + "'");
+        }
+
         if (StringUtils.isNotBlank(param.getEnvCode())) {
             andFilterList.add("envCode='" + param.getEnvCode() + "'");
         }

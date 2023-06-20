@@ -37,6 +37,11 @@ public abstract class AbstractAmdbBaseRequest {
      * 租户标识
      */
     private String tenantAppKey;
+
+    /**
+     * 租户编码
+     */
+    private String tenantCode;
     /**
      * 环境标识
      */
