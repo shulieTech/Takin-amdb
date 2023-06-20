@@ -69,7 +69,7 @@ public class TraceServiceImpl implements TraceService {
 
     // trace日志字段
     private static final String TRACE_SELECT_FILED
-            = " chainCode,serviceCode,appName,traceId,level,parentIndex,`index`,rpcId,rpcType,logType,traceAppName,upAppName,startTime,cost,"
+            = " chainCode,serviceCode,tenantCode,envCode,appName,traceId,level,parentIndex,`index`,rpcId,rpcType,logType,traceAppName,upAppName,startTime,cost,"
             + "middlewareName,serviceName,methodName,remoteIp,port,resultCode,request,response,clusterTest,callbackMsg,"
             + "attributes,localAttributes,async,version,hostIp,agentId,parsedServiceName ";
 
