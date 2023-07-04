@@ -224,10 +224,6 @@
                     <artifactId>log-protocol</artifactId>
                     <groupId>io.shulie.pradar</groupId>
                 </exclusion>
-                <exclusion>
-                    <artifactId>zookeeper</artifactId>
-                    <groupId>org.apache.zookeeper</groupId>
-                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
