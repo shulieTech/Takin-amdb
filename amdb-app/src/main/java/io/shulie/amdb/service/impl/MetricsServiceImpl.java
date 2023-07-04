@@ -44,6 +44,7 @@ import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
 import javax.annotation.PostConstruct;
@@ -398,8 +399,9 @@ public class MetricsServiceImpl implements MetricsService {
         return edges;
     }
 
+
     // 循环去获取
-    // @Select("select distinct CONCAT(app_name,'#',service,'#',method) as service,link_id as linkId from t_amdb_pradar_link_edge where app_name != 'UNKNOWN' and log_type != '2'")
+    @Transactional(rollbackFor = Exception.class)
     public List<TAmdbPradarLinkEdgeDO> getAllEdge1() {
         Map<String, String> duMap = Maps.newHashMap();
         List<TAmdbPradarLinkEdgeDO> linkEdgeList = Lists.newArrayList();
