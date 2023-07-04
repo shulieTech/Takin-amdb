@@ -49,10 +49,6 @@
             <version>1.0</version>
             <exclusions>
                 <exclusion>
-                    <groupId>io.shulie.surge.data</groupId>
-                    <artifactId>common</artifactId>
-                </exclusion>
-                <exclusion>
                     <artifactId>mysql-connector-java</artifactId>
                     <groupId>mysql</groupId>
                 </exclusion>
