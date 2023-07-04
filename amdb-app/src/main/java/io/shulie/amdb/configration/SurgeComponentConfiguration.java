@@ -37,7 +37,7 @@ public class SurgeComponentConfiguration {
     public MysqlSupport mysqlSupport(@Value("${spring.datasource.url}") String url,
                                      @Value("${spring.datasource.username}") String userName,
                                      @Value("${spring.datasource.password}") String password) {
-        return new MysqlSupport(url, userName, password, 1, 1, 20);
+        return new MysqlSupport(url, userName, password, 5, 5, 40);
     }
 
     @Bean
