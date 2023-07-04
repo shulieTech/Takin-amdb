@@ -224,6 +224,18 @@
                     <artifactId>log-protocol</artifactId>
                     <groupId>io.shulie.pradar</groupId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>curator-client</artifactId>
+                    <groupId>com.netflix.curator</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>curator-framework</artifactId>
+                    <groupId>com.netflix.curator</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>curator-recipes</artifactId>
+                    <groupId>com.netflix.curator</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
@@ -261,6 +273,21 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-pool2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-framework</artifactId>
+            <version>5.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-client</artifactId>
+            <version>5.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-recipes</artifactId>
+            <version>5.5.0</version>
         </dependency>
     </dependencies>
 
