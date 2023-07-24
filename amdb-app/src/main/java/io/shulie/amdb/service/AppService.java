@@ -47,7 +47,6 @@ public interface AppService {
     List<AppDO> selectByFilter(String filter);
 
     PageInfo<AmdbAppResponse> selectByBatchAppParams(TAmdbAppBatchAppQueryRequest param);
-    PageInfo<AmdbAppResponse> selectByBatchAppParams2(TAmdbAppBatchAppQueryRequest param);
 
     List<String> selectAllAppName(TAmdbAppBatchAppQueryRequest param);
 
