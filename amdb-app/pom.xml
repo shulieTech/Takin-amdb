@@ -21,13 +21,12 @@
 
     <groupId>io.shulie.amdb</groupId>
     <artifactId>amdb-app</artifactId>
-    <version>2.6</version>
     <packaging>jar</packaging>
 
     <parent>
         <groupId>io.shulie.amdb</groupId>
         <artifactId>amdb-receiver-service-parent</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>5.9.1</version>
     </parent>
 
     <properties>
@@ -41,7 +40,7 @@
         <dependency>
             <groupId>io.shulie.amdb</groupId>
             <artifactId>amdb-common</artifactId>
-            <version>1.1.2</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.shulie.surge.data</groupId>
@@ -57,7 +56,7 @@
         <dependency>
             <groupId>io.shulie.pradar</groupId>
             <artifactId>log-protocol</artifactId>
-            <version>2.0.7.1</version>
+            <version>${log.protocol.version}</version>
         </dependency>
         <!--添加Springmvc依赖-->
         <dependency>
@@ -225,7 +224,7 @@
         <dependency>
             <groupId>io.shulie.pradar</groupId>
             <artifactId>log-rule</artifactId>
-            <version>2.0.4.3</version>
+            <version>${log.protocol.version}</version>
         </dependency>
         <dependency>
             <groupId>ru.yandex.clickhouse</groupId>
