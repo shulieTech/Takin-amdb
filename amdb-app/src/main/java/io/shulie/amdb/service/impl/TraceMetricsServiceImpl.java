@@ -74,8 +74,8 @@ public class TraceMetricsServiceImpl implements TraceMetricsService {
         String edgeIds[] = param.getEdgeIds().split(",");
         int clusterTest = param.getClusterTest();
         StringBuffer buffer = new StringBuffer();
-        buffer.append("select edgeId,sqlStatement,maxRt,avgRt,totalCount,traceId,appName,method,rpcType,service from trace_metrics where" +
-                " time >= " + startTime + "000000 and time < " + endTime + "000000 and sqlStatement != 'null' and (");
+        buffer.append("select edgeId,sqlStatement,maxRt,avgRt,avgTps,totalCount,successCount,traceId,appName,method,rpcType,service from trace_metrics where" +
+                " time >= " + startTime + "000000 and time < " + endTime + "000000 and (");
         boolean isFirst = true;
         for (String edgeId : edgeIds) {
             if (StringUtils.isNoneBlank(edgeId)) {
