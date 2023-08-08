@@ -22,6 +22,7 @@ import lombok.Data;
 @Data
 @ApiModel
 public class ExitInfoDTO {
+    private Long id;
     @ApiModelProperty("应用名称(入口为客户端应用名称,出口为服务端应用名称)")
     String appName;
     @ApiModelProperty("接口名称")

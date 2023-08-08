@@ -619,6 +619,7 @@ public class LinkServiceImpl implements LinkService {
                         exitInfoDTO.setDefaultWhiteInfo(data.getDefaultWhiteInfo());
                     }
                 }
+                exitInfoDTO.setId(data.getId());
                 exitInfoDtos.add(exitInfoDTO);
             });
         }
