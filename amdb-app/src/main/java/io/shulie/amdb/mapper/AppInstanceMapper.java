@@ -54,7 +54,8 @@ public interface AppInstanceMapper extends Mapper<TAmdbAppInstanceDO>, MySqlMapp
     @Results(value = {@Result(column = "flag", property = "flag"), @Result(column = "app_id", property = "appId"), @Result(column = "user_app_key", property = "userAppKey"), @Result(column = "env_code", property = "envCode")})
     List<TAmdbAppInstanceDO> selectFlagByAppId(@Param("appDos") List<AppDO> amdbApps);
 
-    @Select("select user_app_key,env_code,app_name from t_amdb_app_instance where flag in ('1','3') group by user_app_key,env_code,app_name")
+//    @Select("select user_app_key,env_code,app_name from t_amdb_app_instance where flag in ('1','3') group by user_app_key,env_code,app_name")
+    @Select("select user_app_key,env_code,app_name from t_amdb_app_instance group by user_app_key,env_code,app_name")
     @Results(value = {@Result(column = "user_app_key", property = "userAppKey"), @Result(column = "env_code", property = "envCode"), @Result(column = "app_name", property = "appName")})
     List<TAmdbAppInstanceDO> selectOnlineAppList();
 
