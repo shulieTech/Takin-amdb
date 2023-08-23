@@ -31,7 +31,7 @@
     </parent>
     <properties>
         <surge.data.version>1.3</surge.data.version>
-        <log.protocol.version>2.0.7</log.protocol.version>
+        <log.protocol.version>2.0.8</log.protocol.version>
     </properties>
 
     <modules>
