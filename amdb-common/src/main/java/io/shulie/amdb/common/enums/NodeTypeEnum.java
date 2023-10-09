@@ -211,6 +211,8 @@ public enum NodeTypeEnum {
                 return NodeTypeEnum.VIRTUAL;
             case "dm":
                 return NodeTypeEnum.DB;
+            case "tidb":
+                return NodeTypeEnum.DB;
             default:
                 return NodeTypeEnum.APP;
         }

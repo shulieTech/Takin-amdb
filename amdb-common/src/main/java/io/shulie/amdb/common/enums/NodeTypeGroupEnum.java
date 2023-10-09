@@ -91,6 +91,7 @@ public enum NodeTypeGroupEnum {
             case "postgresql":
             case "mongodb":
             case "dm":
+            case "tidb":
                 return NodeTypeGroupEnum.DB;
             case "tfs":
             case "oss":

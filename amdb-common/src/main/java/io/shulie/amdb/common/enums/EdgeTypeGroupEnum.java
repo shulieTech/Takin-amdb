@@ -95,6 +95,7 @@ public enum EdgeTypeGroupEnum {
             case "cassandra":
             case "mongodb":
             case "dm":
+            case "tidb":
                 return EdgeTypeGroupEnum.DB;
             case "tfs":
             case "oss":

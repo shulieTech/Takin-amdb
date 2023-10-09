@@ -204,6 +204,8 @@ public enum EdgeTypeEnum {
                 return EdgeTypeEnum.GRPC;
             case "dm":
                 return EdgeTypeEnum.DB;
+            case "tidb":
+                return EdgeTypeEnum.DB;
             default:
                 if (middlewareName.toLowerCase().contains("http")) {
                     return EdgeTypeEnum.HTTP;
