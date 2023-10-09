@@ -202,6 +202,8 @@ public enum EdgeTypeEnum {
                 return EdgeTypeEnum.ELASTICJOB;
             case "grpc":
                 return EdgeTypeEnum.GRPC;
+            case "dm":
+                return EdgeTypeEnum.DB;
             default:
                 if (middlewareName.toLowerCase().contains("http")) {
                     return EdgeTypeEnum.HTTP;
