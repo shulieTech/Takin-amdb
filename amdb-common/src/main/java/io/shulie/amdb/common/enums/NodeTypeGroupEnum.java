@@ -90,6 +90,7 @@ public enum NodeTypeGroupEnum {
             case "cassandra":
             case "postgresql":
             case "mongodb":
+            case "dm":
                 return NodeTypeGroupEnum.DB;
             case "tfs":
             case "oss":
