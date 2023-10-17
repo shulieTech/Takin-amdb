@@ -12,12 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.shulie.amdb.adaptors.connector;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Queues;
-import io.shulie.surge.data.common.pool.NamedThreadFactory;
+import com.alibaba.fastjson.JSON;
 import io.shulie.surge.data.common.zk.ZkClient;
 import io.shulie.surge.data.common.zk.ZkClientSpec;
 import io.shulie.surge.data.common.zk.ZkPathChildrenCache;
@@ -26,27 +23,25 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 
-/**
- * @author vincent
- */
+
 public class ZookeeperPathConnector implements Connector {
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperPathConnector.class);
 
     private static final String ZK_SERVERS = System.getProperty("zookeeper.servers", "default.zookeeper:2181");
     private static final int CONNECTION_TIMEOUT = NumberUtils.toInt(System.getProperty("zookeeper.connection.timeout", "30000"));
     private static final int SESSION_TIMEOUT = NumberUtils.toInt(System.getProperty("zookeeper.session.timeout", "20000"));
-
-
+    private Map<String, ZkPathChildrenCache> childCache = new ConcurrentHashMap<>();
     private ZkClient zkClient;
-
-    private Map<String, ZkPathChildrenCache> childCache = Maps.newHashMap();
+    private final ExecutorService executor = Executors.newFixedThreadPool(10);
 
     @Override
     public void init() throws Exception {
@@ -63,66 +58,30 @@ public class ZookeeperPathConnector implements Connector {
         ZkClientSpec spec = new ZkClientSpec(zookeepers);
         spec.setConnectionTimeoutMillis(connectionTimeout)
                 .setSessionTimeoutMillis(sessionTimeout);
-        try {
-            this.zkClient = new NetflixCuratorZkClientFactory().create(spec);
-        } catch (Exception e) {
-            logger.error("zookeeper客户端初始化异常,请检查ZK集群连接是否正常", e);
-            e.printStackTrace();
-        }
+        this.zkClient = new NetflixCuratorZkClientFactory().create(spec);
+
         if (this.zkClient == null) {
-            logger.error("zookeeper客户端初始化异常,请检查ZK集群连接是否正常");
+            logger.error("ZooKeeper client initialization failed. Please check if the ZooKeeper cluster connection is correct.");
         }
     }
 
     @Override
     public <T> void addPath(String path, Class<T> paramsClazz, Processor processor) throws Exception {
-        try {
-            createIfNotExistsDirectory(path);
-            // 只触发最新的一次 Update 更新
-            final NamedThreadFactory threadFactory = new NamedThreadFactory("ZookeeperPathConnector-" + path, true);
-            ExecutorService executor = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
-                    Queues.<Runnable>newArrayBlockingQueue(1), threadFactory,
-                    new ThreadPoolExecutor.DiscardOldestPolicy());
-            // 已处理过的path进来后不再处理
-            if (childCache.get(path) != null) {
-                return;
-            }
-            ZkPathChildrenCache instanceCache = zkClient.createPathChildrenCache(path);
-            instanceCache.setUpdateExecutor(executor);
-            childCache.put(path, instanceCache);
-            //初始化时先call线程，再发生变更后再call一次
-            Thread callThread = new Thread() {
-                @Override
-                public void run() {
-                    DataContext dataContext = processor.getContext();
-                    dataContext.setPath(path);
-                    try {
-                        List<String> childPaths = zkClient.listChildren(path);
-                        dataContext.setChildPaths(childPaths);
-                        processor.process(dataContext);
-                    } catch (KeeperException.NoNodeException e) {
-                        logger.warn("节点下线:{}", path);
-                        //执行删除表中历史节点数据操作,必须在shutdownnow方法之前
-                        processor.process(dataContext);
-                        // 节点删除时执行
-                        // 通知adaptor节点已删除，通过childPath+model同时为NULL即可确认
-                        //logger.error("解析ZK数据失败，path:{}，errorInfo:{}", path, e.getMessage());
-                        if (childCache.get(path) != null) {
-                            childCache.get(path).stop();
-                            childCache.remove(path);
-                            executor.shutdownNow();
-                        }
-                    } catch (Exception e) {
-                        logger.error("processor处理发生异常:{},异常堆栈:{}，path:{}，dataContext:{}", e, e.getStackTrace(), path, dataContext);
-                    }
-                }
-            };
-            callThread.start();
-            instanceCache.setUpdateListener(callThread);
-            instanceCache.startAndRefresh();
-        } catch (Exception e) {
-            throw new RuntimeException("fail to start heartbeat node for path: " + path, e);
+        createIfNotExistsDirectory(path);
+        // 已处理过的path进来后不再处理
+        if (childCache.get(path) != null) {
+            return;
         }
+        ZkPathChildrenCache instanceCache = zkClient.createPathChildrenCache(path);
+        instanceCache.setUpdateExecutor(executor);
+        childCache.put(path, instanceCache);
+
+        // 初始化时先触发一次回调处理
+        processDataChanges(path, paramsClazz, processor);
+
+        // 设置监听器，当子节点发生变化时触发回调处理
+        instanceCache.setUpdateListener(() -> processDataChanges(path, paramsClazz, processor));
+        instanceCache.startAndRefresh();
     }
 
     @Override
@@ -131,28 +90,52 @@ public class ZookeeperPathConnector implements Connector {
         return zkClient.listChildren(path);
     }
 
-
-    /**
-     * @param path
-     */
+    // 创建指定路径，如果路径不存在的话
     private void createIfNotExistsDirectory(String path) {
         try {
             zkClient.ensureDirectoryExists(path);
         } catch (Exception e) {
-            logger.error("createIfNotExistsDirectory err!", e);
+            logger.error("Failed to create directory if not exists.", e);
+        }
+    }
+
+    // 处理子节点的数据变化
+    private <T> void processDataChanges(String path, Class<T> paramsClazz, Processor processor) {
+        DataContext dataContext = processor.getContext();
+        dataContext.setPath(path);
+        try {
+            List<String> childPaths = zkClient.listChildren(path);
+            dataContext.setChildPaths(childPaths);
+
+            for (String childPath : childPaths) {
+                String childFullPath = path + "/" + childPath;
+                byte[] childDataBytes = zkClient.getData(childFullPath);
+                if (childDataBytes != null) {
+                    String childData = new String(childDataBytes, StandardCharsets.UTF_8);
+                    if (childData != null) {
+                        Object object = JSON.parseObject(childData, paramsClazz);
+                        dataContext.setModel(object);
+                        processor.process(dataContext);
+                    }
+                }
+            }
+        } catch (KeeperException.NoNodeException e) {
+            logger.warn("Node is offline: {}", path);
+            // 执行删除表中历史节点数据操作
+            processor.process(dataContext);
+
+            if (childCache.get(path) != null) {
+                childCache.get(path).stop();
+                childCache.remove(path);
+            }
+        } catch (Exception e) {
+            logger.error("Exception occurred while processing data: {}", e.getMessage(), e);
         }
     }
 
     @Override
     public void start() throws Exception {
-//        for (ZkPathChildrenCache instanceCache : childCache.values()) {
-//            try {
-//                instanceCache.startAndRefresh();
-//            } catch (Exception e) {
-//                logger.error("instance cache start failed");
-//            }
-//        }
-
+        // 启动操作，根据需要实现
     }
 
     @Override
@@ -160,13 +143,13 @@ public class ZookeeperPathConnector implements Connector {
         for (ZkPathChildrenCache instanceCache : childCache.values()) {
             try {
                 instanceCache.stop();
-                this.childCache = Maps.newHashMap();
-                return true;
             } catch (Exception e) {
-                logger.error("instance cache start failed");
+                logger.error("Failed to stop instance cache: {}", e.getMessage(), e);
             }
         }
-        return false;
+        // 清空子节点缓存
+        childCache.clear();
+        return true;
     }
 
     @Override
@@ -174,3 +157,6 @@ public class ZookeeperPathConnector implements Connector {
         return ConnectorType.ZOOKEEPER_PATH;
     }
 }
+
+
+
