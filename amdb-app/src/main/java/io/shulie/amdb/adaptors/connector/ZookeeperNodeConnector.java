@@ -25,6 +25,7 @@ import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -40,10 +41,7 @@ public class ZookeeperNodeConnector implements Connector {
 
     private ZkClient zkClient;
 
-    @Value("${zk_node_thread_num:10}")
-    private int thread_num;
-
-    private final ExecutorService executor = Executors.newFixedThreadPool(10);
+    private final ExecutorService executor = Executors.newFixedThreadPool(10,new CustomizableThreadFactory("zk-node-connector-"));
 
     @Override
     public void init() throws Exception {

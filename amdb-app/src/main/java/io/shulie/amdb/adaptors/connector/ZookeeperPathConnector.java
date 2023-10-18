@@ -23,7 +23,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -41,7 +41,7 @@ public class ZookeeperPathConnector implements Connector {
     private static final int SESSION_TIMEOUT = NumberUtils.toInt(System.getProperty("zookeeper.session.timeout", "20000"));
     private Map<String, ZkPathChildrenCache> childCache = new ConcurrentHashMap<>();
     private ZkClient zkClient;
-    private final ExecutorService executor = Executors.newFixedThreadPool(10);
+    private final ExecutorService executor = Executors.newFixedThreadPool(10, new CustomizableThreadFactory("zk-path-connector-"));
 
     @Override
     public void init() throws Exception {
