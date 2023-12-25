@@ -27,7 +27,7 @@ import java.util.Date;
 public class TAmdbPradarLinkEdgeDO extends BaseDatabaseDO {
     @Id
     @Column(name = "id")
-    Integer id;
+    Long id;
     @Column(name = "link_id")
     String linkId;
     @Column(name = "service")

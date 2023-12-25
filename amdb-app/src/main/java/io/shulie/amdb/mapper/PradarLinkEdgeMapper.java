@@ -51,7 +51,7 @@ public interface PradarLinkEdgeMapper extends Mapper<TAmdbPradarLinkEdgeDO>, MyS
             "and i.server_app_name = #{serverAppName}\n" +
             "and i.middleware_name = #{middlewareName}\n" +
             "order by i.gmt_modify desc limit 1")
-    Integer getLatestEdge(TAmdbPradarLinkEdgeDO edgeDO);
+    Long getLatestEdge(TAmdbPradarLinkEdgeDO edgeDO);
 
     @Update("update t_amdb_pradar_link_edge set link_id = CONCAT(link_id,'_bak')\n" +
             "where id !=#{id}\n" +

@@ -53,7 +53,7 @@ public class ClearEdgeScheduled {
             List<TAmdbPradarLinkEdgeDO> resultList = pradarLinkEdgeMapper.getExpiredEdge();
             for(TAmdbPradarLinkEdgeDO edgeTemp:resultList){
                 //保留被最后刷新对边
-                int latestId = pradarLinkEdgeMapper.getLatestEdge(edgeTemp);
+                Long latestId = pradarLinkEdgeMapper.getLatestEdge(edgeTemp);
                 log.info(edgeTemp.getLinkId()+"/"+edgeTemp.getFromAppId()+"/"+edgeTemp.getToAppId()+"--->"+latestId);
                 edgeTemp.setId(latestId);
                 //清除其他过期对边
