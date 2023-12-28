@@ -25,11 +25,13 @@ import io.shulie.amdb.entity.TAmdbAppInstanceDO;
 import io.shulie.amdb.mapper.AppInstanceMapper;
 import io.shulie.amdb.mapper.AppMapper;
 import io.shulie.amdb.mapper.AppShadowDatabaseMapper;
+import io.shulie.amdb.request.query.AppInstanceStatusQueryRequest;
 import io.shulie.amdb.request.query.AppShadowBizTableRequest;
 import io.shulie.amdb.request.query.AppShadowDatabaseRequest;
 import io.shulie.amdb.request.query.TAmdbAppBatchAppQueryRequest;
 import io.shulie.amdb.response.app.AmdbAppResponse;
 import io.shulie.amdb.response.app.model.InstanceInfo;
+import io.shulie.amdb.service.AppInstanceStatusService;
 import io.shulie.amdb.service.AppService;
 import io.shulie.amdb.utils.PagingUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -56,6 +58,8 @@ public class AppServiceImpl implements AppService {
 
     @Resource
     private AppShadowDatabaseMapper appShadowDatabaseMapper;
+    @Resource
+    AppInstanceStatusService appInstanceStatusService;
 
     @Override
     public Response insert(AppDO record) {
@@ -167,7 +171,6 @@ public class AppServiceImpl implements AppService {
             int totalCount = instanceDOS.size();
             int onlineCount = (int) instanceDOS.stream().filter(instance -> (instance.getFlag() & 1) == 1).count();
             long exceptionCount = instanceDOS.stream().filter(instance -> (instance.getFlag() & 2) != 2 && (instance.getFlag() & 1) == 1).count();
-
             InstanceInfo instanceInfo = new InstanceInfo();
             instanceInfo.setInstanceAmount(totalCount);
             instanceInfo.setInstanceOnlineAmount(onlineCount);
