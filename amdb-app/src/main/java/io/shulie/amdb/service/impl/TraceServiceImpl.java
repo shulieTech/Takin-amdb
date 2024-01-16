@@ -19,8 +19,10 @@ import com.alibaba.fastjson.JSONObject;
 import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
+import io.shulie.amdb.common.dto.trace.TraceMockDTO;
 import io.shulie.amdb.common.enums.RpcType;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
+import io.shulie.amdb.common.request.trace.TraceMockQueryParam;
 import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
 import io.shulie.amdb.constant.SqlConstants;
 import io.shulie.amdb.dao.ITraceDao;
@@ -925,6 +927,21 @@ public class TraceServiceImpl implements TraceService {
         }
         List<RpcBased> rpcBasedList = modelList.stream().map(model -> model.getRpcBased()).collect(Collectors.toList());
         return rpcBasedList;
+    }
+
+    @Override
+    public List<TraceMockDTO> getTraceMockInfo(TraceMockQueryParam param) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select appName,serviceName,methodName,resultCode,count(0) as count,sum(cost) as totalCost from t_trace_all where");
+        sql.append(" startTime>="+param.getStartTime()+" and startTime<"+param.getEndTime());
+        if(StringUtils.isNotBlank(param.getTaskId())) {
+            sql.append(" and taskId='").append(param.getTaskId()).append("' ");
+        }
+        sql.append(" and rpcType="+RpcType.TYPE_MOCK); //11标识mock
+        sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+        sql.append(" group by appName,serviceName,methodName,resultCode");
+        return traceDao.queryForList(sql.toString(), TraceMockDTO.class);
     }
 
     private void calculateCost(TTrackClickhouseModel clientModel, List<TTrackClickhouseModel> modelList) {

@@ -18,7 +18,9 @@ package io.shulie.amdb.controller;
 import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
+import io.shulie.amdb.common.dto.trace.TraceMockDTO;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
+import io.shulie.amdb.common.request.trace.TraceMockQueryParam;
 import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
 import io.shulie.amdb.dto.LogResultDTO;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
@@ -101,11 +103,21 @@ public class TraceController {
     }
 
     /**
-     * 流量明细
+     * Trace-MOCK汇总数据
      *
      * @param param
      * @return
      */
+    @RequestMapping(value = "/getMockDataList", method = RequestMethod.GET)
+    public Response<List<TraceMockDTO>> getTraceMockList(TraceMockQueryParam param) {
+        try {
+            return Response.success(traceService.getTraceMockInfo(param));
+        } catch (Exception e) {
+            logger.error("Trace-Mock查询失败", e);
+            return Response.fail(AmdbExceptionEnums.TRACE_QUERY);
+        }
+    }
+
     @RequestMapping(value = "/getEntryTraceList", method = RequestMethod.GET)
     public Response<List<EntryTraceInfoDTO>> getEntryTraceList(EntryTraceQueryParam param) {
         logger.info("流量明细查询 请求参数:{}", param);

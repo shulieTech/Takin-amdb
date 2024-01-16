@@ -61,6 +61,10 @@ public final class RpcType {
      * 本地方法
      */
     static public final int TYPE_LOCAL = 9;
+    /**
+     * mock
+     */
+    static public final int TYPE_MOCK = 11;
 
     /**
      * 未知

@@ -18,7 +18,9 @@ package io.shulie.amdb.service;
 import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.shulie.amdb.common.Response;
 import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
+import io.shulie.amdb.common.dto.trace.TraceMockDTO;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
+import io.shulie.amdb.common.request.trace.TraceMockQueryParam;
 import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
 import io.shulie.surge.data.deploy.pradar.link.model.TTrackClickhouseModel;
 
@@ -40,4 +42,7 @@ public interface TraceService {
     Response<List<TTrackClickhouseModel>> getAllTraceList(EntryTraceQueryParam param);
 
     Response<String> getAppNameByUrl(EntryTraceQueryParam param);
+
+    List<TraceMockDTO> getTraceMockInfo(TraceMockQueryParam param);
+
 }

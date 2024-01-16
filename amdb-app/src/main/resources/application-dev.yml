@@ -1,0 +1,105 @@
+server:
+  port: 10032
+  servlet:
+    context-path: /
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 102400KB
+      max-request-size: 102400KB
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driverClassName: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.1.221:3306/amdb_sf?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    username: root
+    password: shulie@2020
+    druid:
+      initialSize: 1
+      minIdle: 1
+      maxActive: 20
+      maxWait: 60000
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 30000
+      validationQuery: select 'x'
+      testWhileIdle: true
+      testOnBorrow: false
+      testOnReturn: false
+      poolPreparedStatements: true
+      maxPoolPreparedStatementPerConnectionSize: 20
+      filters: stat,wall,slf4j
+      connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+
+tro:
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.1.221:3306/trodb_sf?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    username: root
+    password: shulie@2020
+    druid:
+      initialSize: 1
+      minIdle: 1
+      maxActive: 10
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+  mapper-locations: classpath*:generator/**/*.xml
+
+pagehelper:
+  helperDialect: mysql
+  reasonable: false
+  supportMethodsArguments: true
+  params: count=countSql
+
+influx:
+  openurl: http://192.168.1.221:8086
+  username: pradar
+  password: pradar
+  database: pradar
+
+zookeeper:
+  server: 192.168.1.178:2181
+
+datasource:
+  # t_trace_all 数据源类型 支持mysql、clickhouse
+  traceAll: clickhouse
+
+config:
+  clickhouse:
+    enable: true
+    url: jdbc:clickhouse://192.168.1.221:8123,192.168.1.221:8123/default
+    userName: default
+    password: rU4zGjA/
+    enableRound: true
+  adaptor:
+    instance:
+      open: false
+  link:
+    processUnknow: false
+  e2e:
+    delaySec: 120
+  trace:
+    limit: 500
+    oldTask:
+      queryDate: 2023-01-01
+  agentlog:
+    reserveDays: 7
+  tenantConfig:
+    host: 192.168.1.148
+    port: 10008
+    url: /takin-web/api/tenant/app/all
+    defaultTenantAppKey: ed45ef6b-bf94-48fa-b0c0-15e0285365d2
+  entryRule:
+    url: /takin-web/api/v1/api/pull
+    queryThreads: 20
+config.adaptor.instance.open: true
+app:
+  version: @project.version@
+  build:
+    time: @timestamp@
