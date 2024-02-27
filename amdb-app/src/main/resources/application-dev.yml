@@ -16,7 +16,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://192.168.1.221:3306/amdb_sf?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    url: jdbc:mysql://192.168.1.112:3306/amdb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
     username: root
     password: shulie@2020
     druid:
@@ -38,7 +38,7 @@ spring:
 tro:
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://192.168.1.221:3306/trodb_sf?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    url: jdbc:mysql://192.168.1.112:3306/trodb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
     username: root
     password: shulie@2020
     druid:
@@ -58,13 +58,13 @@ pagehelper:
   params: count=countSql
 
 influx:
-  openurl: http://192.168.1.221:8086
+  openurl: http://192.168.1.112:8086
   username: pradar
   password: pradar
   database: pradar
 
 zookeeper:
-  server: 192.168.1.178:2181
+  server: 192.168.1.192:2181
 
 datasource:
   # t_trace_all 数据源类型 支持mysql、clickhouse
@@ -73,7 +73,7 @@ datasource:
 config:
   clickhouse:
     enable: true
-    url: jdbc:clickhouse://192.168.1.221:8123,192.168.1.221:8123/default
+    url: jdbc:clickhouse://192.168.1.112:8123,192.168.1.112:8123/default
     userName: default
     password: rU4zGjA/
     enableRound: true

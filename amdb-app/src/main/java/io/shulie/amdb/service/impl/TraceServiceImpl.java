@@ -938,7 +938,9 @@ public class TraceServiceImpl implements TraceService {
             sql.append(" and taskId='").append(param.getTaskId()).append("' ");
         }
         sql.append(" and rpcType="+RpcType.TYPE_MOCK); //11标识mock
-        sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        if(StringUtils.isNotBlank(param.getTenantAppKey())) {
+            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        }
         sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
         sql.append(" group by appName,serviceName,methodName,resultCode");
         return traceDao.queryForList(sql.toString(), TraceMockDTO.class);
@@ -953,7 +955,9 @@ public class TraceServiceImpl implements TraceService {
             sql.append(" and taskId='").append(param.getTaskId()).append("' ");
         }
         sql.append(" and rpcType="+RpcType.TYPE_MOCK); //11标识mock
-        sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        if(StringUtils.isNotBlank(param.getTenantAppKey())) {
+            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        }
         sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
         sql.append(" limit 1");
         return traceDao.queryForList(sql.toString(), TraceMockDTO.class);
