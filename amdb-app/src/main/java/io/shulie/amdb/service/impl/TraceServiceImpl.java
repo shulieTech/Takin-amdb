@@ -944,6 +944,21 @@ public class TraceServiceImpl implements TraceService {
         return traceDao.queryForList(sql.toString(), TraceMockDTO.class);
     }
 
+    @Override
+    public List<TraceMockDTO> existTraceMockInfo(TraceMockQueryParam param) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select traceId from t_trace_all where");
+        sql.append(" startTime>="+param.getStartTime()+" and startTime<"+param.getEndTime());
+        if(StringUtils.isNotBlank(param.getTaskId())) {
+            sql.append(" and taskId='").append(param.getTaskId()).append("' ");
+        }
+        sql.append(" and rpcType="+RpcType.TYPE_MOCK); //11标识mock
+        sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+        sql.append(" limit 1");
+        return traceDao.queryForList(sql.toString(), TraceMockDTO.class);
+    }
+
     private void calculateCost(TTrackClickhouseModel clientModel, List<TTrackClickhouseModel> modelList) {
         TTrackClickhouseModel serverModel = modelList.stream().filter(
                         m -> m.getLogType() == 3 && m.getRpcId().startsWith(clientModel.getRpcId()) && m.getServiceName()

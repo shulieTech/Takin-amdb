@@ -118,6 +118,16 @@ public class TraceController {
         }
     }
 
+    @RequestMapping(value = "/existMockData", method = RequestMethod.GET)
+    public Response<List<TraceMockDTO>> existMockData(TraceMockQueryParam param) {
+        try {
+            return Response.success(traceService.existTraceMockInfo(param));
+        } catch (Exception e) {
+            logger.error("Trace-Mock-Exist查询失败", e);
+            return Response.fail(AmdbExceptionEnums.TRACE_QUERY);
+        }
+    }
+
     @RequestMapping(value = "/getEntryTraceList", method = RequestMethod.GET)
     public Response<List<EntryTraceInfoDTO>> getEntryTraceList(EntryTraceQueryParam param) {
         logger.info("流量明细查询 请求参数:{}", param);

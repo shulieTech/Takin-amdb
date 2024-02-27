@@ -45,4 +45,5 @@ public interface TraceService {
 
     List<TraceMockDTO> getTraceMockInfo(TraceMockQueryParam param);
 
+    List<TraceMockDTO> existTraceMockInfo(TraceMockQueryParam param);
 }
