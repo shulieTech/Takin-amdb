@@ -931,17 +931,19 @@ public class TraceServiceImpl implements TraceService {
 
     @Override
     public List<TraceMockDTO> getTraceMockInfo(TraceMockQueryParam param) {
+        String startTime = DateFormatUtils.format(new Date(param.getStartTime()), "yyyy-MM-dd HH:mm:ss");
+        String endTime = DateFormatUtils.format(new Date(param.getEndTime()), "yyyy-MM-dd HH:mm:ss");
         StringBuilder sql = new StringBuilder();
         sql.append("select appName,serviceName,methodName,resultCode,count(0) as count,sum(cost) as totalCost from t_trace_all where");
-        sql.append(" startTime>="+param.getStartTime()+" and startTime<"+param.getEndTime());
+        sql.append(" startDate>='"+startTime+"' and startDate<'"+endTime+"'");
         if(StringUtils.isNotBlank(param.getTaskId())) {
             sql.append(" and taskId='").append(param.getTaskId()).append("' ");
         }
         sql.append(" and rpcType="+RpcType.TYPE_MOCK); //11标识mock
-        if(StringUtils.isNotBlank(param.getTenantAppKey())) {
-            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
-        }
-        sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+//        if(StringUtils.isNotBlank(param.getTenantAppKey())) {
+//            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+//        }
+//        sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
         sql.append(" group by appName,serviceName,methodName,resultCode");
         return traceDao.queryForList(sql.toString(), TraceMockDTO.class);
     }
@@ -949,16 +951,18 @@ public class TraceServiceImpl implements TraceService {
     @Override
     public List<TraceMockDTO> existTraceMockInfo(TraceMockQueryParam param) {
         StringBuilder sql = new StringBuilder();
+        String startTime = DateFormatUtils.format(new Date(param.getStartTime()), "yyyy-MM-dd HH:mm:ss");
+        String endTime = DateFormatUtils.format(new Date(param.getEndTime()), "yyyy-MM-dd HH:mm:ss");
         sql.append("select traceId from t_trace_all where");
-        sql.append(" startTime>="+param.getStartTime()+" and startTime<"+param.getEndTime());
+        sql.append(" startDate>='"+startTime+"' and startDate<'"+endTime+"'");
         if(StringUtils.isNotBlank(param.getTaskId())) {
             sql.append(" and taskId='").append(param.getTaskId()).append("' ");
         }
         sql.append(" and rpcType="+RpcType.TYPE_MOCK); //11标识mock
-        if(StringUtils.isNotBlank(param.getTenantAppKey())) {
-            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
-        }
-        sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+//        if(StringUtils.isNotBlank(param.getTenantAppKey())) {
+//            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+//        }
+//        sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
         sql.append(" limit 1");
         return traceDao.queryForList(sql.toString(), TraceMockDTO.class);
     }
