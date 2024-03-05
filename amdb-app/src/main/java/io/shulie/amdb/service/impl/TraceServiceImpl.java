@@ -1278,7 +1278,7 @@ public class TraceServiceImpl implements TraceService {
             sql.append(")");
         }
         sql.append(" and traceId='" + param.getTraceId()
-                + "' order by rpcId limit " + traceQueryLimit);
+                + "' order by rpcId asc,logType asc limit " + traceQueryLimit);
 
         List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
 
