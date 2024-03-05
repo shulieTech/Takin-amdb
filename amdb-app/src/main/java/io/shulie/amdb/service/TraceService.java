@@ -34,6 +34,13 @@ public interface TraceService {
 
     List<RpcBased> getTraceDetail(TraceStackQueryParam param);
 
+    /**
+     * 精简版的trace
+     * @param param
+     * @return
+     */
+    List<RpcBased> getReduceTraceDetail(TraceStackQueryParam param);
+
     Response<Map<String, List<RpcBased>>> getTraceInfo(EntryTraceQueryParam param);
 
     List<Map<String, Object>> queryInterfaceParam(TraceStackQueryParam param);

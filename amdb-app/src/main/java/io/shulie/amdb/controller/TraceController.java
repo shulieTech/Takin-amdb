@@ -221,6 +221,27 @@ public class TraceController {
     }
 
     /**
+     * 查询调用链（精简版-只展示有问题的和耗时大的链路，无用的都去掉）
+     * @param param
+     * @return
+     */
+    @RequestMapping(value = "/getReduceTraceDetail", method = RequestMethod.GET)
+    public Response<List<RpcBased>> getReduceTraceDetail(TraceStackQueryParam param){
+        if (StringUtil.isBlank(param.getTraceId())) {
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "traceId");
+        }
+        try {
+            List<RpcBased> rpcBasedList = traceService.getReduceTraceDetail(param);
+            Response<List<RpcBased>> response = Response.success(rpcBasedList);
+            response.setTotal(rpcBasedList == null ? 0 : rpcBasedList.size());
+            return response;
+        } catch (Exception e) {
+            logger.error("调用链查询失败", e);
+            return Response.fail(AmdbExceptionEnums.TRACE_DETAIL_QUERY);
+        }
+    }
+
+    /**
      * trace日志查询
      *
      * @param logResultRequest

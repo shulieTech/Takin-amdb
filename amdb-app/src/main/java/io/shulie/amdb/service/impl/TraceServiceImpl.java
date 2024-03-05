@@ -15,6 +15,7 @@
 
 package io.shulie.amdb.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -56,7 +57,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.sql.*;
 import java.util.*;
+import java.util.Date;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -1197,13 +1200,13 @@ public class TraceServiceImpl implements TraceService {
         sql.append(" and traceId='" + param.getTraceId()
                 + "' order by rpcId limit " + traceQueryLimit);
         List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
-        /*List<TTrackClickhouseModel> engineModelList = modelList.stream().filter(model -> 5 == model.getLogType())
-                .collect(Collectors.toList());*/
-        /*TTrackClickhouseModel engineModel = null;
-        if (CollectionUtils.isNotEmpty(engineModelList)) {
-            modelList = subtractToList(modelList, engineModelList);
-            engineModel = engineModelList.get(0);
-        }*/
+            /*List<TTrackClickhouseModel> engineModelList = modelList.stream().filter(model -> 5 == model.getLogType())
+                    .collect(Collectors.toList());*/
+            /*TTrackClickhouseModel engineModel = null;
+            if (CollectionUtils.isNotEmpty(engineModelList)) {
+                modelList = subtractToList(modelList, engineModelList);
+                engineModel = engineModelList.get(0);
+            }*/
 
         // 压测引擎日志
         if (modelList.size() > 1) {
@@ -1214,18 +1217,125 @@ public class TraceServiceImpl implements TraceService {
             if (model.getLogType() == 2) {
                 calculateCost(model, modelList);
             }
-            /*// 流量引擎日志和入口日志匹配，如果匹配上，替换耗时、response、request
-            if (engineModel != null && (model.getLogType() == 1 || model.getLogType() == 3) && model
-                    .getParsedServiceName().equals(
-                            engineModel.getServiceName()) && model.getRpcType() == engineModel.getRpcType()) {
-                model.setStartTime(engineModel.getStartTime());
-                model.setCost(engineModel.getCost());
-                model.setRequest(engineModel.getRequest());
-                model.setResponse(engineModel.getResponse());
-            }*/
+                /*// 流量引擎日志和入口日志匹配，如果匹配上，替换耗时、response、request
+                if (engineModel != null && (model.getLogType() == 1 || model.getLogType() == 3) && model
+                        .getParsedServiceName().equals(
+                                engineModel.getServiceName()) && model.getRpcType() == engineModel.getRpcType()) {
+                    model.setStartTime(engineModel.getStartTime());
+                    model.setCost(engineModel.getCost());
+                    model.setRequest(engineModel.getRequest());
+                    model.setResponse(engineModel.getResponse());
+                }*/
         }
         List<RpcBased> rpcBasedList = modelList.stream().map(model -> model.getRpcBased()).collect(Collectors.toList());
         return rpcBasedList;
+    }
+
+    /**
+     * 先查询出所有有问题的节点
+     * 切割rpcId获取有问题的节点的父类节点，包括根节点
+     * 然后返回以上所有trace
+     *
+     * @param param
+     * @return
+     */
+    @Override
+    public List<RpcBased> getReduceTraceDetail(TraceStackQueryParam param) {
+        String rpcSql = spliceReduceRpcSql(param);
+        List<TTrackClickhouseModel> modelRpcIdList = traceDao.queryForList(rpcSql, TTrackClickhouseModel.class);
+        //如果判断条件不满足，就展示所有
+        if (CollectionUtils.isEmpty(modelRpcIdList)) {
+            return getTraceDetail(param);
+        }
+
+        List<String> rpcList = modelRpcIdList.stream().filter(a -> Objects.nonNull(a) && StringUtils.isNotBlank(a.getRpcId()))
+                .map(TTrackClickhouseModel::getRpcId).collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(rpcList)){
+            return getTraceDetail(param);
+        }
+
+        Set<String> allRpcSet = new HashSet<>();
+        for (String rpcId : rpcList) {
+            allRpcSet.addAll(getAllRootRpcIdSet(rpcId));
+        }
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("select " + TRACE_SELECT_FILED + " from t_trace_all where 1=1 ");
+        if (StringUtil.isNotBlank(param.getStartTime()) && StringUtil.isNotBlank(param.getEndTime())) {
+            sql.append(" and startDate between '" + param.getStartTime() + "' and '" + param.getEndTime() + "' ");
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+        }
+        if (CollectionUtils.isNotEmpty(allRpcSet)) {
+            sql.append(" and rpcId in (");
+            allRpcSet.forEach(rpcId -> sql.append("'").append(rpcId).append("',"));
+            sql.deleteCharAt(sql.length() - 1);
+            sql.append(")");
+        }
+        sql.append(" and traceId='" + param.getTraceId()
+                + "' order by rpcId limit " + traceQueryLimit);
+
+        List<TTrackClickhouseModel> modelList = traceDao.queryForList(sql.toString(), TTrackClickhouseModel.class);
+
+        // 压测引擎日志
+        if (modelList.size() > 1) {
+            modelList = modelList.stream().filter(model -> model.getLogType() != 5).collect(Collectors.toList());
+        }
+        for (TTrackClickhouseModel model : modelList) {
+            // 所有客户端都要重新计算耗时
+            if (model.getLogType() == 2) {
+                calculateCost(model, modelList);
+            }
+        }
+        List<RpcBased> rpcBasedList = modelList.stream().map(model -> model.getRpcBased()).collect(Collectors.toList());
+        return rpcBasedList;
+    }
+
+    private static String spliceReduceRpcSql(TraceStackQueryParam param) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("select rpcId" + " from t_trace_all where 1=1 ");
+        if (StringUtil.isNotBlank(param.getStartTime()) && StringUtil.isNotBlank(param.getEndTime())) {
+            sql.append(" and startDate between '" + param.getStartTime() + "' and '" + param.getEndTime() + "' ");
+        }
+        if (StringUtils.isNotBlank(param.getTenantAppKey())) {
+            sql.append(" and userAppKey='").append(param.getTenantAppKey()).append("' ");
+        }
+        if (StringUtils.isNotBlank(param.getEnvCode())) {
+            sql.append(" and envCode='").append(param.getEnvCode()).append("' ");
+        }
+        if (Objects.nonNull(param.getCost())) {
+            sql.append(" and (cost >= ").append(param.getCost()).append(" or (resultCode!='200' and resultCode !='00'))");
+        }
+        sql.append(" and traceId='" + param.getTraceId() + "' order by rpcId");
+
+        return sql.toString();
+    }
+
+    public static void main(String[] args) {
+
+    }
+
+    /**
+     * 根据rpcId获取所有父类的节点
+     * @param rpcId
+     * @return
+     */
+    private static Set<String> getAllRootRpcIdSet(String rpcId) {
+        if (StringUtils.isBlank(rpcId)) {
+            return Collections.emptySet();
+        }
+        List<String> rpcIdParts = Arrays.asList(rpcId.split("\\."));
+        Set<String> rpcIdSet = new HashSet<>();
+        for (int i = rpcIdParts.size(); i > 0; i--) {
+            String currentRpcId = String.join(".", rpcIdParts.subList(0, i));
+            rpcIdSet.add(currentRpcId);
+        }
+        return rpcIdSet;
     }
 
     private void calculateCost(TTrackClickhouseModel clientModel, List<TTrackClickhouseModel> modelList) {

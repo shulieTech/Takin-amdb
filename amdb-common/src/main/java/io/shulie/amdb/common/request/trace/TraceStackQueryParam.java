@@ -41,5 +41,7 @@ public class TraceStackQueryParam extends AbstractAmdbBaseRequest {
     String startTime;
     @ApiModelProperty("查询结束时间")
     String endTime;
+    @ApiModelProperty("耗时区间")
+    Integer cost;
 
 }
