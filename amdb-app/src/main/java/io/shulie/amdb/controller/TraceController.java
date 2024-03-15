@@ -17,10 +17,12 @@ package io.shulie.amdb.controller;
 
 import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.shulie.amdb.common.Response;
+import io.shulie.amdb.common.dto.trace.EntryTraceAvgCostDTO;
 import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
 import io.shulie.amdb.common.request.trace.TraceCompensateRequest;
 import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
+import io.shulie.amdb.common.request.trace.TraceStatisticsQueryReq;
 import io.shulie.amdb.dto.LogResultDTO;
 import io.shulie.amdb.exception.AmdbExceptionEnums;
 import io.shulie.amdb.request.query.LogResultRequest;
@@ -34,10 +36,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -239,6 +238,19 @@ public class TraceController {
             logger.error("调用链查询失败", e);
             return Response.fail(AmdbExceptionEnums.TRACE_DETAIL_QUERY);
         }
+    }
+
+    /**
+     * 根据时间区间和业务活动入口获取对应节点的指标
+     * @param traceStatisticsQueryReqList
+     * @return
+     */
+    @PostMapping("/getStatisticsTraceList")
+    public Response<List<EntryTraceAvgCostDTO>> getStatisticsTraceList(@RequestBody List<TraceStatisticsQueryReq> traceStatisticsQueryReqList) {
+        if (CollectionUtils.isEmpty(traceStatisticsQueryReqList)){
+            return Response.fail(AmdbExceptionEnums.COMMON_EMPTY_PARAM_STRING_DESC, "traceStatisticsQueryReqList");
+        }
+        return Response.success(this.traceService.getStatisticsTraceList(traceStatisticsQueryReqList));
     }
 
     /**

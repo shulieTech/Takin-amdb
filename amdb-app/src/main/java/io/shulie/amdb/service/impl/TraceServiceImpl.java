@@ -23,11 +23,13 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.shulie.amdb.common.Response;
+import io.shulie.amdb.common.dto.trace.EntryTraceAvgCostDTO;
 import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
 import io.shulie.amdb.common.enums.RpcType;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
 import io.shulie.amdb.common.request.trace.TraceCompensateRequest;
 import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
+import io.shulie.amdb.common.request.trace.TraceStatisticsQueryReq;
 import io.shulie.amdb.common.request.trodata.LogCompensateCallbackRequest;
 import io.shulie.amdb.common.request.trodata.LogCompensateCallbackRequest.LogCompensateCallbackData;
 import io.shulie.amdb.constant.SqlConstants;
@@ -1047,6 +1049,110 @@ public class TraceServiceImpl implements TraceService {
         taskStautsCache.put(checkDirectory, true);
     }
 
+    @Override
+    public List<EntryTraceAvgCostDTO> getStatisticsTraceList(List<TraceStatisticsQueryReq> traceStatisticsQueryReqList) {
+        //获取当前入口所有的traceId列表
+        String traceSQL = getTraceIdsSQL(traceStatisticsQueryReqList);
+        List<TTrackClickhouseModel> TraceModelList = traceDao.queryForList(traceSQL, TTrackClickhouseModel.class);
+        if (CollectionUtils.isEmpty(TraceModelList)) {
+            return Collections.emptyList();
+        }
+        List<String> traceList = TraceModelList.stream().map(TTrackClickhouseModel::getTraceId).collect(Collectors.toList());
+
+        //获取每个入口的平均耗时数据
+        String traceAvgCostSQL = getTraceAvgCost(traceList);
+        List<EntryTraceAvgCostDTO> modelList = traceDao.queryForList(traceAvgCostSQL, EntryTraceAvgCostDTO.class);
+
+        //找到每个入口耗时最大的traceId
+        String getMaxCostTraceIdSQL = getMaxCostTraceIdsSQL(traceStatisticsQueryReqList);
+        List<EntryTraceAvgCostDTO> maxCostList = traceDao.queryForList(getMaxCostTraceIdSQL, EntryTraceAvgCostDTO.class);
+        Map<String, String> traceIdMap = maxCostList.stream()
+                .collect(Collectors.toMap(traceInfo -> traceInfo.getServiceName() + traceInfo.getAppName() + traceInfo.getMethodName(),
+                        EntryTraceAvgCostDTO::getTraceId, (existingValue, newValue) -> existingValue));
+
+        //将最大的traceId放到每个入口上面去
+        for (EntryTraceAvgCostDTO avgCostDTO : modelList) {
+            String traceId = traceIdMap.get(avgCostDTO.getServiceName() + avgCostDTO.getAppName() + avgCostDTO.getMethodName());
+            if (StringUtils.isNotBlank(traceId)) {
+                avgCostDTO.setTraceId(traceId);
+            }
+        }
+
+        // 压测引擎日志
+        if (modelList.size() > 1) {
+            modelList = modelList.stream().filter(model -> model.getLogType() != 5).collect(Collectors.toList());
+        }
+        return modelList;
+    }
+
+    private static String getTraceIdsSQL(List<TraceStatisticsQueryReq> traceStatisticsQueryReqList) {
+        if (traceStatisticsQueryReqList.isEmpty()) {
+            return ""; // 返回一个空字符串或适当的错误消息
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("select traceId from t_trace_all where (");
+
+        for (int i = 0; i < traceStatisticsQueryReqList.size(); i++) {
+            TraceStatisticsQueryReq queryReq = traceStatisticsQueryReqList.get(i);
+            stringBuilder.append("(serviceName = '").append(queryReq.getServiceName()).append("'")
+                    .append(" and appName = '").append(queryReq.getAppName()).append("'")
+                    .append(" and methodName = '").append(queryReq.getMethodName()).append("'")
+                    .append(" and startDate >= '").append(queryReq.getStartTime()).append("'")
+                    .append(" and startDate <= '").append(queryReq.getEndTime()).append("'")
+                    .append(")");
+
+            if (i < traceStatisticsQueryReqList.size() - 1) {
+                stringBuilder.append(" or "); // 使用OR连接多个条件，假设你想要满足任何一个条件的结果
+            }
+        }
+
+        stringBuilder.append(") limit 50000");
+        return stringBuilder.toString();
+    }
+
+    private static String getMaxCostTraceIdsSQL(List<TraceStatisticsQueryReq> traceStatisticsQueryReqList) {
+        if (traceStatisticsQueryReqList.isEmpty()) {
+            return ""; // 返回一个空字符串或适当的错误消息
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("select  serviceName,appName,methodName,argMax(traceId, cost) AS traceId  from t_trace_all where (");
+
+        for (int i = 0; i < traceStatisticsQueryReqList.size(); i++) {
+            TraceStatisticsQueryReq queryReq = traceStatisticsQueryReqList.get(i);
+            stringBuilder.append("(serviceName = '").append(queryReq.getServiceName()).append("'")
+                    .append(" and appName = '").append(queryReq.getAppName()).append("'")
+                    .append(" and methodName = '").append(queryReq.getMethodName()).append("'")
+                    .append(" and startDate >= '").append(queryReq.getStartTime()).append("'")
+                    .append(" and startDate <= '").append(queryReq.getEndTime()).append("'").append(")");
+            if (i < traceStatisticsQueryReqList.size() - 1) {
+                stringBuilder.append(" or "); // 使用OR连接多个条件，假设你想要满足任何一个条件的结果
+            }
+        }
+        stringBuilder.append(") GROUP BY serviceName,appName,methodName");
+        stringBuilder.append(" limit 50000");
+        return stringBuilder.toString();
+    }
+
+    private static String getTraceAvgCost(List<String> traceList) {
+        if (traceList.isEmpty()) {
+            return ""; // 返回一个空字符串或适当的错误消息
+        }
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("select appName,serviceName,methodName,rpcId,logType,rpcType,avg(cost) as avgCost,");
+        stringBuilder.append("SUM(CASE WHEN resultCode NOT IN ('200', '00') THEN 1 ELSE 0 END) AS failureCount,");
+        stringBuilder.append("SUM(CASE WHEN resultCode IN ('200', '00') THEN 1 ELSE 0 END) AS successCount, COUNT(*) AS totalCount, ");
+        stringBuilder.append("(SUM(CASE WHEN resultCode IN ('200', '00') THEN 1 ELSE 0 END) * 100.0) / COUNT(*) AS successRate from t_trace_all  where traceId in (");
+
+        for (int i = 0; i < traceList.size(); i++) {
+            stringBuilder.append("'").append(traceList.get(i)).append("'");
+            if (i < traceList.size() - 1) {
+                stringBuilder.append(",");
+            }
+        }
+        stringBuilder.append(") group by appName,serviceName,methodName,rpcId,logType,rpcType");
+        return stringBuilder.toString();
+    }
+
     private void compensate(TraceCompensateRequest request, String checkDirectory, LogCompensateCallbackRequest callbackTakinRequest, List<File> fileList) {
         LogCompensateCallbackData data = callbackTakinRequest.getData();
         final CountDownLatch latch = new CountDownLatch(fileList.size());
@@ -1314,10 +1420,6 @@ public class TraceServiceImpl implements TraceService {
         sql.append(" and traceId='" + param.getTraceId() + "' order by rpcId");
 
         return sql.toString();
-    }
-
-    public static void main(String[] args) {
-
     }
 
     /**

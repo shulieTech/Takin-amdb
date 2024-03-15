@@ -17,11 +17,14 @@ package io.shulie.amdb.service;
 
 import com.pamirs.pradar.log.parser.trace.RpcBased;
 import io.shulie.amdb.common.Response;
+import io.shulie.amdb.common.dto.trace.EntryTraceAvgCostDTO;
 import io.shulie.amdb.common.dto.trace.EntryTraceInfoDTO;
 import io.shulie.amdb.common.request.trace.EntryTraceQueryParam;
 import io.shulie.amdb.common.request.trace.TraceCompensateRequest;
 import io.shulie.amdb.common.request.trace.TraceStackQueryParam;
+import io.shulie.amdb.common.request.trace.TraceStatisticsQueryReq;
 import io.shulie.surge.data.deploy.pradar.link.model.TTrackClickhouseModel;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Map;
@@ -54,4 +57,6 @@ public interface TraceService {
     List<RpcBased> getTraceListByTraceIdList(List<String> traceIdList);
 
     void startCompensate(TraceCompensateRequest request);
+
+    List<EntryTraceAvgCostDTO> getStatisticsTraceList(List<TraceStatisticsQueryReq> traceStatisticsQueryReqList);
 }
