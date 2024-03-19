@@ -1115,7 +1115,7 @@ public class TraceServiceImpl implements TraceService {
             return ""; // 返回一个空字符串或适当的错误消息
         }
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("select  serviceName,appName,methodName,argMax(traceId, cost) AS traceId  from t_trace_all where (");
+        stringBuilder.append("select  serviceName,appName,methodName,samplingInterval,argMax(traceId, cost) AS traceId  from t_trace_all where (");
 
         for (int i = 0; i < traceStatisticsQueryReqList.size(); i++) {
             TraceStatisticsQueryReq queryReq = traceStatisticsQueryReqList.get(i);
@@ -1128,9 +1128,25 @@ public class TraceServiceImpl implements TraceService {
                 stringBuilder.append(" or "); // 使用OR连接多个条件，假设你想要满足任何一个条件的结果
             }
         }
-        stringBuilder.append(") GROUP BY serviceName,appName,methodName");
+        stringBuilder.append(") GROUP BY serviceName,appName,methodName,samplingInterval");
         stringBuilder.append(" limit 50000");
         return stringBuilder.toString();
+    }
+
+    public static void main(String[] args) {
+        TraceStatisticsQueryReq req = new TraceStatisticsQueryReq();
+        req.setServiceName("/order/policy/v4/policyInfoList");
+        req.setMethodName("POST");
+        req.setAppName("wechat-order-service");
+        req.setStartTime("2024-03-19 10:56:16");
+        req.setEndTime("2024-03-19 11:17:16");
+        TraceStatisticsQueryReq req1 = new TraceStatisticsQueryReq();
+        req1.setServiceName("t_wp_risk_information");
+        req1.setMethodName("jdbc:oracle:thin:@9.23.28.15:1521/zghdb171");
+        req1.setAppName("wechat-order-service");
+        req1.setStartTime("2024-03-19 10:56:16");
+        req1.setEndTime("2024-03-19 11:17:16");
+        System.out.println(getMaxCostTraceIdsSQL(Arrays.asList(req, req1)));
     }
 
     private static String getTraceAvgCost(List<String> traceList) {

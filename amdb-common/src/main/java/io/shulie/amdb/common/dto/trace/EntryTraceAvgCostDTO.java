@@ -24,5 +24,6 @@ public class EntryTraceAvgCostDTO {
     private BigDecimal failureCount;
     private BigDecimal successCount;
     private BigDecimal totalCount;
+    private Integer samplingInterval;
     private BigDecimal successRate;
 }
