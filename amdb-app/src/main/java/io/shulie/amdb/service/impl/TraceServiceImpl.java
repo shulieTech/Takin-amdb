@@ -1136,7 +1136,7 @@ public class TraceServiceImpl implements TraceService {
             return ""; // 返回一个空字符串或适当的错误消息
         }
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("select appName,serviceName,methodName,middlewareName,rpcId,logType,rpcType,avg(cost) as avgCost,");
+        stringBuilder.append("select appName,serviceName,methodName,middlewareName,samplingInterval,rpcId,logType,rpcType,avg(cost) as avgCost,");
         stringBuilder.append("SUM(CASE WHEN resultCode NOT IN ('200', '00') THEN 1 ELSE 0 END) AS failureCount,");
         stringBuilder.append("SUM(CASE WHEN resultCode IN ('200', '00') THEN 1 ELSE 0 END) AS successCount, COUNT(*) AS totalCount, ");
         stringBuilder.append("(SUM(CASE WHEN resultCode IN ('200', '00') THEN 1 ELSE 0 END) * 100.0) / COUNT(*) AS successRate from t_trace_all  where traceId in (");
@@ -1147,7 +1147,7 @@ public class TraceServiceImpl implements TraceService {
                 stringBuilder.append(",");
             }
         }
-        stringBuilder.append(") group by appName,serviceName,methodName,middlewareName,rpcId,logType,rpcType");
+        stringBuilder.append(") group by appName,serviceName,methodName,middlewareName,samplingInterval,rpcId,logType,rpcType");
         return stringBuilder.toString();
     }
 
