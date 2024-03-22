@@ -15,7 +15,6 @@
 
 package io.shulie.amdb.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -59,7 +58,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.sql.*;
 import java.util.*;
 import java.util.Date;
 import java.util.concurrent.*;
@@ -1133,28 +1131,12 @@ public class TraceServiceImpl implements TraceService {
         return stringBuilder.toString();
     }
 
-    public static void main(String[] args) {
-        TraceStatisticsQueryReq req = new TraceStatisticsQueryReq();
-        req.setServiceName("/order/policy/v4/policyInfoList");
-        req.setMethodName("POST");
-        req.setAppName("wechat-order-service");
-        req.setStartTime("2024-03-19 10:56:16");
-        req.setEndTime("2024-03-19 11:17:16");
-        TraceStatisticsQueryReq req1 = new TraceStatisticsQueryReq();
-        req1.setServiceName("t_wp_risk_information");
-        req1.setMethodName("jdbc:oracle:thin:@9.23.28.15:1521/zghdb171");
-        req1.setAppName("wechat-order-service");
-        req1.setStartTime("2024-03-19 10:56:16");
-        req1.setEndTime("2024-03-19 11:17:16");
-        System.out.println(getMaxCostTraceIdsSQL(Arrays.asList(req, req1)));
-    }
-
     private static String getTraceAvgCost(List<String> traceList) {
         if (traceList.isEmpty()) {
             return ""; // 返回一个空字符串或适当的错误消息
         }
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("select appName,serviceName,methodName,rpcId,logType,rpcType,avg(cost) as avgCost,");
+        stringBuilder.append("select appName,serviceName,methodName,middlewareName,rpcId,logType,rpcType,avg(cost) as avgCost,");
         stringBuilder.append("SUM(CASE WHEN resultCode NOT IN ('200', '00') THEN 1 ELSE 0 END) AS failureCount,");
         stringBuilder.append("SUM(CASE WHEN resultCode IN ('200', '00') THEN 1 ELSE 0 END) AS successCount, COUNT(*) AS totalCount, ");
         stringBuilder.append("(SUM(CASE WHEN resultCode IN ('200', '00') THEN 1 ELSE 0 END) * 100.0) / COUNT(*) AS successRate from t_trace_all  where traceId in (");
@@ -1165,7 +1147,7 @@ public class TraceServiceImpl implements TraceService {
                 stringBuilder.append(",");
             }
         }
-        stringBuilder.append(") group by appName,serviceName,methodName,rpcId,logType,rpcType");
+        stringBuilder.append(") group by appName,serviceName,methodName,middlewareName,rpcId,logType,rpcType");
         return stringBuilder.toString();
     }
 
