@@ -44,6 +44,7 @@ import io.shulie.surge.data.common.utils.Pair;
 import io.shulie.surge.data.deploy.pradar.link.model.TTrackClickhouseModel;
 import io.shulie.surge.data.deploy.pradar.parser.MiddlewareType;
 import io.shulie.surge.data.deploy.pradar.parser.PradarLogType;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -67,6 +68,7 @@ import java.util.stream.Collectors;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
 
 @Service
+@Slf4j
 public class TraceServiceImpl implements TraceService {
     private Logger logger = LoggerFactory.getLogger(TraceServiceImpl.class);
 
@@ -1051,14 +1053,17 @@ public class TraceServiceImpl implements TraceService {
     public List<EntryTraceAvgCostDTO> getStatisticsTraceList(List<TraceStatisticsQueryReq> traceStatisticsQueryReqList) {
         //获取当前入口所有的traceId列表
         String traceSQL = getTraceIdsSQL(traceStatisticsQueryReqList);
-        List<TTrackClickhouseModel> TraceModelList = traceDao.queryForList(traceSQL, TTrackClickhouseModel.class);
-        if (CollectionUtils.isEmpty(TraceModelList)) {
-            return Collections.emptyList();
-        }
-        List<String> traceList = TraceModelList.stream().map(TTrackClickhouseModel::getTraceId).collect(Collectors.toList());
+//        List<TTrackClickhouseModel> TraceModelList = traceDao.queryForList(traceSQL, TTrackClickhouseModel.class);
+//        if (CollectionUtils.isEmpty(TraceModelList)) {
+//            return Collections.emptyList();
+//        }
+//        List<String> traceList = TraceModelList.stream().map(TTrackClickhouseModel::getTraceId).collect(Collectors.toList());
 
         //获取每个入口的平均耗时数据
-        String traceAvgCostSQL = getTraceAvgCost(traceList);
+        String traceAvgCostSQL = getTraceAvgCost(traceSQL);
+        if (StringUtils.isBlank(traceAvgCostSQL)){
+            return Collections.emptyList();
+        }
         List<EntryTraceAvgCostDTO> modelList = traceDao.queryForList(traceAvgCostSQL, EntryTraceAvgCostDTO.class);
 
         //找到每个入口耗时最大的traceId
@@ -1104,7 +1109,7 @@ public class TraceServiceImpl implements TraceService {
             }
         }
 
-        stringBuilder.append(") limit 50000");
+        stringBuilder.append(") limit 500000");
         return stringBuilder.toString();
     }
 
@@ -1131,24 +1136,34 @@ public class TraceServiceImpl implements TraceService {
         return stringBuilder.toString();
     }
 
-    private static String getTraceAvgCost(List<String> traceList) {
-        if (traceList.isEmpty()) {
-            return ""; // 返回一个空字符串或适当的错误消息
+    private static String getTraceAvgCost(String sql) {
+        if (StringUtils.isBlank(sql)) {
+            return null;
         }
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("select appName,serviceName,methodName,middlewareName,samplingInterval,rpcId,logType,rpcType,avg(cost) as avgCost,");
         stringBuilder.append("SUM(CASE WHEN resultCode NOT IN ('200', '00') THEN 1 ELSE 0 END) AS failureCount,");
         stringBuilder.append("SUM(CASE WHEN resultCode IN ('200', '00') THEN 1 ELSE 0 END) AS successCount, COUNT(*) AS totalCount, ");
-        stringBuilder.append("(SUM(CASE WHEN resultCode IN ('200', '00') THEN 1 ELSE 0 END) * 100.0) / COUNT(*) AS successRate from t_trace_all  where traceId in (");
-
-        for (int i = 0; i < traceList.size(); i++) {
-            stringBuilder.append("'").append(traceList.get(i)).append("'");
-            if (i < traceList.size() - 1) {
-                stringBuilder.append(",");
-            }
-        }
+        stringBuilder.append("(SUM(CASE WHEN resultCode IN ('200', '00') THEN 1 ELSE 0 END) * 100.0) / COUNT(*) AS successRate from t_trace_all  where traceId GLOBAL in (");
+        stringBuilder.append(sql);
         stringBuilder.append(") group by appName,serviceName,methodName,middlewareName,samplingInterval,rpcId,logType,rpcType");
         return stringBuilder.toString();
+    }
+
+    public static void main(String[] args) {
+        List<TraceStatisticsQueryReq> list = new ArrayList<>();
+        TraceStatisticsQueryReq req = new TraceStatisticsQueryReq();
+        req.setServiceName("/user-center/user/shadow_data");
+        req.setMethodName("POST");
+        req.setAppName("easydemo-usercenter-1.0.0");
+
+        TraceStatisticsQueryReq req1 = new TraceStatisticsQueryReq();
+        req1.setServiceName("/gateway/api/register");
+        req1.setMethodName("POST");
+        req1.setAppName("easydemo-gateway-1.0.0");
+        list.add(req);
+        list.add(req1);
+        System.out.println(getTraceAvgCost(getTraceIdsSQL(list)));
     }
 
     private void compensate(TraceCompensateRequest request, String checkDirectory, LogCompensateCallbackRequest callbackTakinRequest, List<File> fileList) {
