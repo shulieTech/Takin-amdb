@@ -1,6 +1,7 @@
 package io.shulie.amdb.config;
 
 import com.alibaba.druid.pool.DruidDataSource;
+import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -95,6 +96,7 @@ class AmdbDataSourceConfig {
         final SqlSessionFactoryBean sessionFactory = new SqlSessionFactoryBean();
         sessionFactory.setDataSource(masterDataSource);
         sessionFactory.setMapperLocations(new PathMatchingResourcePatternResolver().getResources(AmdbDataSourceConfig.MAPPER_LOCATION));
+        LogFactory.useNoLogging();
 
         return sessionFactory.getObject();
     }

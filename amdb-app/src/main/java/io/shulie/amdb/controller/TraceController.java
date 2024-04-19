@@ -199,7 +199,7 @@ public class TraceController {
      * @param param
      * @return
      */
-    @RequestMapping(value = "/getTraceDetail", method = RequestMethod.GET)
+    @RequestMapping(value = "/`getTraceDetail`", method = RequestMethod.GET)
     public Response<List<RpcBased>> getTraceDetail(TraceStackQueryParam param) {
         logger.info("调用链查询:{}", param);
         if (StringUtil.isBlank(param.getTraceId())) {

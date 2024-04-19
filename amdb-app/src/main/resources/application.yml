@@ -2,7 +2,24 @@ server:
   port: 10032
   servlet:
     context-path: /
-
+  undertow:
+    enabled: true
+    io-threads: 4
+    worker-threads: 32
+    max-connections: 500
+    connection-timeout: 20000
+    no-request-timeout: 20000
+    max-buffered-request-size: 1024
+    buffer-pipelined-data: true
+    buffer-pool: default
+    response-headers: true
+    keep-alive: true
+    tcp-no-delay: true
+    max-concurrent-requests: 1024
+    task-queue-size: 256
+    max-headers: 1000
+    max-header-size: 10240
+    non-blocking: true
 spring:
   servlet:
     multipart:

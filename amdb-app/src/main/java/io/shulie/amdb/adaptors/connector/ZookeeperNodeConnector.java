@@ -42,9 +42,8 @@ public class ZookeeperNodeConnector implements Connector {
     private static final Logger logger = LoggerFactory.getLogger(ZookeeperNodeConnector.class);
 
     private static final String ZK_SERVERS = System.getProperty("zookeeper.servers", "default.zookeeper:2181");
-    private static final int CONNECTION_TIMEOUT = NumberUtils.toInt(System.getProperty("zookeeper.connection.timeout", "30000"));
-    private static final int SESSION_TIMEOUT = NumberUtils.toInt(System.getProperty("zookeeper.session.timeout", "20000"));
-
+    private static final int CONNECTION_TIMEOUT = NumberUtils.toInt(System.getProperty("zookeeper.connection.timeout", "45000"));
+    private static final int SESSION_TIMEOUT = NumberUtils.toInt(System.getProperty("zookeeper.session.timeout", "30000"));
 
     private ZkClient zkClient;
 
