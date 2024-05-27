@@ -4,21 +4,21 @@ server:
     context-path: /
   undertow:
     enabled: true
-    io-threads: 4
+    io-threads: 8
     worker-threads: 32
-    max-connections: 500
-    connection-timeout: 20000
-    no-request-timeout: 20000
-    max-buffered-request-size: 1024
+    max-connections: 1000
+    connection-timeout: 30000
+    no-request-timeout: 30000
+    max-buffered-request-size: 16384
     buffer-pipelined-data: true
     buffer-pool: default
     response-headers: true
     keep-alive: true
     tcp-no-delay: true
-    max-concurrent-requests: 1024
-    task-queue-size: 256
-    max-headers: 1000
-    max-header-size: 10240
+    max-concurrent-requests: 2048
+    task-queue-size: 512
+    max-headers: 2000
+    max-header-size: 20480
     non-blocking: true
 spring:
   servlet:
