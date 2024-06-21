@@ -42,6 +42,9 @@ public class ZookeeperPathConnector implements Connector {
     private static final String ZK_SERVERS = System.getProperty("zookeeper.servers", "default.zookeeper:2181");
     private static final int CONNECTION_TIMEOUT = NumberUtils.toInt(System.getProperty("zookeeper.connection.timeout", "30000"));
     private static final int SESSION_TIMEOUT = NumberUtils.toInt(System.getProperty("zookeeper.session.timeout", "20000"));
+    private static final String USER_NAME = System.getProperty("zookeeper.session.digest.username", "admin");
+    private static final String PASSWORD = System.getProperty("zookeeper.session.digest.password", "Shulie@2020");
+    private static final boolean IS_DIGEST_ENABLED = Boolean.parseBoolean(System.getProperty("zookeeper.session.digest.enabled", "false"));
 
 
     private ZkClient zkClient;
@@ -63,6 +66,9 @@ public class ZookeeperPathConnector implements Connector {
         ZkClientSpec spec = new ZkClientSpec(zookeepers);
         spec.setConnectionTimeoutMillis(connectionTimeout)
                 .setSessionTimeoutMillis(sessionTimeout);
+        if (IS_DIGEST_ENABLED){
+            spec.setDigest(USER_NAME + ":" + PASSWORD);
+        }
         try {
             this.zkClient = new NetflixCuratorZkClientFactory().create(spec);
         } catch (Exception e) {

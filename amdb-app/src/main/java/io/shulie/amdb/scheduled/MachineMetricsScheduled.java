@@ -82,7 +82,7 @@ public class MachineMetricsScheduled {
     public void sendTask(List<String> appNameList) {
         List<String> executorUrlList = null;
         try {
-            executorUrlList = zookeeperUtils.getZkClient().getChildren("/config/pradar/task/executors");
+            executorUrlList = zookeeperUtils.getZkClient().listChildren("/config/pradar/task/executors");
         } catch (Exception e) {
             log.error("getListError ", e);
         }

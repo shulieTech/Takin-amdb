@@ -28,8 +28,15 @@ public class VersionRegister implements ApplicationListener<ApplicationStartedEv
         String zk_servers = System.getProperty("zookeeper.servers", "default.zookeeper:2181");
         int connection_timeout = NumberUtils.toInt(System.getProperty("zookeeper.connection.timeout", "30000"));
         int session_timeout = NumberUtils.toInt(System.getProperty("zookeeper.session.timeout", "20000"));
+        String userName = System.getProperty("zookeeper.session.digest.username", "admin");
+        String password = System.getProperty("zookeeper.session.digest.password", "Shulie@2020");
+        boolean isDigestEnabled = Boolean.parseBoolean(System.getProperty("zookeeper.session.digest.enabled", "false"));
+
         ZkClientSpec spec = new ZkClientSpec(zk_servers);
         spec.setConnectionTimeoutMillis(connection_timeout).setSessionTimeoutMillis(session_timeout);
+        if (isDigestEnabled){
+            spec.setDigest(userName + ":" + password);
+        }
         try {
             ZkClient zkClient = new NetflixCuratorZkClientFactory().create(spec);
             registerVersion(zkClient);

@@ -32,8 +32,8 @@ spring:
       force: true
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
-    driverClassName: com.mysql.jdbc.Driver
-    url: jdbc:mysql://pradar.host.mysql.amdb:3306/amdb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.1.221:3306/amdb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowMultiQueries=true&serverTimezone=GMT%2B8
     username: root
     password: shulie@2020
     druid:
@@ -81,7 +81,16 @@ influx:
   database: pradar
 
 zookeeper:
-  server: pradar.host.zk01:2181,pradar.host.zk02:2181,pradar.host.zk03:2181
+  server: 192.168.63.26:2181,192.168.63.26:2181,192.168.63.26:2181
+  connection:
+    timeout: 30000
+  session:
+    timeout: 20000
+    digest:
+      enabled: true
+      username: admin
+      password: Shulie@2020
+
 
 datasource:
   # t_trace_all 数据源类型 支持mysql、clickhouse
