@@ -78,6 +78,9 @@ public class TraceServiceImpl implements TraceService {
             + "middlewareName,serviceName,methodName,remoteIp,port,resultCode,request,response,clusterTest,callbackMsg,"
             + "attributes,localAttributes,async,version,hostIp,agentId,parsedServiceName ";
 
+    private static final String TRACE_TASK_SELECT_FILED = "appName,traceId,serviceName,methodName,cost,resultCode,startTime," +
+            "request,response,callbackMsg";
+
     @Autowired
     @Qualifier("traceDaoImpl")
     ITraceDao traceDao;
@@ -104,6 +107,9 @@ public class TraceServiceImpl implements TraceService {
     public static final String TABLE_TRACE_PRESSURE = "t_trace_pressure";
 
     private static ExecutorService executorService;
+
+    private static final int DEFAULT_PAGE_SIZE = 20;
+    private static final int DEFAULT_CURRENT_PAGE = 1;
 
     static {
         executorService = Executors.newFixedThreadPool(5, new DefaultThreadFactory("traceIds-query-pool"));
@@ -271,7 +277,7 @@ public class TraceServiceImpl implements TraceService {
 
         // 流量引擎日志
         StringBuilder sql = new StringBuilder();
-        sql.append("select " + TRACE_SELECT_FILED + " from " + queryTable + " where " + StringUtils.join(
+        sql.append("select " + TRACE_TASK_SELECT_FILED + " from " + queryTable + " where " + StringUtils.join(
                 andFilterList, " and ")).append(SqlConstants.BLANK);
         if (CollectionUtils.isNotEmpty(orFilterList)) {
             sql.append(" and (" + StringUtils.join(orFilterList, " or ") + ")").append(SqlConstants.BLANK);
@@ -661,20 +667,17 @@ public class TraceServiceImpl implements TraceService {
     }
 
     private String getLimitInfo(EntryTraceQueryParam param) {
-        String limit = "";
-        if ((param.getPageSize() != null && param.getPageSize() > 0) || (param.getCurrentPage() != null
-                && param.getCurrentPage() > 0)) {
-            int pageSize = param.getPageSize();
-            if (pageSize <= 0) {
-                pageSize = 20;
-            }
-            int currentPage = param.getCurrentPage();
-            if (currentPage <= 0) {
-                currentPage = 1;
-            }
-            limit = "limit " + ((currentPage - 1) * pageSize) + "," + pageSize;
+        if (param == null) {
+            return "";
         }
-        return limit;
+
+        // 获取分页参数
+        int pageSize = (param.getPageSize() != null && param.getPageSize() > 0) ? param.getPageSize() : DEFAULT_PAGE_SIZE;
+        int currentPage = (param.getCurrentPage() != null && param.getCurrentPage() > 0) ? param.getCurrentPage() : DEFAULT_CURRENT_PAGE;
+
+        // 计算 LIMIT 子句
+        int offset = (currentPage - 1) * pageSize;
+        return "LIMIT " + offset + ", " + pageSize;
     }
 
     private void setResponseCount(List<String> andFilterList, List<String> orFilterList, Response
@@ -1061,7 +1064,7 @@ public class TraceServiceImpl implements TraceService {
 
         //获取每个入口的平均耗时数据
         String traceAvgCostSQL = getTraceAvgCost(traceSQL);
-        if (StringUtils.isBlank(traceAvgCostSQL)){
+        if (StringUtils.isBlank(traceAvgCostSQL)) {
             return Collections.emptyList();
         }
         List<EntryTraceAvgCostDTO> modelList = traceDao.queryForList(traceAvgCostSQL, EntryTraceAvgCostDTO.class);
@@ -1370,7 +1373,7 @@ public class TraceServiceImpl implements TraceService {
         List<String> rpcList = modelRpcIdList.stream().filter(a -> Objects.nonNull(a) && StringUtils.isNotBlank(a.getRpcId()))
                 .map(TTrackClickhouseModel::getRpcId).collect(Collectors.toList());
 
-        if (CollectionUtils.isEmpty(rpcList)){
+        if (CollectionUtils.isEmpty(rpcList)) {
             return getTraceDetail(param);
         }
 
@@ -1437,6 +1440,7 @@ public class TraceServiceImpl implements TraceService {
 
     /**
      * 根据rpcId获取所有父类的节点
+     *
      * @param rpcId
      * @return
      */

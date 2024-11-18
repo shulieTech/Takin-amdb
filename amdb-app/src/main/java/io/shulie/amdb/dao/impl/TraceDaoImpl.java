@@ -19,20 +19,20 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import io.shulie.amdb.dao.ITraceDao;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-import ru.yandex.clickhouse.BalancedClickhouseDataSource;
-import ru.yandex.clickhouse.settings.ClickHouseProperties;
 
 import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 @Service("traceDaoImpl")
@@ -70,6 +70,30 @@ public class TraceDaoImpl implements ITraceDao, ApplicationContextAware, Initial
         return JSONObject.parseObject(JSON.toJSON(result).toString(), clazz);
     }
 
+
+    /**
+     * 创建对象工厂
+     *
+     * @param clazz 目标类
+     * @param <T>   泛型
+     * @return Supplier
+     */
+    public static <T> Supplier<T> createFactory(Class<T> clazz) {
+        try {
+            // 提前验证无参构造器是否存在
+            clazz.getDeclaredConstructor();
+            return () -> {
+                try {
+                    return clazz.getDeclaredConstructor().newInstance();
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to create instance for class: " + clazz.getName(), e);
+                }
+            };
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("Class must have a no-args constructor: " + clazz.getName(), e);
+        }
+    }
+
     /**
      * 查询map
      *
@@ -78,14 +102,21 @@ public class TraceDaoImpl implements ITraceDao, ApplicationContextAware, Initial
      */
     @Override
     public <T> List<T> queryForList(String sql, Class<T> clazz) {
+        // 获取查询结果
         List<Map<String, Object>> resultList = queryForList(sql);
-        if (resultList == null) {
-            return null;
-        }
-        if (resultList.size() == 0) {
+        if (resultList == null || resultList.isEmpty()) {
             return new ArrayList<>();
         }
-        return resultList.stream().map(result -> JSONObject.parseObject(JSON.toJSON(result).toString(), clazz)).collect(Collectors.toList());
+
+        // 创建对象工厂
+        Supplier<T> factory = createFactory(clazz);
+
+        // 转换为目标对象列表
+        return resultList.stream().map(result -> {
+                    T target = factory.get();
+                    BeanUtils.copyProperties(result, target);
+                    return target;
+                }).collect(Collectors.toList());
     }
 
 
