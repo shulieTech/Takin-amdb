@@ -78,8 +78,10 @@ public class TraceServiceImpl implements TraceService {
             + "middlewareName,serviceName,methodName,remoteIp,port,resultCode,request,response,clusterTest,callbackMsg,"
             + "attributes,localAttributes,async,version,hostIp,agentId,parsedServiceName ";
 
-    private static final String TRACE_TASK_SELECT_FILED = "appName,traceId,serviceName,methodName,cost,resultCode,startTime," +
-            "request,response,callbackMsg";
+//    private static final String TRACE_TASK_SELECT_FILED = "appName,traceId,serviceName,methodName,cost,resultCode,startTime," +
+//            "request,response,callbackMsg";
+
+    private static final String TRACE_TASK_SELECT_FILED = "appName,serviceName,methodName,request,response,callbackMsg,remoteIp,port,resultCode,cost,startTime,traceId";
 
     @Autowired
     @Qualifier("traceDaoImpl")
