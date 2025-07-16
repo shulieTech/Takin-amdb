@@ -948,7 +948,7 @@ public class LinkServiceImpl implements LinkService {
             edgeCriteria.andEqualTo("envCode", param.getEnvCode());
         }
         List<TAmdbPradarLinkEdgeDO> edgeDOList = pradarLinkEdgeMapper.selectByExample(edgeExample);
-        return Pair.of(nodeDOList, edgeDOList);
+        return dealUnknowEdgeAndNode(nodeDOList, edgeDOList);
     }
 
     /**
@@ -1008,4 +1008,41 @@ public class LinkServiceImpl implements LinkService {
         return ObjectUtils.toString(value);
     }
 
+
+    private Pair<List<TAmdbPradarLinkNodeDO>, List<TAmdbPradarLinkEdgeDO>> dealUnknowEdgeAndNode(List<TAmdbPradarLinkNodeDO> nodeList, List<TAmdbPradarLinkEdgeDO> edgeList) {
+        if(CollectionUtils.isEmpty(nodeList) || CollectionUtils.isEmpty(edgeList)) {
+            return Pair.of(nodeList, edgeList);
+        }
+        //未知节点
+        List<String> unknownAppList = nodeList.stream().filter(node -> node.getAppName().equalsIgnoreCase("UNKNOWN")).map(node -> node.getAppId()).collect(Collectors.toList());
+        if(CollectionUtils.isEmpty(unknownAppList)) {
+            return Pair.of(nodeList, edgeList);
+        }
+        Map<String, Boolean> edgeMap = new HashMap<>();
+        for(TAmdbPradarLinkEdgeDO edge : edgeList) {
+            if(unknownAppList.contains(edge.getToAppId())) {
+                continue;
+            }
+            edgeMap.put(edge.getServerAppName()+"_"+edge.getService()+"_"+edge.getMethod(), true);
+        }
+        //要移出的edgeId
+        List<String> removeEdgeList = new ArrayList<>();
+        //to未知节点的边
+        List<TAmdbPradarLinkEdgeDO> unknownEdgeList = edgeList.stream().filter(edge -> unknownAppList.contains(edge.getToAppId())).collect(Collectors.toList());
+        if(CollectionUtils.isNotEmpty(unknownEdgeList)) {
+            for(TAmdbPradarLinkEdgeDO edge : unknownEdgeList) {
+                if(edgeMap.containsKey(edge.getServerAppName()+"_"+edge.getService()+"_"+edge.getMethod())) {
+                    removeEdgeList.add(edge.getEdgeId());
+                }
+            }
+            edgeList = edgeList.stream().filter(edge -> !removeEdgeList.contains(edge.getEdgeId())).collect(Collectors.toList());
+        }
+        Set<String> keepAppSet = new HashSet<>();
+        for(TAmdbPradarLinkEdgeDO edge : edgeList) {
+            keepAppSet.add(edge.getFromAppId());
+            keepAppSet.add(edge.getToAppId());
+        }
+        nodeList = nodeList.stream().filter(node -> keepAppSet.contains(node.getAppId())).collect(Collectors.toList());
+        return Pair.of(nodeList, edgeList);
+    }
 }
