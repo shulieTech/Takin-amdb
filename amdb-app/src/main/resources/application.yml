@@ -85,7 +85,7 @@ config:
   e2e:
     delaySec: 120
   trace:
-    limit: 500
+    limit: 2000
     oldTask:
       queryDate: 2023-01-01
     compensate:
